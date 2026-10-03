@@ -26,14 +26,14 @@ def resample_curve(P, smooth, step=0.25):
     return C,N,S
 
 from scipy.interpolate import UnivariateSpline
-from fitdecal import clean, fit, taper
+from fitdecal import clean, fit
 
 def to_rect1(C,N,W):
     L2,R2 = tf(C+N*W[:,None]/2), tf(C-N*W[:,None]/2); C2=(L2+R2)/2
     d=np.gradient(C2,axis=0); d/=np.linalg.norm(d,axis=1,keepdims=True); n2=np.c_[-d[:,1],d[:,0]]
     return C2, np.abs(np.sum((L2-R2)*n2,1))
 
-def stroke_xy(ys, xs, ws, sx, swt, y0, y1, wfun=None, step=0.25, dense=None):
+def stroke_xy(ys, xs, ws, sx, swt, y0, y1, wfun=None, step=0.25):
     """smooth stroke parameterised by y (monotonic). returns C,N,W on [y0,y1] going from y0 to y1"""
     o=np.argsort(ys); ys,xs,ws,sx=ys[o],xs[o],ws[o],sx[o]
     fx=UnivariateSpline(ys,xs,w=1/sx,s=len(ys))
@@ -48,31 +48,27 @@ def stroke_xy(ys, xs, ws, sx, swt, y0, y1, wfun=None, step=0.25, dense=None):
     return C,N,W
 
 def J_parts():
-    m = build()
-    # --- main: decal part (rect1) + sign tail
-    C,N,S,W = m['_J_main']
-    C2,W2 = to_rect1(C,N,W)
-    k = (C2[:,1] <= 538) & (C2[:,1] >= C2[0,1])
-    ys=list(C2[k,1]); xs=list(C2[k,0]); ws=list(W2[k]); sx=[0.5]*k.sum(); sw=[0.6]*k.sum()
-    tail = np.load(os.path.join(PODACI, 'tail_sign.npy'))[:,:2]/SC
-    tail = tail[(tail[:,1]>545)&(tail[:,1]<621)]
-    ys+=list(tail[:,1]); xs+=list(tail[:,0]); sx+=[1.2]*len(tail)
-    kn_y = np.array([545,550,560,570,580,590,600,610,620])
-    kn_w = np.array([10.2,9.6,8.6,7.6,6.6,5.6,4.6,3.3,1.8])
-    ws+=list(np.interp(tail[:,1],kn_y,kn_w)); sw+=[0.6]*len(tail)
-    # tip
-    ys.append(627.0); xs.append(166.8); ws.append(0.0); sx.append(0.4); sw.append(0.2)
-    ys,xs,ws,sx,sw = map(np.array,(ys,xs,ws,sx,sw))
-    y_top = C2[0,1]
-    def wfun(yy, fw):
-        w=np.clip(fw(yy),0,None)
-        # enforce clean taper to the tip over the last 70 px
-        tl=627.0-yy; m_=tl<70
-        w0=float(fw(557.0))
-        w[m_]=np.minimum(w[m_], w0*(tl[m_]/70.0)**0.95)
-        return w
-    Cm,Nm,Wm = stroke_xy(ys,xs,ws,sx,sw,y_top,627.0,wfun=wfun)
-    Wm[-1]=0
+    # --- main: axis = gently curved top + straight middle + slight angle near the bottom,
+    #     fitted to the J edges on the rectified sign (podaci/j_axis_params.npy);
+    #     widths are perpendicular widths measured on the sign
+    pa = np.load(os.path.join(PODACI, 'j_axis_params.npy'))
+    def axis_x(yy):
+        a_, b_, c_, yk, s1, d_, yt, s2 = pa
+        sp = lambda z: np.logaddexp(0, z)
+        return a_ + b_*(yy-400) + c_*s1*sp((yy-yk)/s1) + d_*s2*sp((yt-yy)/s2)
+    y_top, y_tip = 128.8, 627.0
+    yy = np.linspace(y_top, y_tip, 20000)
+    P = np.c_[axis_x(yy), yy]
+    S = np.r_[0, np.cumsum(np.hypot(*np.diff(P, axis=0).T))]
+    t = np.linspace(0, S[-1], int(S[-1]/0.25))
+    yy = np.interp(t, S, yy)
+    Cm = np.c_[axis_x(yy), yy]
+    d = np.gradient(Cm, axis=0); d /= np.linalg.norm(d, axis=1, keepdims=True)
+    Nm = np.c_[-d[:,1], d[:,0]]
+    kn_y = np.array([128.8,150,175,200,250,330,370,400,430,460,486,500,515,530,545,560,575,590,603,615,627.0])
+    kn_w = np.array([16.2,17.8,19.0,19.5,19.6,19.8,19.4,18.9,18.2,17.1,15.0,14.0,12.8,11.5,10.0,8.7,7.2,5.6,4.0,2.2,0.0])
+    Wm = PchipInterpolator(kn_y, kn_w)(np.clip(yy, kn_y[0], 627))
+    Wm[-1] = 0
     main = stroke_polygon(Cm,Nm,Wm,start='round',end='tip')
     # --- entry: follows the measured combined left edge of the window photo, then fades inside the main stroke
     ent = [(139.8,187.6,0.6)] + clean('J_entry', ylim=(110,186)) + [
@@ -108,12 +104,12 @@ def wordmark():
     m = build()
     jm, je, (Cm,Nm,Wm), _ = J_parts()
     J = unary_union([jm, je]).buffer(0.6, resolution=32).buffer(-0.6, resolution=32)
-    # local smoothing of the cap shoulder (opening + closing, top region only)
+    # top region only: the left edge runs straight from the round tip down to where the
+    # entry stroke has joined and the stroke widens
     from shapely.geometry import box
     yc = Cm[0,1]; x0,y0,x1,y1 = J.bounds
     outer = box(x0-5, y0-5, x1+5, yc+48); inner = box(x0-5, y0-5, x1+5, yc+38)
-    r = 45.0
-    top = J.intersection(outer).buffer(r, resolution=64).buffer(-r, resolution=64)
+    top = J.intersection(outer).convex_hull.intersection(outer)
     J = unary_union([J.difference(inner), top.intersection(outer)])
     from ringsmooth import smooth_geom
     raw = {'J': J, 'o': aff(m['o']), 'apostrophe': apostrophe(), 's': aff(m['s'])}
