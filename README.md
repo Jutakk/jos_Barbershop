@@ -11,14 +11,15 @@ Logo i grafički materijali za Jo's Barbershop.
 
 ## Hero sekcija (3D)
 
-Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/fasada.jpg`).
+Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/fasada.jpg`, `images/znak.jpg`).
 
 **Geometrija znaka**
 
 - Disk je ekstrudirani krug: debeli crni valjak s vidljivim rubom, logo na prednjoj i stražnjoj strani.
 - Kroz središte diska prolazi okomita os rotacije. Na vrhu i dnu diska izlazi kao kratki čep.
-- Oba čepa spaja polukružna cijev (nosač u obliku slova C) koja ide oko desne strane diska.
-- Polukružna cijev je na sredini svog luka pričvršćena na zid.
+- Oba čepa spaja polukružni crni nosač u obliku slova C koji ide oko desne strane diska, u istoj ravnini kao disk.
+- Na sredini luka iz nosača izlaze dva kratka vodoravna kraka do okomite pločice pričvršćene na zid.
+- Znak stoji okomito na zid: zid je s desne strane nosača.
 
 **Ponašanje**
 
