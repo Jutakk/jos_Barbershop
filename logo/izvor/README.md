@@ -1,16 +1,26 @@
 # izvor
 
-Skripte i izmjereni podaci iz kojih se gradi master logo u mapi `logo/`.
+Skripta koja gradi master logo u mapi `logo/` iz vektorskog crteža `reference/jos-logo.svg`.
 
 ## Ponovna izgradnja
 
-Potrebno: Python 3, paketi `numpy scipy shapely fonttools cairosvg` i font Liberation Sans Regular
-na putanji `/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf` (Debian i Ubuntu paket `fonts-liberation`).
+Potrebno: Python 3 i paketi `numpy scipy svgelements fonttools cairosvg`.
 
-Iz korijena repozitorija:
+Font Arial Regular nije u repozitoriju zbog licence. Skripta ga čita iz `logo/izvor/fonts/Arial.TTF`
+ili s putanje u varijabli okruženja `ARIAL_TTF`. Na Windowsu je to `C:\Windows\Fonts\arial.ttf`.
+Na Linuxu se dobiva iz Microsoftovog paketa core fontova:
 
 ```bash
-pip install numpy scipy shapely fonttools cairosvg
+mkdir -p logo/izvor/fonts && cd logo/izvor/fonts
+curl -L -o arial32.exe https://downloads.sourceforge.net/corefonts/arial32.exe
+cabextract -F Arial.TTF arial32.exe
+cd ../../..
+```
+
+Zatim, iz korijena repozitorija:
+
+```bash
+pip install numpy scipy svgelements fonttools cairosvg
 python3 logo/izvor/build_svg.py
 ```
 
@@ -20,16 +30,7 @@ Skripta piše sve četiri datoteke u `logo/` i ispisuje položaj diska.
 
 | Datoteka | Uloga |
 |----------|-------|
-| `build_svg.py` | Raspored na platnu 2048 x 2048, Bézierove krivulje, SVG i PNG izvoz |
-| `final_model.py` | Sklapa "J", "o", apostrof, "s", BARBERSHOP i crtice u koordinatama ispravljenog znaka |
-| `model_decal.py` | Potezi "o" i "s" izmjereni na fotografiji izloga |
-| `fitdecal.py` | Zaglađivanje izmjerenih sredina i debljina poteza |
-| `strokes.py` | Obris poteza iz sredine i debljine, s oštrim ili zaobljenim krajevima |
-| `ringsmooth.py` | Zaglađivanje obrisa koje čuva oštre vrhove |
-| `bezfit.py` | Pretvaranje obrisa u kubne Bézierove krivulje (točnost 0,1 px) |
-| `textgeom.py` | Obrisi slova iz fonta |
-| `podaci/meas.json` | Sredine i debljine poteza izmjerene na izlogu |
-| `podaci/A_decal2rect1.npy` | Afina transformacija s izloga na ispravljeni znak |
-| `podaci/j_axis_params.npy` | Os stabla slova "J" (zakrivljeni vrh, ravna sredina, blagi kut prema repu) izmjerena na znaku |
-| `podaci/textfit.json` | Visina slova, razmak i položaj reda BARBERSHOP |
+| `build_svg.py` | Preuzima wordmark iz crteža, popravlja "o", slaže BARBERSHOP u Arialu i crtice, centrira na 2048 x 2048, izvozi SVG i PNG |
+| `bezfit.py` | Pretvaranje popravljenih obrisa slova "o" u kubne Bézierove krivulje (točnost 0,05 jedinica) |
+| `podaci/A_jos-logo2znak.npy` | Afina transformacija iz crteža na ispravljenu fotografiju znaka, za položaj diska |
 | `podaci/disc_ellipse.npy` | Elipsa diska na fotografiji znaka |
