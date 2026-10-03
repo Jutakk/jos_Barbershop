@@ -7,7 +7,7 @@ Logo i grafički materijali za Jo's Barbershop.
 | `reference/` | Izvorne fotografije i slike postojećeg loga |
 | `images/` | Fotografije i slike za web stranicu |
 | `hairs/` | Materijal za web stranicu |
-| `logo/` | Čisti master logo (SVG i PNG 2048 x 2048 px) |
+| `logo/` | Čisti master logo (SVG i PNG 2048 x 2048 px), opis u `logo/README.md` |
 
 ## Hero sekcija (3D)
 
