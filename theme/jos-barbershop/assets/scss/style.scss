@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.4.2
+Version: 0.4.3
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -37,7 +37,7 @@ $size-meta: 12px;
 $bp-tablet: 768px;
 
 :root {
-	--jos-bg: #0f0c0a;     // very dark brown
+	--jos-bg: #130e0b;     // very dark brown
 	--jos-ink: #f3f0ea;
 	--jos-line: #f1e2a0;   // pale yellow: the lines of the facade and the thin rules
 	--jos-muted: #a39d94;
@@ -265,7 +265,7 @@ canvas {
 			position: absolute;
 			inset: (0 - s(8)) (0 - s(9)) (0 - s(7)) (0 - s(8));
 			z-index: -1;
-			background: radial-gradient(closest-side, rgba(15, 12, 10, 0.9), rgba(15, 12, 10, 0));
+			background: radial-gradient(closest-side, rgba(19, 14, 11, 0.9), rgba(19, 14, 11, 0));
 			pointer-events: none;
 		}
 	}
@@ -322,7 +322,7 @@ canvas {
 	// behind the door the shop stays visible: the text lies on a dark glass panel
 	&--shop &__inner {
 		padding: s(7);
-		background: rgba(15, 12, 10, 0.74);
+		background: rgba(19, 14, 11, 0.74);
 	}
 
 	&__title {
@@ -526,7 +526,7 @@ html {
 	padding: 0;
 	border: 1px solid var(--jos-ink);
 	border-radius: 50%;
-	background: rgba(15, 12, 10, 0.55);
+	background: rgba(19, 14, 11, 0.55);
 	color: var(--jos-ink);
 	cursor: pointer;
 	transition: background-color 200ms ease, color 200ms ease;
