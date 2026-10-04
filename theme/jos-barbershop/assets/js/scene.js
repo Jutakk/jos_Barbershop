@@ -47,11 +47,11 @@ const BACKGROUND = 0xcecece;     // the paper (paper.webp, data-paper) while it 
 const FACADE_COLOR = 0x5b3517;   // brown ink, same as --jos-line
 const FACADE_OPACITY = 1;
 const FACADE_OPACITY_MOBILE = 0.9;   // on phones the wall runs behind the text
-const LINE_WIDTH = 2.2;          // px on the screen, the facade lines drawn bold
-const LINE_WIDTH_MOBILE = 1.8;
+const LINE_WIDTH = 1.5;          // px on the screen, the facade lines drawn a little bold
+const LINE_WIDTH_MOBILE = 1.3;
 // the paper is a big sphere around the whole scene: turning the building turns the paper with it
 const PAPER_RADIUS = 150;
-const PAPER_REPEAT = [8, 6];     // the paper this many times around and from top to bottom: grain about as on the page
+const PAPER_REPEAT = [4, 3];     // the paper this many times around and from top to bottom: grain about as on the page
 const FACADE_FADE = [1, 24];     // the lines fade out between these distances behind the framed view
 const DRAW_DURATION = 5;         // s, the facade draws itself when the page loads, in the order of facade.js
 const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left

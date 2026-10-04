@@ -149,6 +149,9 @@ canvas {
   -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
   mask-image: linear-gradient(to bottom, #000 35%, transparent);
 }
+.has-arches .site-header::before {
+  display: none;
+}
 .site-header__brand, .site-header__nav a {
   font-size: 12px;
   letter-spacing: 0.24em;
@@ -445,8 +448,11 @@ canvas {
 
 .has-arches .journey > .room {
   position: fixed;
-  inset: 0;
+  inset: 72px 0 0;
   z-index: 5;
+  padding-top: 32px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 32px);
+  mask-image: linear-gradient(to bottom, transparent, #000 32px);
   align-items: flex-start;
   min-height: 0;
   overflow-y: auto;
@@ -467,7 +473,8 @@ canvas {
 }
 @media (max-width: 767px) {
   .has-arches .journey > .room {
-    padding-top: 112px;
+    top: 96px;
+    padding-top: 16px;
   }
   .has-arches .journey > .room .room__title {
     padding-right: 64px;

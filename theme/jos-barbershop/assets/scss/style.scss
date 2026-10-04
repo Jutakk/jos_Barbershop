@@ -185,7 +185,8 @@ canvas {
 	padding: s(5) clamp(#{s(5)}, 6vw, #{s(9)});
 	pointer-events: none;
 
-	// long pages scroll under the header: a soft dark band keeps its text readable
+	// long pages scroll under the header: a band of paper keeps its text readable. On the front page the
+	// paper is part of the 3D scene, so there is no band: the pages there fade out below the header instead.
 	&::before {
 		content: "";
 		position: absolute;
@@ -194,6 +195,10 @@ canvas {
 		background: var(--jos-bg) url("assets/images/paper.webp") center / cover no-repeat fixed;
 		-webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
 		mask-image: linear-gradient(to bottom, #000 35%, transparent);
+
+		.has-arches & {
+			display: none;
+		}
 	}
 
 	&__brand,
@@ -556,8 +561,11 @@ canvas {
 
 .has-arches .journey > .room {
 	position: fixed;
-	inset: 0;
+	inset: 72px 0 0;   // below the header; the text fades out at the top edge as it scrolls up
 	z-index: 5;
+	padding-top: s(6);
+	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 #{s(6)});
+	mask-image: linear-gradient(to bottom, transparent, #000 #{s(6)});
 	align-items: flex-start;
 	min-height: 0;
 	overflow-y: auto;
@@ -583,7 +591,8 @@ canvas {
 
 	// on phones the header has two rows and the X sits next to the title
 	@media (max-width: $bp-tablet - 1) {
-		padding-top: 112px;
+		top: 96px;
+		padding-top: s(4);
 
 		.room__title {
 			padding-right: 64px;

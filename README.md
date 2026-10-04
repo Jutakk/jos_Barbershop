@@ -61,7 +61,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Disk se uvijek okreće istom sporom brzinom (jedan krug za oko 24 sekunde).
 - Pozadina svih stranica je papir (`images/white-paper-texture.jpg`, u temi `assets/images/paper.webp`, 2000 px).
   Na naslovnoj je papir u 3D prostoru, na unutarnjoj strani velike kugle oko cijele scene, pa se okreće zajedno sa
-  zgradom kad je okrećeš. Linije fasade su podebljane (2,2 px, na mobitelu 1,8 px, three.js LineMaterial). Linije fasade, trake u lukovima i natpis u temelju su smeđi (`#5b3517`), tekst je tamnosmeđa
+  zgradom kad je okrećeš. Linije fasade su malo podebljane (1,5 px, na mobitelu 1,3 px, three.js LineMaterial). Na naslovnoj zaglavlje
+  nema svoju traku papira, pa je papir jedan cijeli; tekst stranica blijedi ispod zaglavlja. Linije fasade, trake u lukovima i natpis u temelju su smeđi (`#5b3517`), tekst je tamnosmeđa
   tinta (`#2b1d14`). Pod mišem se otvor prozora ili vrata ispuni prozirnom žutom. Znak ostaje tamnosmeđi metal sa
   svijetlim logom. U lokalu tekst stoji na svijetlom staklu boje papira.
 
