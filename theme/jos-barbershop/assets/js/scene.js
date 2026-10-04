@@ -31,10 +31,10 @@ const DISC_DEPTH = 0.26;         // thickness of the disc, disc radius = 1
 const BRACKET_RADIUS = 1.16;     // radius of the C shaped bracket
 const BRACKET_TUBE = 0.04;
 const TURN_SPEED = 0.26;         // rad/s, always the same slow turn (one turn in about 24 s)
-const BACKGROUND = 0x0d0c0c;     // same as --jos-bg
-const FACADE_COLOR = 0xf3f0ea;   // same as --jos-ink
-const FACADE_OPACITY = 0.34;
-const FACADE_OPACITY_MOBILE = 0.24;   // on phones the wall runs behind the text
+const BACKGROUND = 0x170f0a;     // very dark brown, same as --jos-bg
+const FACADE_COLOR = 0xf1e2a0;   // pale yellow, same as --jos-line
+const FACADE_OPACITY = 0.6;
+const FACADE_OPACITY_MOBILE = 0.45;   // on phones the wall runs behind the text
 const FACADE_FADE = [1, 24];     // the lines fade out between these distances behind the framed view
 const DRAW_DURATION = 5;         // s, the facade draws itself when the page loads, in the order of facade.js
 const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left
@@ -104,9 +104,10 @@ if (root) {
 		const camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 100);
 
 		// ---- materials
-		const metal = new THREE.MeshStandardMaterial({ color: 0x0b0b0c, metalness: 0.85, roughness: 0.3, envMap: reflections, envMapIntensity: 0.6, fog: false });
-		const rim = new THREE.MeshStandardMaterial({ color: 0x0c0c0d, metalness: 0.9, roughness: 0.26, envMap: reflections, envMapIntensity: 0.6, fog: false });
-		const face = new THREE.MeshLambertMaterial({ color: 0x0e0c0c, fog: false });   // matt black face, no highlight
+		// the sign in very dark brown like the page: bracket and rim as metal, the face matt
+		const metal = new THREE.MeshStandardMaterial({ color: 0x1a110b, metalness: 0.85, roughness: 0.3, envMap: reflections, envMapIntensity: 0.6, fog: false });
+		const rim = new THREE.MeshStandardMaterial({ color: 0x1c130c, metalness: 0.9, roughness: 0.26, envMap: reflections, envMapIntensity: 0.6, fog: false });
+		const face = new THREE.MeshLambertMaterial({ color: 0x1b120c, fog: false });   // matt face, no highlight
 		const logoMaterial = new THREE.MeshBasicMaterial({
 			color: new THREE.Color(1.6, 1.6, 1.57),   // above 1: the logo is the only thing that blooms
 			transparent: true,

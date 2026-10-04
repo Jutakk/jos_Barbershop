@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.4.0
+Version: 0.4.1
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -37,8 +37,9 @@ $size-meta: 12px;
 $bp-tablet: 768px;
 
 :root {
-	--jos-bg: #0d0c0c;
+	--jos-bg: #170f0a;     // very dark brown
 	--jos-ink: #f3f0ea;
+	--jos-line: #f1e2a0;   // pale yellow: the lines of the facade and the thin rules
 	--jos-muted: #a39d94;
 	--jos-accent: #c9a66b;
 }
@@ -264,7 +265,7 @@ canvas {
 			position: absolute;
 			inset: (0 - s(8)) (0 - s(9)) (0 - s(7)) (0 - s(8));
 			z-index: -1;
-			background: radial-gradient(closest-side, rgba(13, 12, 12, 0.9), rgba(13, 12, 12, 0));
+			background: radial-gradient(closest-side, rgba(23, 15, 10, 0.9), rgba(23, 15, 10, 0));
 			pointer-events: none;
 		}
 	}
@@ -321,7 +322,7 @@ canvas {
 	// behind the door the shop stays visible: the text lies on a dark glass panel
 	&--shop &__inner {
 		padding: s(7);
-		background: rgba(13, 12, 12, 0.74);
+		background: rgba(23, 15, 10, 0.74);
 	}
 
 	&__title {
@@ -379,7 +380,7 @@ canvas {
 			th {
 				padding: s(3) 0;
 				border: 0;
-				border-bottom: 1px solid rgba(243, 240, 234, 0.16);
+				border-bottom: 1px solid rgba(241, 226, 160, 0.2);
 				text-align: left;
 				vertical-align: top;
 			}
@@ -401,10 +402,10 @@ canvas {
 		.wp-block-details {
 			margin: 0;
 			padding: s(4) 0;
-			border-top: 1px solid rgba(243, 240, 234, 0.16);
+			border-top: 1px solid rgba(241, 226, 160, 0.2);
 
 			&:last-of-type {
-				border-bottom: 1px solid rgba(243, 240, 234, 0.16);
+				border-bottom: 1px solid rgba(241, 226, 160, 0.2);
 			}
 
 			summary {
@@ -525,7 +526,7 @@ html {
 	padding: 0;
 	border: 1px solid var(--jos-ink);
 	border-radius: 50%;
-	background: rgba(13, 12, 12, 0.55);
+	background: rgba(23, 15, 10, 0.55);
 	color: var(--jos-ink);
 	cursor: pointer;
 	transition: background-color 200ms ease, color 200ms ease;

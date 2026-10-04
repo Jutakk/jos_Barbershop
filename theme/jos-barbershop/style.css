@@ -3,15 +3,16 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.4.0
+Version: 0.4.1
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
 Text Domain: jos-barbershop
 */
 :root {
-  --jos-bg: #0d0c0c;
+  --jos-bg: #170f0a;
   --jos-ink: #f3f0ea;
+  --jos-line: #f1e2a0;
   --jos-muted: #a39d94;
   --jos-accent: #c9a66b;
 }
@@ -208,7 +209,7 @@ canvas {
   position: absolute;
   inset: -64px -96px -48px -64px;
   z-index: -1;
-  background: radial-gradient(closest-side, rgba(13, 12, 12, 0.9), rgba(13, 12, 12, 0));
+  background: radial-gradient(closest-side, rgba(23, 15, 10, 0.9), rgba(23, 15, 10, 0));
   pointer-events: none;
 }
 .hero__title {
@@ -251,7 +252,7 @@ canvas {
 }
 .room--shop .room__inner {
   padding: 48px;
-  background: rgba(13, 12, 12, 0.74);
+  background: rgba(23, 15, 10, 0.74);
 }
 .room__title {
   margin: 0 0 48px;
@@ -297,7 +298,7 @@ canvas {
 .room__content .wp-block-table th {
   padding: 12px 0;
   border: 0;
-  border-bottom: 1px solid rgba(243, 240, 234, 0.16);
+  border-bottom: 1px solid rgba(241, 226, 160, 0.2);
   text-align: left;
   vertical-align: top;
 }
@@ -314,10 +315,10 @@ canvas {
 .room__content .wp-block-details {
   margin: 0;
   padding: 16px 0;
-  border-top: 1px solid rgba(243, 240, 234, 0.16);
+  border-top: 1px solid rgba(241, 226, 160, 0.2);
 }
 .room__content .wp-block-details:last-of-type {
-  border-bottom: 1px solid rgba(243, 240, 234, 0.16);
+  border-bottom: 1px solid rgba(241, 226, 160, 0.2);
 }
 .room__content .wp-block-details summary {
   display: flex;
@@ -420,7 +421,7 @@ html {
   padding: 0;
   border: 1px solid var(--jos-ink);
   border-radius: 50%;
-  background: rgba(13, 12, 12, 0.55);
+  background: rgba(23, 15, 10, 0.55);
   color: var(--jos-ink);
   cursor: pointer;
   transition: background-color 200ms ease, color 200ms ease;
