@@ -365,9 +365,9 @@ canvas {
 		position: absolute;
 		// always on the left, on the empty paper next to the building, in Arabic too
 		left: clamp(#{s(5)}, 6vw, #{s(9)});
-		bottom: clamp(#{s(6)}, 10vh, #{s(9)});
+		bottom: clamp(#{s(5)}, 6vw, #{s(9)});   // as far from the bottom as from the left (the name in the header)
 		max-width: 34rem;
-		padding-inline-end: s(5);
+		padding-right: s(5);   // physical: the text stays flush with the left edge in Arabic too
 		pointer-events: none;
 
 		.button {
@@ -385,8 +385,9 @@ canvas {
 		}
 	}
 
+	// one word per line
 	&__title {
-		max-width: 8.5em;   // always two lines: "your confidence / starts here"
+		width: min-content;
 		margin: 0 0 s(4);
 		font-size: clamp(2rem, 4.2vw, 3.75rem);
 		font-weight: 400;
@@ -394,12 +395,17 @@ canvas {
 		letter-spacing: -0.01em;
 	}
 
+	&__brand {
+		display: block;
+		text-transform: uppercase;
+	}
+
+	// written as it stands: BARBERSHOP in 1060 VIENNA
 	&__meta {
-		margin: 0 0 s(6);
+		margin: 0;
 		color: var(--jos-muted);
 		font-size: $size-meta;
 		letter-spacing: 0.24em;
-		text-transform: uppercase;
 	}
 }
 

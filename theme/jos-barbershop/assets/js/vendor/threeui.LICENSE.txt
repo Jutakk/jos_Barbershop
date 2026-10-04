@@ -1,5 +1,5 @@
-assets/js/scene.js adapts the Animated Top Dock (retro) of @designcodeio/threeui 1.2.0:
-the proximity spring of topDockController.js and the field shader of retroPixelField.js (palette in browns).
+assets/js/scene.js adapts the proximity spring of the Animated Top Dock of @designcodeio/threeui 1.2.0
+(topDockController.js) for the menu buttons on the cornice.
 
 MIT License
 

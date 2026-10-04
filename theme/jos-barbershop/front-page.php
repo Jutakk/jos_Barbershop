@@ -40,11 +40,12 @@ foreach ( jos_rooms() as $jos_room ) {
 
 	<section class="hero" aria-labelledby="hero-title">
 		<div class="hero__content">
+			<?php // one word per line: JO'S / your / confidence / starts / here; the booking button is on the contact page ?>
 			<h1 id="hero-title" class="hero__title" data-reveal>
-				<span class="visually-hidden">Jo&rsquo;s Barbershop. </span><?php echo esc_html( jos_t( 'your confidence starts here' ) ); ?>
+				<span class="hero__brand">Jo&rsquo;s</span><span class="visually-hidden"> Barbershop.</span>
+				<?php echo esc_html( jos_t( 'your confidence starts here' ) ); ?>
 			</h1>
-			<p class="hero__meta" data-reveal><?php echo esc_html( jos_t( 'Barbershop in 1060 Wien' ) ); ?></p>
-			<?php jos_booking_button(); ?>
+			<p class="hero__meta" data-reveal><?php echo esc_html( jos_t( 'BARBERSHOP in 1060 VIENNA' ) ); ?></p>
 		</div>
 	</section>
 

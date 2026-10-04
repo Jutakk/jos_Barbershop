@@ -295,9 +295,9 @@ canvas {
 .hero__content {
   position: absolute;
   left: clamp(24px, 6vw, 96px);
-  bottom: clamp(32px, 10vh, 96px);
+  bottom: clamp(24px, 6vw, 96px);
   max-width: 34rem;
-  padding-inline-end: 24px;
+  padding-right: 24px;
   pointer-events: none;
 }
 .hero__content .button {
@@ -312,19 +312,22 @@ canvas {
   pointer-events: none;
 }
 .hero__title {
-  max-width: 8.5em;
+  width: min-content;
   margin: 0 0 16px;
   font-size: clamp(2rem, 4.2vw, 3.75rem);
   font-weight: 400;
   line-height: 1.05;
   letter-spacing: -0.01em;
 }
+.hero__brand {
+  display: block;
+  text-transform: uppercase;
+}
 .hero__meta {
-  margin: 0 0 32px;
+  margin: 0;
   color: var(--jos-muted);
   font-size: 12px;
   letter-spacing: 0.24em;
-  text-transform: uppercase;
 }
 
 .room {

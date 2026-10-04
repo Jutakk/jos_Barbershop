@@ -113,14 +113,12 @@ const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
-// The buttons behave like the retro Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a
-// proximity spring widens the cell under the pointer and its neighbours while the strip keeps its length
-// (topDockController.js), every cell is the ordered-dither pixel field of retroPixelField.js in browns, and
-// CRT scanlines lie over it. The labels are in the font of the site.
-const DOCK = { proximity: 132, spring: 0.19, damping: 0.7, widthGrowth: 54, pixelSize: 3, levels: 6, noise: 1, speed: 1, scanlines: 0.32 };
-const DOCK_PALETTE = ['#1c1009', '#2b180c', '#3d2210', '#5b3517', '#6f4420', '#8a5a2e', '#a87a48', '#c9a66b'];   // dark to light
-const DOCK_INK = { rest: '#e8d9bf', near: '#fff4d6', pressed: '#2b1d14' };
-const DOCK_PAPER = '#ece8df';      // the current language: the paper state
+// The buttons stretch like the Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a proximity
+// spring widens the button under the pointer and its neighbours while the row keeps its length
+// (topDockController.js). Every button is plain brown with light letters in the font of the site.
+const DOCK = { proximity: 132, spring: 0.19, damping: 0.7, widthGrowth: 54 };
+const DOCK_COLOR = '#5b3517';      // brown, same as FACADE_COLOR
+const DOCK_INK = '#ece8df';        // light paper colour
 const BLOCK_PAD = 22;              // px of the canvas left and right of the letters
 
 const root = document.querySelector('[data-scene]');
@@ -348,28 +346,14 @@ if (root) {
 			side: THREE.DoubleSide,
 			fog,
 		});
-		// ---- a dock cell: the field of retroPixelField.js computed on the cell's own pixel grid (uRes field
-		// pixels, pixelSize screen px each), the palette in browns; the label centred and never stretched when
-		// the cell widens; CRT scanlines at screen resolution, one dark css px row of every three
-		const dockTime = { value: 0 };
+		// ---- a button of the dock: plain brown, the label centred and never stretched when the button widens
 		const dockMaterial = (label) => new THREE.ShaderMaterial({
 			uniforms: {
-				uTime: dockTime,
-				uNoise: { value: DOCK.noise },
-				uLevels: { value: DOCK.levels },
-				uRes: { value: new THREE.Vector2(32, 4) },
 				uLabel: { value: label },
 				uScale: { value: 1 },
-				uNear: { value: 0 },
-				uPressed: { value: 0 },
 				uOpacity: { value: 0 },
-				uScan: { value: DOCK.scanlines },
-				uDpr: { value: 1 },
-				uPalette: { value: DOCK_PALETTE.map((hex) => new THREE.Color(hex)) },
-				uInkRest: { value: new THREE.Color(DOCK_INK.rest) },
-				uInkNear: { value: new THREE.Color(DOCK_INK.near) },
-				uInkPressed: { value: new THREE.Color(DOCK_INK.pressed) },
-				uPaper: { value: new THREE.Color(DOCK_PAPER) },
+				uColor: { value: new THREE.Color(DOCK_COLOR) },
+				uInk: { value: new THREE.Color(DOCK_INK) },
 			},
 			vertexShader: `
 				varying vec2 vUv;
@@ -378,86 +362,16 @@ if (root) {
 					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 				}`,
 			fragmentShader: `
-				uniform vec2 uRes;
-				uniform float uTime;
-				uniform float uNoise;
-				uniform float uLevels;
 				uniform sampler2D uLabel;
 				uniform float uScale;
-				uniform float uNear;
-				uniform float uPressed;
 				uniform float uOpacity;
-				uniform float uScan;
-				uniform float uDpr;
-				uniform vec3 uPalette[8];
-				uniform vec3 uInkRest;
-				uniform vec3 uInkNear;
-				uniform vec3 uInkPressed;
-				uniform vec3 uPaper;
+				uniform vec3 uColor;
+				uniform vec3 uInk;
 				varying vec2 vUv;
-
-				float hash(vec2 p){ p = fract(p * vec2(127.1, 311.7)); p += dot(p, p + 34.23); return fract(p.x * p.y); }
-
-				float vnoise(vec2 p){
-					vec2 i = floor(p), f = fract(p);
-					f = f * f * (3.0 - 2.0 * f);
-					float a = hash(i), b = hash(i + vec2(1.0, 0.0)), c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
-					return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-				}
-
-				float fbm(vec2 p){
-					float sum = 0.0, amp = 0.5;
-					for (int i = 0; i < 5; i++){ sum += amp * vnoise(p); p = p * 2.03 + 11.7; amp *= 0.5; }
-					return sum;
-				}
-
-				float bayer2(vec2 a){ a = floor(a); return fract(a.x * 0.5 + a.y * a.y * 0.75); }
-				float bayer4(vec2 a){ return bayer2(a * 0.5) * 0.25 + bayer2(a); }
-				float bayer8(vec2 a){ return bayer4(a * 0.5) * 0.25 + bayer2(a); }
-
-				vec3 stop(float index){
-					if (index < 0.5) return uPalette[0];
-					if (index < 1.5) return uPalette[1];
-					if (index < 2.5) return uPalette[2];
-					if (index < 3.5) return uPalette[3];
-					if (index < 4.5) return uPalette[4];
-					if (index < 5.5) return uPalette[5];
-					if (index < 6.5) return uPalette[6];
-					return uPalette[7];
-				}
-
 				void main(){
-					vec2 pixel = floor(vUv * uRes) + 0.5;   // the field pixel, as gl_FragCoord.xy in the authored canvas
-					vec2 uv = pixel / uRes;
-					float t = uTime;
-
-					vec2 cloud = vec2(uv.x * 3.4, uv.y * 2.1);
-					float weather = fbm(cloud + vec2(t * 0.055, t * -0.021));
-					weather = mix(weather, fbm(cloud * 1.9 + vec2(-t * 0.032, t * 0.044)), 0.42);
-
-					float sky = smoothstep(0.98, 0.20, uv.y) * 0.36;
-					float heat = smoothstep(0.60, 0.16, uv.y) * 0.32;
-					float ground = smoothstep(0.26, 0.08, uv.y);
-					float sun = smoothstep(0.38, 0.0, length((uv - vec2(0.5, 0.29)) * vec2(0.70, 1.5))) * 0.20;
-					float field = 0.11 + sky + heat + sun - ground * 0.80 + (weather - 0.5) * 0.82 * uNoise;
-
-					float grain = hash(floor(pixel) + floor(t * 12.0)) - 0.5;
-					field += grain * 0.055 * uNoise;
-					field *= 1.0 - 0.34 * smoothstep(0.45, 1.05, length((uv - vec2(0.5, 0.46)) * vec2(1.06, 1.0)));
-					field += 0.16 * uNear;   // a cell near the pointer lights up, as the authored near state
-
-					float levels = max(uLevels, 2.0);
-					float dither = bayer8(pixel) - 0.5;
-					float quantised = clamp(field + dither / levels, 0.0, 0.9999);
-					vec3 color = stop(floor(quantised * levels) * (7.0 / (levels - 1.0)));
-					color = mix(color, uPaper, uPressed);
-
 					float u = (vUv.x - 0.5) * uScale + 0.5;
 					float ink = (u >= 0.0 && u <= 1.0) ? texture2D(uLabel, vec2(u, vUv.y)).a : 0.0;
-					color = mix(color, mix(mix(uInkRest, uInkNear, uNear), uInkPressed, uPressed), ink);
-
-					float line = mod(floor(gl_FragCoord.y / uDpr), 3.0) < 1.0 ? 0.42 * min(uScan * 1.5, 1.0) : 0.0;
-					gl_FragColor = vec4(color * (1.0 - line), uOpacity);
+					gl_FragColor = vec4(mix(uColor, uInk, ink), uOpacity);
 				}`,
 			transparent: true,
 			depthWrite: false,
@@ -569,7 +483,7 @@ if (root) {
 				const length = (row.height * width) / TEXT_CANVAS_HEIGHT;
 				return {
 					...piece, row, block, texture, length, base: length, glow: { value: piece.current ? 1 : 0 },
-					value: 0, velocity: 0, target: 0, near: false,
+					value: 0, velocity: 0, target: 0,
 				};
 			});
 			if (rtl) words.reverse();
@@ -832,9 +746,9 @@ if (root) {
 			});
 		};
 
-		// ---- the dock (topDockController.js): every cell springs towards its target, the pointer's closeness
-		// along the strip (smoothstep over DOCK.proximity screen px) or the keyboard focus (1, neighbours 0.24);
-		// the cells share the strip's length in proportion to their widths plus DOCK.widthGrowth px each
+		// ---- the dock (topDockController.js): every button springs towards its target, the pointer's closeness
+		// along the row (smoothstep over DOCK.proximity screen px) or the keyboard focus (1, neighbours 0.24);
+		// the buttons share the row's length in proportion to their widths plus DOCK.widthGrowth px each
 		const dockScreen = new THREE.Vector3();
 		const toScreen = (z, y) => {
 			dockScreen.set(wallX + MENU_ROW.depth, y, z).applyMatrix4(sign.matrixWorld).project(camera);
@@ -849,14 +763,8 @@ if (root) {
 			const screen = cells.map((cell) => {
 				const from = toScreen(cell.from, middle);
 				const to = toScreen(cell.to, middle);
-				const top = toScreen((cell.from + cell.to) / 2, MENU_ROW.top);
-				const bottom = toScreen((cell.from + cell.to) / 2, MENU_ROW.top - MENU_ROW.height);
 				const width = Math.max(1, Math.hypot(to.x - from.x, to.y - from.y));
-				return {
-					x: (from.x + to.x) / 2, y: (from.y + to.y) / 2, width,
-					height: Math.max(1, Math.hypot(top.x - bottom.x, top.y - bottom.y)),
-					perUnit: width / Math.max(cell.to - cell.from, 1e-4),
-				};
+				return { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2, perUnit: width / Math.max(cell.to - cell.from, 1e-4) };
 			});
 			// the strip's own axis on the screen
 			const first = screen[0];
@@ -875,7 +783,6 @@ if (root) {
 				} else {
 					cell.target = 0;
 				}
-				cell.near = cell.target > 0.08;
 				cell.velocity += (cell.target - cell.value) * DOCK.spring;
 				cell.velocity *= DOCK.damping;
 				cell.value += cell.velocity;
@@ -893,12 +800,7 @@ if (root) {
 				cell.to = along + length;
 				cell.mesh.scale.x = length;
 				cell.mesh.position.z = along + length / 2;
-				const { uniforms } = cell.mesh.material;
-				uniforms.uScale.value = length / cell.base;
-				uniforms.uNear.value = cell.near ? 1 : 0;
-				uniforms.uPressed.value = cell.current ? 1 : 0;
-				uniforms.uRes.value.set(Math.max(2, Math.round((screen[i].perUnit * length) / DOCK.pixelSize)), Math.max(2, Math.round(screen[i].height / DOCK.pixelSize)));
-				uniforms.uDpr.value = renderer.getPixelRatio();
+				cell.mesh.material.uniforms.uScale.value = length / cell.base;
 				along += length + MENU_ROW.gap;
 			});
 		};
@@ -949,7 +851,6 @@ if (root) {
 			const dt = lastTime === null ? 0 : Math.min((now - lastTime) / 1000, 0.1);
 			lastTime = now;
 			state.angle += TURN_SPEED * dt;
-			dockTime.value += Math.min(0.096, dt) * DOCK.speed;
 			ribbons.forEach((ribbon) => {
 				ribbon.texture.offset.x = (ribbon.texture.offset.x + (ribbonSpeed.value / ribbon.repeat) * dt) % 1;
 			});
