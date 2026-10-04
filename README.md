@@ -118,7 +118,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Rub svakog luka (između dva luka kamenova) je smeđ, a po njemu u boji papira teče traka s imenom stranice, npr. `LEISTUNGEN  ·`: gore uz
   lijevi dovratak, preko luka i dolje uz desni. Kad se fasada iscrta, traka jednom brzo protrči okolo, uspori
   i dalje teče polako.
-- Cijeli prozor ili cijela vrata su gumb: pod mišem se otvor ispuni prozirnom blijedo žutom, linije luka i
+- Cijeli prozor ili cijela vrata su gumb: pod mišem se otvor ispuni bijelom, linije luka i
   traka zasvijetle, pokazivač postane ruka.
 - Klik na prozor ili vrata (ili na stavku izbornika u zaglavlju, ili na bilo koji link `#leistungen`, `#ueber-uns`, `#galerie`,
   `#kontakt`): kamera u oko 1,5 sekundi preleti pred luk i uđe kroz njega, a stranica se otvori preko cijelog
