@@ -153,14 +153,14 @@ canvas {
 .has-arches .site-header::before {
   display: none;
 }
-.site-header__brand, .site-header__nav a {
+.site-header__nav a {
   font-size: 12px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   text-decoration: none;
   pointer-events: auto;
 }
-.site-header__brand:focus-visible, .site-header__nav a:focus-visible {
+.site-header__nav a:focus-visible {
   outline: 2px solid var(--jos-accent);
   outline-offset: 4px;
 }
@@ -226,13 +226,6 @@ canvas {
 }
 .site-header__nav a:lang(ar) {
   letter-spacing: 0;
-}
-@media (max-width: 767px) {
-  .site-header__languages {
-    position: absolute;
-    top: 16px;
-    inset-inline-end: 24px;
-  }
 }
 
 .journey {

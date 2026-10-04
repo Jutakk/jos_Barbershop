@@ -143,7 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			view.arch = room.arch;
 			html.classList.add('is-away');
 		});
-		if (heroContent) tl.to(heroContent, { autoAlpha: 0, y: -24, duration: time(0.4), ease: 'power2.in' }, 0);
+		// only its opacity: its place is drawn by scene.js, stuck to the house
+		if (heroContent) tl.to(heroContent, { autoAlpha: 0, duration: time(0.4), ease: 'power2.in' }, 0);
 		tl.to(view, { t: 1, duration: FLY_IN, ease: 'power2.inOut', onUpdate: sendView }, 0);
 		tl.call(() => showRoom(room), null, Math.max(FLY_IN - time(0.2), 0));
 		tl.fromTo(room.el, { opacity: 0 }, { opacity: 1, duration: FADE_IN, ease: 'power1.out' }, '>');
@@ -174,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 		if (toStreet && heroContent) {
 			tl.call(() => html.classList.remove('is-away'));
-			tl.to(heroContent, { autoAlpha: 1, y: 0, duration: time(0.5), ease: 'power2.out' });
+			tl.to(heroContent, { autoAlpha: 1, duration: time(0.5), ease: 'power2.out' });
 		}
 		return tl;
 	};

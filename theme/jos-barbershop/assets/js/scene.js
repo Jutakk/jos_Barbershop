@@ -114,7 +114,7 @@ const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap
 // runs to the right; it is never faded by the fog. Every link is a button: light letters in a brown block.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
-const HERO_TEXT_GAP = 6;           // px between the ends of the hero lines and the left edge of the house
+const HERO_TEXT_GAP = 26;          // px (7 mm) between the ends of the hero lines and the left edge of the house
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.13 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
 // The buttons stretch like the Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a proximity
 // spring widens the button under the pointer and its neighbours while the row keeps its length
@@ -660,12 +660,22 @@ if (root) {
 			placeHeroText();
 		};
 
-		// ---- the hero text stands against the bottom left corner of the house in the first view: set flush
-		// right, every line ends HERO_TEXT_GAP px left of the house, the last line stands on the ground line. Where there is no room for it
-		// (narrow screens) it keeps its place at the bottom left of the screen (style.scss).
+		// ---- the hero text is stuck to the house in space. In the first view it stands upright and flat next to
+		// the bottom left corner of the house: set flush right, every line ends HERO_TEXT_GAP px (7 mm) left of
+		// the house, the last line on the ground line. That rectangle is fixed as a plane in space, facing the
+		// first view; when the building is turned or moved, the plane goes with it and the text is drawn in
+		// perspective onto it (a CSS matrix3d, the text stays real text). Where there is no room for it in the
+		// first view (narrow screens) it keeps its place at the bottom left of the screen (style.scss).
 		const heroCamera = new THREE.PerspectiveCamera();
 		const corner = new THREE.Vector3();
 		const heroContent = document.querySelector('.hero__content');
+		const heroHolder = heroContent ? heroContent.parentElement : null;
+		const heroPlate = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];   // top left, top right, bottom right, bottom left
+		const heroPlateSize = { w: 0, h: 0, on: false };
+		const plane = new THREE.Plane();
+		const facing = new THREE.Vector3();
+		const ndc = new THREE.Vector2();
+		const unproject = new THREE.Raycaster();
 		const placeHeroText = () => {
 			if (!heroContent) return;
 			const w = root.clientWidth;
@@ -676,15 +686,76 @@ if (root) {
 			heroCamera.lookAt(hero.target);
 			heroCamera.updateProjectionMatrix();
 			heroCamera.updateMatrixWorld();
-			corner.set(wallX, FACADE_ARCH.ground, BUILDING_LEFT).applyMatrix4(sign.matrixWorld).project(heroCamera);
-			const x = (corner.x + 1) * 0.5 * w;
-			const y = (1 - corner.y) * 0.5 * h;
-			const fits = x - HERO_TEXT_GAP - heroContent.offsetWidth >= 16 && y > heroContent.offsetHeight + 80 && y <= h;
-			const style = document.documentElement.style;
+			corner.set(wallX, FACADE_ARCH.ground, BUILDING_LEFT).applyMatrix4(sign.matrixWorld);
+			const screen = corner.clone().project(heroCamera);
+			const x = (screen.x + 1) * 0.5 * w;
+			const y = (1 - screen.y) * 0.5 * h;
+			const textW = heroContent.offsetWidth;
+			const textH = heroContent.offsetHeight;
+			const fits = x - HERO_TEXT_GAP - textW >= 16 && y > textH + 80 && y <= h;
+			heroPlateSize.on = fits;
 			document.documentElement.classList.toggle('has-house-corner', fits);
-			style.setProperty('--house-x', `${Math.round(x - HERO_TEXT_GAP)}px`);
-			style.setProperty('--house-y', `${Math.round(y)}px`);
+			if (!fits) {
+				heroContent.style.transform = '';
+				if (heroHolder) heroHolder.style.visibility = '';
+				return;
+			}
+			// the rectangle of the text in the first view, put onto the plane through the corner that faces it
+			heroPlateSize.w = textW;
+			heroPlateSize.h = textH;
+			heroCamera.getWorldDirection(facing);
+			plane.setFromNormalAndCoplanarPoint(facing, corner);
+			const right = x - HERO_TEXT_GAP;
+			[[right - textW, y - textH], [right, y - textH], [right, y], [right - textW, y]].forEach(([px, py], i) => {
+				ndc.set((px / w) * 2 - 1, -(py / h) * 2 + 1);
+				unproject.setFromCamera(ndc, heroCamera);
+				unproject.ray.intersectPlane(plane, heroPlate[i]);
+			});
+			drawHeroText();
 		};
+
+		// every frame: the corners of the plane on the screen, and the projective map of the text onto them
+		const heroPlateScreen = new THREE.Vector3();
+		const drawHeroText = () => {
+			if (!heroContent || !heroPlateSize.on) return;
+			const w = root.clientWidth;
+			const h = root.clientHeight;
+			const q = [];
+			for (const point of heroPlate) {
+				heroPlateScreen.copy(point).applyMatrix4(camera.matrixWorldInverse);
+				if (heroPlateScreen.z > -camera.near) {
+					// behind the camera (inside an arch): not shown
+					if (heroHolder) heroHolder.style.visibility = 'hidden';
+					return;
+				}
+				heroPlateScreen.applyMatrix4(camera.projectionMatrix);
+				q.push([(heroPlateScreen.x + 1) * 0.5 * w, (1 - heroPlateScreen.y) * 0.5 * h]);
+			}
+			if (heroHolder) heroHolder.style.visibility = '';
+			// unit square (0,0) (1,0) (1,1) (0,1) to the quad (Heckbert), then scaled to the size of the text
+			const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
+			const dx1 = x1 - x2;
+			const dx2 = x3 - x2;
+			const dx3 = x0 - x1 + x2 - x3;
+			const dy1 = y1 - y2;
+			const dy2 = y3 - y2;
+			const dy3 = y0 - y1 + y2 - y3;
+			const den = dx1 * dy2 - dx2 * dy1;
+			const g = den ? (dx3 * dy2 - dx2 * dy3) / den : 0;
+			const k = den ? (dx1 * dy3 - dx3 * dy1) / den : 0;
+			const a = x1 - x0 + g * x1;
+			const b = x3 - x0 + k * x3;
+			const d = y1 - y0 + g * y1;
+			const e = y3 - y0 + k * y3;
+			const tw = heroPlateSize.w;
+			const th = heroPlateSize.h;
+			const m = [a / tw, d / tw, 0, g / tw, b / th, e / th, 0, k / th, 0, 0, 1, 0, x0, y0, 0, 1];
+			heroContent.style.transform = `matrix3d(${m.map((v) => +v.toFixed(8)).join(',')})`;
+		};
+		if (heroContent) {
+			new ResizeObserver(() => placeHeroText()).observe(heroContent);
+			if (document.fonts) document.fonts.ready.then(() => placeHeroText());
+		}
 
 		// ---- camera: in the street the hero view turned and moved along the wall; through an arch one smooth
 		// curve from there past the framed view in front of the arch straight in through it. The view turns
@@ -865,6 +936,7 @@ if (root) {
 			disc.rotation.y = state.angle;
 			placeCamera();
 			camera.updateMatrixWorld();
+			drawHeroText();
 			placeDock();
 			placeTexts();
 			composer.render();

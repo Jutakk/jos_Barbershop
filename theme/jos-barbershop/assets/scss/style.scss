@@ -172,8 +172,7 @@ canvas {
 
 // ---------- header
 
-// the name stays in the same place in every language and whatever the menu next to it does: always on the
-// left, at the top
+// the header holds only the menu (no name: the name is in the hero text); always left to right, at the top
 .site-header {
 	position: fixed;
 	top: 0;
@@ -204,7 +203,6 @@ canvas {
 		}
 	}
 
-	&__brand,
 	&__nav a {
 		font-size: $size-meta;
 		letter-spacing: 0.24em;
@@ -218,7 +216,7 @@ canvas {
 		}
 	}
 
-	// on phones the arches are small: the menu stays, in a second row under the name
+	// on phones the arches are small: the menu stays in the header
 	@media (max-width: $bp-tablet - 1) {
 		flex-wrap: wrap;
 		gap: s(2);
@@ -289,14 +287,7 @@ canvas {
 		}
 	}
 
-	// DE EN AR; on phones up in the row of the name
-	&__languages {
-		@media (max-width: $bp-tablet - 1) {
-			position: absolute;
-			top: s(4);
-			inset-inline-end: s(5);
-		}
-	}
+	// DE EN AR, at the end of the menu
 }
 
 // ---------- front page: the scene stays fixed behind the hero and the pages
@@ -389,8 +380,10 @@ canvas {
 	}
 
 	&__title {
+		--title: clamp(2rem, 4.2vw, 3.75rem);
+
 		margin: 0 0 s(4);
-		font-size: clamp(2rem, 4.2vw, 3.75rem);
+		font-size: var(--title);
 		font-weight: 400;
 		line-height: 1.05;
 		letter-spacing: -0.01em;
@@ -401,9 +394,9 @@ canvas {
 		display: block;
 	}
 
-	// JO'S above the slogan: small, like the line below it
+	// JO'S above the slogan: small, like the line below it, just above "your"
 	&__brand {
-		margin-bottom: s(3);
+		margin-bottom: calc(var(--title) * -0.26);
 		color: var(--jos-muted);
 		font-size: $size-meta;
 		line-height: 1.6;
@@ -839,12 +832,17 @@ canvas {
 	position: fixed;
 }
 
+// the hero text stuck to the house (scene.js): the box sits at the top left of the screen and scene.js maps it
+// in perspective onto its place next to the house (transform: matrix3d)
 .has-house-corner .hero__content {
-	right: calc(100% - var(--house-x));
-	bottom: calc(100% - var(--house-y));
-	left: auto;
+	top: 0;
+	right: auto;
+	bottom: auto;
+	left: 0;
 	padding-right: 0;
-	text-align: right;   // every line ends at the left edge of the house
+	text-align: right;   // every line ends at the same distance from the left edge of the house
+	transform-origin: 0 0;
+	will-change: transform;
 }
 
 // the spacing after the last letter would leave a gap at the end of the small lines

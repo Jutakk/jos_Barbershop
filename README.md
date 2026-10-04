@@ -145,12 +145,14 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
 
-- `front-page.php`: hero s 3D znakom; malo JO'S (kao red ispod slogana), pa riječ ispod riječi: your / confidense /
-  starts / here (natpis s izloga trgovine), ispod BARBERSHOP in 1060 VIENNA. Tekst stoji uz donji lijevi kut kuće
-  u prvom kadru, poravnat desno: svaki red završava 6 px lijevo od lijeve linije kuće, zadnji red stoji na liniji
-  tla (`scene.js` izmjeri kut na ekranu, tekst je
-  fiksiran na ekran kao i scena, pa ga ni traka administratora WordPressa ne pomiče). Gdje nema mjesta (mobitel)
-  stoji dolje lijevo na ekranu. Natpis JO'S BARBERSHOP u zaglavlju stoji uvijek lijevo gore, i na arapskom. Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
+- `front-page.php`: hero s 3D znakom; malo JO'S (kao red ispod slogana) odmah iznad slogana, pa riječ ispod riječi:
+  your / confidense / starts / here (natpis s izloga trgovine), ispod BARBERSHOP in 1060 VIENNA. Tekst je
+  zalijepljen za kuću u prostoru: u prvom kadru stoji uz donji lijevi kut kuće, poravnat desno, svaki red završava
+  7 mm (26 px) lijevo od ruba kuće, zadnji red na liniji tla. Kad se zgrada okreće, gura u dubinu ili ide uz ulicu,
+  tekst je prati i crta se u perspektivi (`scene.js`, CSS matrix3d, tekst ostaje pravi tekst). Gdje u prvom
+  kadru nema mjesta (mobitel) stoji dolje lijevo na ekranu. Zaglavlje nema natpis JO'S BARBERSHOP, samo izbornik
+  (na računalu skriven, jer je izbornik na vijencu). Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri
+  stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
   kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
   `jos:open`, klik na redak u temelju kao `jos:link`.
