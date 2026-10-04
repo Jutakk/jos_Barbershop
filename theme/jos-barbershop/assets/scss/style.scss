@@ -844,6 +844,23 @@ canvas {
 	bottom: calc(100% - var(--house-y));
 	left: auto;
 	padding-right: 0;
+	text-align: right;   // every line ends at the left edge of the house
+}
+
+// the spacing after the last letter would leave a gap at the end of the small lines
+.has-house-corner .hero__brand,
+.has-house-corner .hero__meta {
+	margin-right: -0.24em;
+}
+
+// the letters of the last line stand on the ground line
+.has-house-corner .hero__meta {
+	margin-bottom: -0.2em;
+	line-height: 1;
+
+	&:lang(ar) {
+		margin-right: 0;
+	}
 }
 
 // logged in, WordPress shows its admin bar at the top: the header goes below it
@@ -863,7 +880,7 @@ canvas {
 // ---------- Arabic (dir="rtl"): the hero text stays on the left like in German, on the empty paper next to
 // the building; the letters are joined, so no spacing between them anywhere
 
-[dir="rtl"] .hero__content {
+[dir="rtl"]:not(.has-house-corner) .hero__content {
 	text-align: left;
 }
 

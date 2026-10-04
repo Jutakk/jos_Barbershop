@@ -686,6 +686,20 @@ canvas {
   bottom: calc(100% - var(--house-y));
   left: auto;
   padding-right: 0;
+  text-align: right;
+}
+
+.has-house-corner .hero__brand,
+.has-house-corner .hero__meta {
+  margin-right: -0.24em;
+}
+
+.has-house-corner .hero__meta {
+  margin-bottom: -0.2em;
+  line-height: 1;
+}
+.has-house-corner .hero__meta:lang(ar) {
+  margin-right: 0;
 }
 
 .admin-bar .site-header {
@@ -701,7 +715,7 @@ canvas {
   direction: rtl;
 }
 
-[dir=rtl] .hero__content {
+[dir=rtl]:not(.has-house-corner) .hero__content {
   text-align: left;
 }
 

@@ -114,7 +114,7 @@ const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap
 // runs to the right; it is never faded by the fog. Every link is a button: light letters in a brown block.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
-const HERO_TEXT_GAP = 16;          // px between the hero text and the left edge of the house
+const HERO_TEXT_GAP = 6;           // px between the ends of the hero lines and the left edge of the house
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.13 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
 // The buttons stretch like the Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a proximity
 // spring widens the button under the pointer and its neighbours while the row keeps its length
@@ -660,8 +660,8 @@ if (root) {
 			placeHeroText();
 		};
 
-		// ---- the hero text stands against the bottom left corner of the house in the first view: its bottom on
-		// the ground line, its right edge HERO_TEXT_GAP px left of the house. Where there is no room for it
+		// ---- the hero text stands against the bottom left corner of the house in the first view: set flush
+		// right, every line ends HERO_TEXT_GAP px left of the house, the last line stands on the ground line. Where there is no room for it
 		// (narrow screens) it keeps its place at the bottom left of the screen (style.scss).
 		const heroCamera = new THREE.PerspectiveCamera();
 		const corner = new THREE.Vector3();

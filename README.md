@@ -147,7 +147,8 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 - `front-page.php`: hero s 3D znakom; malo JO'S (kao red ispod slogana), pa riječ ispod riječi: your / confidense /
   starts / here (natpis s izloga trgovine), ispod BARBERSHOP in 1060 VIENNA. Tekst stoji uz donji lijevi kut kuće
-  u prvom kadru: dno na liniji tla, desni rub 16 px lijevo od kuće (`scene.js` izmjeri kut na ekranu, tekst je
+  u prvom kadru, poravnat desno: svaki red završava 6 px lijevo od lijeve linije kuće, zadnji red stoji na liniji
+  tla (`scene.js` izmjeri kut na ekranu, tekst je
   fiksiran na ekran kao i scena, pa ga ni traka administratora WordPressa ne pomiče). Gdje nema mjesta (mobitel)
   stoji dolje lijevo na ekranu. Natpis JO'S BARBERSHOP u zaglavlju stoji uvijek lijevo gore, i na arapskom. Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
