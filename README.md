@@ -73,9 +73,10 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Nakon stranice kamera izađe iz luka, vrati se na ulicu u prvi kadar sa znakom i odande prijeđe do
   sljedećeg luka i uđe u njega.
 - Redom: Leistungen & Preise (izlog desno), Über uns (vrata), Galerie, Kontakt (izlog lijevo).
-- Kroz vrata kamera ulazi u lokal: 360 fotografija lokala oko kamere (`images/google-maps-28.webp`, 2048 x 1024).
-  Ostaje prava fotografija: za web je samo povećana na dvostruku veličinu i vrlo blago izoštrena, bez AI-ja
-  (`tools/panorama.py`): `lokal-360.webp` (4096 px) za računala, `lokal-360-mobile.webp` (2048 px) za mobitele. Pogled prvo ide ravno u lokal, prema stolicama
+- Kroz vrata kamera ulazi u lokal: 360 fotografija lokala oko kamere (`images/google-maps-28.webp`, 8192 x 4096).
+  Fotografija ostaje kakva jest, bez izoštravanja (`tools/panorama.py`): `lokal-360.webp` (8192 px, 1,1 MB) za
+  računala, `lokal-360-mobile.webp` (4096 px, 0,6 MB) za mobitele. Učitava se tek kad kamera krene niz ulicu,
+  pa ne ulazi u budžet prvog učitavanja. Pogled prvo ide ravno u lokal, prema stolicama
   i ogledalima, s ulazom iza leđa, i sa scrollom se okrene jednom u krug. Stranica Über uns dolazi preko lokala
   na tamnom staklu. Unutra se kut gledanja proširi s 30 na 70 stupnjeva.
 - Bez animacija (prefers-reduced-motion) kamera stoji na prvom kadru, a stranice slijede jedna za drugom.
@@ -101,6 +102,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.3.7: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+Status 0.3.8: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
 s 360 fotografijom. Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 

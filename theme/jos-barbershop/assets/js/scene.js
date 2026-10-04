@@ -57,7 +57,7 @@ const FRAME = {
 const EYE_HEIGHT = (FRAME.bottom + FRAME.top) / 2;
 const INSIDE = FACADE_ARCH.reveal + 1.4;          // how far behind the wall face the camera stops
 const PANORAMA_RADIUS = 8;
-// 360 photo of the shop (lokal-360.webp, 2:1, the real photo enlarged to twice its size). Coming in through
+// 360 photo of the shop (lokal-360.webp, 2:1, 8192 px wide, the photo as it is). Coming in through
 // the door the camera looks straight into the shop, at this part of the photo width (0 = left edge):
 // the chairs and mirrors, with the entrance behind.
 const PANORAMA_VIEW = 0.82;
@@ -214,8 +214,8 @@ if (root) {
 
 		// ---- the shop behind the door: a photo all around the camera, shown only once the camera is inside
 		const doorArch = FACADE_ARCHES.find((arch) => arch.door);
-		// 4096 px wide photo on computers, 2048 px on phones and on graphics cards that cannot take more
-		const smallPanorama = isMobile || renderer.capabilities.maxTextureSize < 4096;
+		// 8192 px wide photo on computers, 4096 px on phones and on graphics cards that cannot take more
+		const smallPanorama = isMobile || renderer.capabilities.maxTextureSize < 8192;
 		const panoramaUrl = (smallPanorama && root.dataset.panoramaMobile) || root.dataset.panorama || '';
 		let panorama = null;
 		let panoramaRequested = false;
