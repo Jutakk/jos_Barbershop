@@ -57,8 +57,12 @@ const FRAME = {
 const EYE_HEIGHT = (FRAME.bottom + FRAME.top) / 2;
 const INSIDE = FACADE_ARCH.reveal + 1.4;          // how far behind the wall face the camera stops
 const PANORAMA_RADIUS = 8;
-const PANORAMA_YAW = 0;          // rad: turns the photo of the shop so the view starts at the right place
-const PANORAMA_BRIGHTNESS = 0.86;   // below 1: the shop never blooms
+// 360 photo of the shop (lokal-360.webp, 2:1). Coming in through the door the camera looks straight into the
+// shop, at this part of the photo width (0 = left edge): the chairs and mirrors, with the entrance behind.
+const PANORAMA_VIEW = 0.82;
+const PANORAMA_BRIGHTNESS = 0.8;   // below 1: the shop never blooms and stays calm behind the text
+const PANORAMA_FOV = 62;         // wider view inside the shop
+const FOV = 30;                  // view on the street
 
 const root = document.querySelector('[data-scene]');
 
@@ -96,7 +100,7 @@ if (root) {
 		scene.add(key);
 		scene.add(new THREE.AmbientLight(0xffffff, 0.15));
 
-		const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 100);
+		const camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 100);
 
 		// ---- materials
 		const metal = new THREE.MeshStandardMaterial({ color: 0x0b0b0c, metalness: 0.85, roughness: 0.3, envMap: reflections, envMapIntensity: 0.6, fog: false });
@@ -227,7 +231,7 @@ if (root) {
 			panorama.renderOrder = 10;   // over the facade lines and the sign
 			panorama.visible = false;
 			panorama.position.set(wallX + INSIDE, EYE_HEIGHT, doorArch.z);
-			panorama.rotation.y = PANORAMA_YAW;
+			panorama.rotation.y = PANORAMA_VIEW * Math.PI * 2;   // that part of the photo lies in front, into the shop
 			sign.add(panorama);
 		}
 		const loadPanorama = () => {
@@ -278,7 +282,7 @@ if (root) {
 			bloom.resolution.set(w * (isMobile ? 0.5 : 1), h * (isMobile ? 0.5 : 1));
 			camera.aspect = w / h;
 			camera.updateProjectionMatrix();
-			const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+			const tan = Math.tan(THREE.MathUtils.degToRad(FOV) / 2);
 
 			// hero: the sign (disc, bracket and plate, about 3.4 wide and 2.5 high) and the facade behind it,
 			// on wide screens the sign right of centre, next to the text
@@ -345,6 +349,12 @@ if (root) {
 				const opacity = atDoor ? smooth(THREE.MathUtils.clamp((local.x - wallX) / INSIDE, 0, 1)) : 0;
 				panorama.material.opacity = opacity;
 				panorama.visible = opacity > 0.001;
+				// inside the shop the view opens up
+				const fov = FOV + (PANORAMA_FOV - FOV) * (panoramaReady ? opacity : 0);
+				if (Math.abs(camera.fov - fov) > 0.01) {
+					camera.fov = fov;
+					camera.updateProjectionMatrix();
+				}
 			}
 		};
 
