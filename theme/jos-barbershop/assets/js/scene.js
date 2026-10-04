@@ -57,11 +57,11 @@ const FRAME = {
 const EYE_HEIGHT = (FRAME.bottom + FRAME.top) / 2;
 const INSIDE = FACADE_ARCH.reveal + 1.4;          // how far behind the wall face the camera stops
 const PANORAMA_RADIUS = 8;
-// 360 photo of the shop (lokal-360.webp, 2:1). Coming in through the door the camera looks straight into the
+// 360 photo of the shop (lokal-360.webp, 2:1, sharpened to twice the size of the original). Coming in through the door the camera looks straight into the
 // shop, at this part of the photo width (0 = left edge): the chairs and mirrors, with the entrance behind.
 const PANORAMA_VIEW = 0.82;
 const PANORAMA_BRIGHTNESS = 0.8;   // below 1: the shop never blooms and stays calm behind the text
-const PANORAMA_FOV = 62;         // wider view inside the shop
+const PANORAMA_FOV = 70;         // wider view inside the shop: the photo is stretched less
 const FOV = 30;                  // view on the street
 
 const root = document.querySelector('[data-scene]');
@@ -213,7 +213,9 @@ if (root) {
 
 		// ---- the shop behind the door: a photo all around the camera, shown only once the camera is inside
 		const doorArch = FACADE_ARCHES.find((arch) => arch.door);
-		const panoramaUrl = root.dataset.panorama || '';
+		// 4096 px wide photo on computers, 2048 px on phones and on graphics cards that cannot take more
+		const smallPanorama = isMobile || renderer.capabilities.maxTextureSize < 4096;
+		const panoramaUrl = (smallPanorama && root.dataset.panoramaMobile) || root.dataset.panorama || '';
 		let panorama = null;
 		let panoramaRequested = false;
 		let panoramaReady = false;
