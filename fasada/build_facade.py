@@ -18,12 +18,16 @@ Output:
 y is up, z runs along the wall. Looking at the facade from the street, its right side comes
 towards the camera (+z), its left side goes away (-z).
 
+The street goes on beyond the building: on the right every horizontal line runs on into the distance,
+on the left only some of them. These lines are split into pieces that get longer and longer, so they
+seem to rush away like the perspective.
+
 Drawing order when the page loads, like an architect draws:
-  1. outline: the cornice lines and the ground line grow from the sign to both ends, then the edges
-     of the building are drawn from top to bottom;
+  1. outline: the cornice lines and the ground line grow from the sign to both ends and on into the
+     distance, then the left edge of the building is drawn from top to bottom;
   2. arches, one after the other, starting with the two next to the sign: each outline is drawn from
      the ground up both jambs at once and meets at the crown;
-  3. joints, arch by arch in the same order, from the top down.
+  3. joints, arch by arch in the same order, from the top down; the courses at the ends run on.
 """
 import math
 import sys
@@ -78,6 +82,12 @@ CORNICE = [
 
 ARC_STEPS = 32                  # segments of a half circle
 
+# ---- lines beyond the building
+BEYOND = 4000.0                 # px, far enough to fade out in the fog
+BEYOND_FIRST = 60.0             # first piece of such a line; every next piece is longer
+BEYOND_GROWTH = 1.6
+BEYOND_LEFT = [279.0, 284.5, 337.5, 472.0, 567.0, Y_GROUND]   # the lines that run on at the left end
+
 # ---- drawing schedule, in parts of the whole drawing (0 to 1 before normalising)
 OUTLINE_GROW = 0.30             # the longest cornice line grows from the sign to its end in this time
 EDGE_TIME = 0.08                # an edge of the building, top to bottom
@@ -90,6 +100,7 @@ JOINT_START = 0.45              # joints of the first arch
 JOINT_STAGGER = 0.09
 JOINT_CASCADE = 0.14            # joints of one arch, from the top course to the ground
 JOINT_TIME = 0.06               # one joint
+BEYOND_TIME = 0.03              # one piece of a line beyond the building
 
 
 def arch_centres():
@@ -121,14 +132,29 @@ def build():
             pts.append((cx + side * r * math.cos(a), Y_SPRING - r * math.sin(a), d))
         return pts
 
-    # 1. outline: cornice and ground grow from the sign to both ends, edges top to bottom
+    def beyond(u, v, d, direction, after):
+        """A line running on from the end of the building at u into the distance, in longer and longer pieces."""
+        pts = [(u, v, d)]
+        step, gone = BEYOND_FIRST, 0.0
+        while gone < BEYOND:
+            gone = min(BEYOND, gone + step)
+            pts.append((u + direction * gone, v, d))
+            step *= BEYOND_GROWTH
+        add('beyond', pts, end=u, v=v, after=after, arch=0 if direction < 0 else ARCH_COUNT - 1)
+
+    # 1. outline: cornice and ground grow from the sign to both ends and on, the left edge top to bottom
+    depth_at = dict(CORNICE)
     for v, d in CORNICE + [(Y_GROUND, 0.0)]:
         line('grow', ORIGIN[0], v, X_LEFT, v, d)
         line('grow', ORIGIN[0], v, X_RIGHT, v, d)
-    for u in (X_LEFT, X_RIGHT):
-        for (v1, d1), (v2, d2) in zip(CORNICE, CORNICE[1:]):
-            line('edge', u, v1, u, v2, d1, d2, end=u)
-        line('edge', u, CORNICE[-1][0], u, Y_GROUND, end=u)
+        beyond(X_RIGHT, v, d, 1, 'grow')
+    for v in BEYOND_LEFT:
+        beyond(X_LEFT, v, depth_at.get(v, 0.0), -1, 'grow' if v in depth_at or v == Y_GROUND else 'joint')
+    for (v1, d1), (v2, d2) in zip(CORNICE, CORNICE[1:]):
+        line('edge', X_LEFT, v1, X_LEFT, v2, d1, d2, end=X_LEFT)
+    line('edge', X_LEFT, CORNICE[-1][0], X_LEFT, Y_GROUND, end=X_LEFT)
+    for v in COURSES:
+        beyond(X_RIGHT, v, 0.0, 1, 'joint')
 
     # 2. arches
     for i, cx in enumerate(centres):
@@ -209,6 +235,14 @@ def schedule(strokes):
             start, duration = 0.0, stroke_length(pts) / grow_speed
         elif kind == 'edge':
             start, duration = abs(s['end'] - ORIGIN[0]) / grow_speed, EDGE_TIME
+        elif kind == 'beyond':
+            if s['after'] == 'grow':
+                start = abs(s['end'] - ORIGIN[0]) / grow_speed
+            else:
+                # after the course at the end of the building has been drawn
+                depth = (s['v'] - top) / (bottom - top)
+                start = JOINT_START + rank[s['arch']] * JOINT_STAGGER + depth * JOINT_CASCADE + JOINT_TIME
+            duration = BEYOND_TIME * (len(pts) - 1)
         elif kind == 'arch':
             start = ARCH_START + rank[s['arch']] * ARCH_STAGGER + s.get('delay', 0.0)
             duration = ARCH_TIME
@@ -225,7 +259,8 @@ def schedule(strokes):
         total = stroke_length(pts)
         t = 0.0
         for p, q in zip(pts, pts[1:]):
-            part = length3(p, q) / total
+            # lines beyond the building: every piece takes the same time, so the far pieces rush away
+            part = 1 / (len(pts) - 1) if kind == 'beyond' else length3(p, q) / total
             timed.append((p, q, start + t * duration, start + (t + part) * duration))
             t += part
     end = max(seg[3] for seg in timed)

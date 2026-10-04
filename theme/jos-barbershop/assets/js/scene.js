@@ -35,7 +35,7 @@ const FACADE_COLOR = 0xf3f0ea;   // same as --jos-ink
 const FACADE_OPACITY = 0.34;
 const FACADE_OPACITY_MOBILE = 0.24;   // on phones the wall runs behind the text
 const FACADE_FADE = [1, 24];     // the lines fade out between these distances behind the framed view
-const DRAW_DURATION = 4.5;       // s, the facade draws itself when the page loads, in the order of facade.js
+const DRAW_DURATION = 5;         // s, the facade draws itself when the page loads, in the order of facade.js
 const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left
 
 // hero view: standing in the street at eye level, the sign above and the whole ground floor down to the

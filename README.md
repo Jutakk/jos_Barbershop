@@ -41,6 +41,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Znak visi na svom stvarnom mjestu, između trećeg i četvrtog luka. Fasada je zakrenuta tako da odgovara
   položaju znaka: pločica nosača sjedi na zidu, a ulica odlazi ulijevo u dubinu, kao na `images/znak.jpg`.
 - Linije u daljini blijede u tamu i ne svijetle.
+- Ulica se nastavlja iza zgrade: na desnom kraju sve vodoravne linije idu dalje u beskonačnost, a na lijevom
+  samo neke (vijenac, dvije fuge i tlo).
 - Pri učitavanju stranice linije se iscrtaju redom, kao kad arhitekt crta: prvo vijenac i linija tla rastu od
   znaka prema oba kraja zgrade, pa rubovi zgrade, pa lukovi jedan po jedan (od dva uz znak prema van), svaki od
   tla uz oba dovratka do tjemena, a na kraju fuge, luk po luk, od vrha prema dolje.
@@ -88,6 +90,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.3.1: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+Status 0.3.2: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
 (čeka 360 sliku). Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 
