@@ -62,13 +62,32 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Boje: sve što je bilo crno je vrlo tamna smeđa, ne previše topla (`#130e0b`: pozadina, disk, nosač, tamno staklo), a linije
   fasade i tanke crte su blijedo žute (`#f1e2a0`). Svijetli logo ostaje bijel.
 
+**Kretanje uz ulicu**
+
+- Scroll (kotačić ili touchpad) vodi kameru lijevo niz ulicu prema dalekim lukovima i natrag. Kut gledanja
+  ostaje isti, pa se svaki luk može dovesti na sredinu ekrana.
+- Zgrada se može uhvatiti mišem ili prstom i pomicati: povlačenje udesno donosi ulicu s lijeve strane,
+  povlačenje prema gore spušta pogled do temelja. Brzi potez se još malo nastavi sam.
+- Strelice lijevo i desno rade isto što i scroll, strelica dolje spušta pogled do temelja, gore ga vraća.
+
+**Footer u temelju**
+
+- Footer (copyright, adresa, Impressum, Datenschutz) upisan je u temelj zgrade, ispod linije tla, u sredini
+  ispod lukova. Vidi se kad se zgrada povuče prema gore.
+- Adresa vodi na Google Maps, Impressum i Datenschutz na svoje stranice: pod mišem zasvijetle i klikaju se.
+  Impressum i Datenschutz se pojave sami čim te stranice postoje u WordPressu (`jos_footer_items()`).
+- Obični HTML footer ostaje za tipkovnicu, čitače ekrana i Google: stoji ispod ekrana i izađe kad neki
+  njegov link dobije fokus.
+
 **Lukovi su izbornik**
 
-- Prvi kadar stoji mirno, nema putovanja scrollom. Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog.
-- U rubu svakog luka (između dva luka kamenova) polako teče traka s imenom stranice, npr. `LEISTUNGEN  ·`:
-  gore uz lijevi dovratak, preko luka i dolje uz desni. Traka se pojavi na kraju iscrtavanja fasade.
-- Pokazivač miša na luku: linije tog luka i njegova traka zasvijetle, pokazivač postane ruka.
-- Klik na luk (ili na stavku izbornika u zaglavlju, ili na bilo koji link `#leistungen`, `#ueber-uns`, `#galerie`,
+- Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog.
+- U rubu svakog luka (između dva luka kamenova) teče traka s imenom stranice, npr. `LEISTUNGEN  ·`: gore uz
+  lijevi dovratak, preko luka i dolje uz desni. Kad se fasada iscrta, traka jednom brzo protrči okolo, uspori
+  i dalje teče polako.
+- Cijeli prozor ili cijela vrata su gumb: pod mišem se otvor ispuni prozirnom blijedo žutom, linije luka i
+  traka zasvijetle, pokazivač postane ruka.
+- Klik na prozor ili vrata (ili na stavku izbornika u zaglavlju, ili na bilo koji link `#leistungen`, `#ueber-uns`, `#galerie`,
   `#kontakt`): kamera u oko 1,5 sekundi preleti pred luk i uđe kroz njega, a stranica se otvori preko cijelog
   ekrana. Tekst heroja se za to vrijeme makne.
 - Natrag na ulicu: veliki X gore desno (lagano pulsira), tipka Esc, tipka Natrag u pregledniku ili ime u
@@ -95,12 +114,13 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 - `front-page.php`: hero s 3D znakom, naslov "your confidence starts here" (natpis s izloga trgovine), gumb "Termin buchen",
   četiri stranice iza lukova i X za povratak na ulicu
-- `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, kamera kroz luk, lokal iza vrata), ES modul preko
-  WordPress Script Modules API. Samo crta; klik na luk javlja kao `jos:open`.
+- `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
+  kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
+  `jos:open`, klik na redak u temelju kao `jos:link`.
 - `assets/js/facade.js`: linije prizemlja fasade s vremenima iscrtavanja, lukom kojem pripadaju i položajem lukova,
   generira ih `fasada/build_facade.py`
-- `assets/js/motion.js`: GSAP drži sve vrijednosti: put kamere kroz luk (`jos:view`), pogled u lokalu (`jos:look`),
-  otvaranje i zatvaranje stranica, adrese i tipka Natrag
+- `assets/js/motion.js`: GSAP drži sve vrijednosti: položaj na ulici (`jos:street`, scroll, povlačenje, strelice),
+  put kamere kroz luk (`jos:view`), pogled u lokalu (`jos:look`), otvaranje i zatvaranje stranica, adrese i tipka Natrag
 - Stranice iza lukova su obične WordPress stranice s adresama `leistungen`, `ueber-uns`, `galerie` i `kontakt`.
   Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu; sadržaj se piše u WordPressu.
   Izbornik u zaglavlju ih otvara kao i klik na luk.
@@ -115,7 +135,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
     radno vrijeme (Di bis Fr 10:00 bis 19:00, Sa 10:00 bis 18:00, Mo i So zatvoreno), plaćanje (gotovina, kreditna
     kartica) i FAQ sa 7 pitanja.
   - Galerie čeka fotografije.
-- Adresa stoji i u footeru. Za Google i AI tražilice naslovnica nosi HairSalon schemu (adresa, radno vrijeme,
+- Adresa stoji i u footeru (u temelju zgrade). Za Google i AI tražilice naslovnica nosi HairSalon schemu (adresa, radno vrijeme,
   plaćanje, jezici) iz `jos_shop()` u `functions.php`; promjena radnog vremena ide i tamo.
 - `assets/scss/style.scss`: izvor stilova, prevodi se u `style.css`:
   `npx sass assets/scss/style.scss style.css --style=expanded --no-source-map` (u mapi teme)
@@ -124,6 +144,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.6.0: znak na fasadi koja se iscrta pri učitavanju, lukovi s tekućim trakama kao izbornik, klik vodi kameru
-kroz luk do četiri stranice, lokal iza vrata s 360 fotografijom. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
+Status 0.7.0: znak na fasadi koja se iscrta pri učitavanju, kamera klizi uz ulicu (scroll, povlačenje), lukovi s
+tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
+iza vrata s 360 fotografijom, footer upisan u temelj. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
 

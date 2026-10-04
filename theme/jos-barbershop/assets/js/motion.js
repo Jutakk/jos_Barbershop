@@ -1,10 +1,13 @@
 /*
- * Motion layer of the front page (GSAP). The arches of the facade are the menu: a click on an arch (scene.js
- * sends 'jos:open'), on a menu link or on any link to #leistungen, #ueber-uns, #galerie or #kontakt takes the
- * camera through that arch and opens its page over the whole screen. The X, Esc or the back button of the
- * browser lead back out to the street. Behind the door is the shop: there the page stands still and dragging
- * (or the arrow keys) turns the view around the shop.
+ * Motion layer of the front page (GSAP). In the street, scrolling, dragging or the arrow keys move the camera
+ * along the facade; dragging up (or the down arrow) lowers it to the foundation, where the footer lines are
+ * cut in. The arches of the facade are the menu: a click on a window or door (scene.js sends 'jos:open'), on
+ * a menu link or on any link to #leistungen, #ueber-uns, #galerie or #kontakt takes the camera through that
+ * arch and opens its page over the whole screen. The X, Esc or the back button of the browser lead back out
+ * to the street. Behind the door is the shop: there the page stands still and dragging (or the arrow keys)
+ * turns the view around the shop.
  * GSAP owns all values and sends them to the three.js scene (scene.js), which only draws:
+ *   'jos:street'   { x, y }: x 0 = first view, 1 = down the street to the last arch; y 0 = eye level, 1 = foundation
  *   'jos:view'     { arch, t }: arch index (-1 = street), t 0 = street view, 1 = inside the arch
  *   'jos:look'     { yaw, pitch }: the view inside the shop
  */
@@ -71,14 +74,29 @@ document.addEventListener('DOMContentLoaded', () => {
 			hint.classList.remove('is-gone');
 		}
 	};
-	const turnTo = (yaw, pitch, duration = 0.6) => gsap.to(look, {
-		yaw,
-		pitch: gsap.utils.clamp(-0.7, 0.7, pitch),
-		duration: time(duration),
-		ease: 'power3.out',
-		overwrite: true,
-		onUpdate: sendLook,
-	});
+	// eases towards the new values; without motion they are there at once
+	const glide = (target, values, duration, onUpdate) => {
+		if (reduced) {
+			gsap.killTweensOf(target);
+			Object.assign(target, values);
+			onUpdate();
+			return;
+		}
+		gsap.to(target, { ...values, duration, ease: 'power3.out', overwrite: true, onUpdate });
+	};
+	const turnTo = (yaw, pitch, duration = 0.6) => glide(look, { yaw, pitch: gsap.utils.clamp(-0.7, 0.7, pitch) }, duration, sendLook);
+
+	// ---- along the street: x from a little to the right of the first view (-0.25) down to the last arch (1),
+	// y from eye level (0) down to the foundation (1)
+	const STREET_X = [-0.25, 1];
+	const street = { x: 0, y: 0 };
+	const aim = { x: 0, y: 0 };
+	const sendStreet = () => send('jos:street', { x: street.x, y: street.y });
+	const moveStreet = (dx, dy, duration = 0.9) => {
+		aim.x = gsap.utils.clamp(STREET_X[0], STREET_X[1], aim.x + dx);
+		aim.y = gsap.utils.clamp(0, 1, aim.y + dy);
+		glide(street, { x: aim.x, y: aim.y }, duration, sendStreet);
+	};
 
 	// ---- the page itself; its link in the menu is marked as the current one
 	const markMenu = (slug) => menuLinks.forEach((link) => {
@@ -239,8 +257,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	exit.addEventListener('click', close);
 
+	// a footer line in the foundation (scene.js) is a link like in the footer
+	window.addEventListener('jos:link', (event) => {
+		if (event.detail) window.location.assign(event.detail);
+	});
+
+	// ---- moving along the street: the wheel (both directions of a touchpad too) goes down the street and back
+	window.addEventListener('wheel', (event) => {
+		if (current || event.ctrlKey) return;   // an open page scrolls itself; ctrl and wheel is the zoom
+		event.preventDefault();
+		const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+		moveStreet(((event.deltaY + event.deltaX) * unit) / 1500, 0);
+	}, { passive: false });
+
+	// grab the building and move it: it follows the pointer, and a quick throw glides on a little
+	const scene = document.querySelector('[data-scene]');
+	let grab = null;
+	let skipClick = false;
+	if (scene) {
+		const across = () => (window.innerWidth > window.innerHeight ? 1 : 0.4);   // street per screen width
+		const downwards = () => (window.innerWidth > window.innerHeight ? 2 : 1);  // foundation per screen height
+		scene.addEventListener('pointerdown', (event) => {
+			if (current || event.button !== 0) return;
+			const now = performance.now();
+			grab = { id: event.pointerId, x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY, time: now, vx: 0, vy: 0, moved: false };
+		});
+		window.addEventListener('pointermove', (event) => {
+			if (!grab || event.pointerId !== grab.id) return;
+			if (!grab.moved) {
+				if (Math.hypot(event.clientX - grab.x, event.clientY - grab.y) < 6) return;
+				grab.moved = true;
+				html.classList.add('is-dragging-street');
+			}
+			const now = performance.now();
+			// dragging to the right brings the street on the left in; dragging up shows the foundation
+			const dx = ((event.clientX - grab.lastX) / window.innerWidth) * across();
+			const dy = (-(event.clientY - grab.lastY) / window.innerHeight) * downwards();
+			const dt = Math.max((now - grab.time) / 1000, 0.001);
+			grab.vx = grab.vx * 0.6 + (dx / dt) * 0.4;
+			grab.vy = grab.vy * 0.6 + (dy / dt) * 0.4;
+			grab.lastX = event.clientX;
+			grab.lastY = event.clientY;
+			grab.time = now;
+			moveStreet(dx, dy, 0.45);
+		});
+		const release = (event) => {
+			if (!grab || event.pointerId !== grab.id) return;
+			if (grab.moved) {
+				skipClick = true;   // the end of a drag is no click on a window
+				if (performance.now() - grab.time < 120) moveStreet(grab.vx * 0.25, grab.vy * 0.25, 1.2);
+				html.classList.remove('is-dragging-street');
+			}
+			grab = null;
+		};
+		window.addEventListener('pointerup', release);
+		window.addEventListener('pointercancel', release);
+		window.addEventListener('click', (event) => {
+			if (!skipClick) return;
+			skipClick = false;
+			event.stopPropagation();
+			event.preventDefault();
+		}, true);
+	}
+
 	window.addEventListener('keydown', (event) => {
-		if (!current || leaving) return;
+		if (!current) {
+			// in the street the arrow keys move along it and down to the foundation
+			const steps = { ArrowLeft: [0.08, 0], ArrowRight: [-0.08, 0], ArrowDown: [0, 0.25], ArrowUp: [0, -0.25] };
+			const typing = event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]');
+			if (steps[event.key] && !typing && !event.altKey && !event.metaKey && !event.ctrlKey) {
+				event.preventDefault();
+				moveStreet(steps[event.key][0], steps[event.key][1], 0.6);
+			}
+			return;
+		}
+		if (leaving) return;
 		const turns = { ArrowLeft: [0.35, 0], ArrowRight: [-0.35, 0], ArrowUp: [0, 0.2], ArrowDown: [0, -0.2] };
 		if (event.key === 'Escape') {
 			event.preventDefault();

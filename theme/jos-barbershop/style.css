@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.6.0
+Version: 0.7.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -221,8 +221,23 @@ canvas {
   opacity: 1;
 }
 
-.is-pointing-arch {
+.has-arches .scene {
+  cursor: grab;
+  touch-action: none;
+}
+
+.is-pointing .scene {
   cursor: pointer;
+}
+
+.is-dragging-street,
+.is-dragging-street .scene {
+  cursor: grabbing;
+}
+
+.is-dragging-street body {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .hero {
@@ -233,12 +248,15 @@ canvas {
   pointer-events: none;
 }
 .hero__content {
-  pointer-events: auto;
   position: absolute;
   left: clamp(24px, 6vw, 96px);
   bottom: clamp(32px, 10vh, 96px);
   max-width: 34rem;
   padding-right: 24px;
+  pointer-events: none;
+}
+.hero__content .button {
+  pointer-events: auto;
 }
 .hero__content::before {
   content: "";
@@ -637,6 +655,19 @@ html {
   outline: 2px solid var(--jos-accent);
   outline-offset: 3px;
 }
+.has-arches .site-footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 11;
+  background: var(--jos-bg);
+  transform: translateY(100%);
+  transition: transform 250ms ease;
+}
+.has-arches .site-footer:focus-within {
+  transform: none;
+}
 .site-footer__legal {
   display: flex;
   gap: 24px;
@@ -661,6 +692,7 @@ html {
   .scene__canvas,
   .button,
   .site-header__nav a,
+  .site-footer,
   .wp-block-details summary::after {
     transition: none;
   }

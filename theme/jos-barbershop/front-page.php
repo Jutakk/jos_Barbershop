@@ -1,8 +1,10 @@
 <?php
 /**
- * Front page: the turning shop sign on the facade, drawn in lines. The arches are the menu: a slow
- * running text in the band of every arch names its page, a click takes the camera through the arch and
- * the page opens; behind the door is the shop. The X, Esc or the back button lead back to the street.
+ * Front page: the turning shop sign on the facade, drawn in lines. Scrolling or dragging moves the camera
+ * along the street (and down to the foundation, where the footer lines are cut in). The arches are the
+ * menu: a running text in the band of every arch names its page, the whole opening is the button, a click
+ * takes the camera through the arch and the page opens; behind the door is the shop. The X, Esc or the
+ * back button lead back to the street.
  * The pages are normal WordPress pages (jos_rooms()), so their content is edited in WordPress.
  * Without JavaScript the pages simply follow the hero.
  *
@@ -26,6 +28,7 @@ foreach ( jos_rooms() as $jos_room ) {
 	<div class="scene" data-scene
 		data-logo="<?php echo esc_url( jos_image( 'logo-texture.webp' ) ); ?>"
 		data-arches="<?php echo esc_attr( wp_json_encode( $jos_arches, JSON_UNESCAPED_UNICODE ) ); ?>"
+		data-footer="<?php echo esc_attr( wp_json_encode( jos_footer_items(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
 		<?php echo $jos_panorama ? 'data-panorama="' . esc_url( $jos_panorama ) . '"' : ''; ?>
 		<?php echo $jos_panorama_mobile ? 'data-panorama-mobile="' . esc_url( $jos_panorama_mobile ) . '"' : ''; ?>>
 		<img class="scene__poster" src="<?php echo esc_url( jos_image( 'scene-poster.webp' ) ); ?>" alt="" width="1600" height="1000" fetchpriority="high">

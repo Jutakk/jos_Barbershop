@@ -12,12 +12,17 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
  * plate. Only the logo on both faces of the disc glows. The wall is the ground floor of the real facade
  * (images/fasada.jpg), drawn only as thin lines (facade.js, made by fasada/build_facade.py); the lines draw
  * themselves when the page loads.
- * The arches are the menu: in the band of every arch the name of its page runs slowly around, pointing at
- * an arch lights it up and a click takes the camera through it into the page. Behind the door is the shop.
+ * Scrolling or dragging moves the camera along the street, dragging up also lowers it to the foundation,
+ * where the footer lines are cut in under the ground line.
+ * The arches are the menu: in the band of every arch the name of its page runs around (fast at first, then
+ * slowly), the whole window or door is the button: pointing at it fills it with a transparent pale yellow,
+ * a click takes the camera through it into the page. Behind the door is the shop.
  * motion.js (GSAP) owns the values and sends them as events, three.js only draws:
+ *   'jos:street'   { x, y }: x 0 = first view, 1 = down the street to the last arch; y 0 = eye level, 1 = foundation
  *   'jos:view'     { arch, t }: arch index in FACADE_ARCHES (-1 = street), t 0 = street view, 1 = inside
  *   'jos:look'     { yaw, pitch } in radians: the view inside the shop, turned by dragging
- * The scene itself only sends 'jos:open' with the arch index when an arch is clicked.
+ * The scene itself only reports clicks: 'jos:open' with the arch index, 'jos:link' with the address of a
+ * footer line.
  * Inside a window arch the screen is dark and covered by its page, so nothing is drawn there.
  */
 
@@ -45,6 +50,11 @@ const HERO_PULL = 2.7;           // times the distance that fits the sign alone
 const HERO_PULL_MOBILE = 1.12;
 const HERO_LIFT = 0.03;          // looks slightly up, times the distance
 
+// along the street: x 1 brings the last arch on the left to where the sign is in the first view,
+// y 1 lowers the camera to just above the ground, in front of the foundation
+const STREET_LENGTH = -FACADE_ARCHES[0].z;
+const FOUNDATION_DROP = 2.8;
+
 // in front of an arch the whole window or door is in view, from the ground to above the keystone
 const FRAME = {
 	bottom: FACADE_ARCH.ground - 0.5,
@@ -64,28 +74,39 @@ const PANORAMA_FOV = 70;         // wider view inside the shop: the photo is str
 const FOV = 30;                  // view on the street
 
 // running text in the band of every arch: the name of its page, up the left jamb, over the arch and
-// down the right jamb, slowly moving like a ticker
+// down the right jamb. When the texts come in they run once around fast, then slow down to a calm ticker.
 const RIBBON_SPEED = 0.22;       // disc radii per second along the band
+const RIBBON_SPIN = 16;          // speed when the texts come in
+const RIBBON_SPIN_TIME = 3.5;    // s, from the fast start down to the calm speed
 const RIBBON_OPACITY = 0.7;
-const RIBBON_FONT = '44px Arial, "Helvetica Neue", Helvetica, sans-serif';
-const RIBBON_CANVAS_HEIGHT = 72;
+const TEXT_FONT = '44px Arial, "Helvetica Neue", Helvetica, sans-serif';
+const TEXT_CANVAS_HEIGHT = 72;
 const HOVER_COLOR = 0.35;        // a pointed arch: its lines go towards warm white ...
 const HOVER_OPACITY = 0.45;      // ... and get this much more opaque
+const OPENING_OPACITY = 0.14;    // ... and the whole window or door fills with transparent pale yellow
+
+// the footer lines, cut into the foundation under the ground line, centred under the arches
+const INSCRIPTION = { height: 0.42, below: 0.2, gap: 0.8, opacity: 0.55 };
 
 const root = document.querySelector('[data-scene]');
+
+const readJson = (value) => {
+	try {
+		const data = JSON.parse(value || '[]');
+		return Array.isArray(data) ? data : [];
+	} catch (e) {
+		return [];
+	}
+};
 
 if (root) {
 	const canvas = root.querySelector('.scene__canvas');
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const isMobile = window.matchMedia('(max-width: 767px)').matches;
 
-	// the menu: which page lies behind which arch (front-page.php)
-	let menu = [];
-	try {
-		menu = JSON.parse(root.dataset.arches || '[]');
-	} catch (e) {
-		menu = [];
-	}
+	// the menu: which page lies behind which arch; the footer lines (front-page.php)
+	const menu = readJson(root.dataset.arches);
+	const footer = readJson(root.dataset.footer);
 
 	let renderer = null;
 	try {
@@ -103,7 +124,7 @@ if (root) {
 
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color(BACKGROUND);
-		// fog only fades the facade lines and the running texts into the dark; the sign and the shop ignore it
+		// fog only fades the facade lines and the texts into the dark; the sign and the shop ignore it
 		scene.fog = new THREE.Fog(BACKGROUND, 10, 30);
 
 		// reflections only on the metal parts; the black face of the disc stays matt
@@ -240,8 +261,47 @@ if (root) {
 		facadeGeometry.setAttribute('archGroup', new THREE.BufferAttribute(archGroups, 1));
 		sign.add(new THREE.LineSegments(facadeGeometry, lineMaterial));
 
-		// ---- running texts in the bands of the arches. The band lies between the opening and the outer
-		// line of the wedge stones; the text runs along its middle, its top towards the outside.
+		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material
+		const textCanvas = (label) => {
+			const context = document.createElement('canvas').getContext('2d');
+			const setFont = () => {
+				context.font = TEXT_FONT;
+				if ('letterSpacing' in context) context.letterSpacing = '6px';
+			};
+			setFont();
+			const width = Math.max(1, Math.ceil(context.measureText(label).width));
+			context.canvas.width = width;
+			context.canvas.height = TEXT_CANVAS_HEIGHT;
+			setFont();
+			context.fillStyle = '#ffffff';
+			context.textBaseline = 'middle';
+			context.fillText(label, 0, TEXT_CANVAS_HEIGHT / 2 + 2);
+			const texture = new THREE.CanvasTexture(context.canvas);
+			texture.colorSpace = THREE.SRGBColorSpace;
+			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+			return { texture, width };
+		};
+		const textMaterial = (texture) => new THREE.MeshBasicMaterial({
+			map: texture,
+			color: FACADE_COLOR,
+			transparent: true,
+			opacity: 0,
+			depthWrite: false,
+			side: THREE.DoubleSide,
+		});
+		// a flat shape drawn with x along the wall and y up, moved into the wall plane at this depth
+		const onWallPlane = (geometry, depth) => {
+			const position = geometry.attributes.position;
+			for (let i = 0; i < position.count; i++) {
+				position.setXYZ(i, wallX + depth, position.getY(i), position.getX(i));
+			}
+			position.needsUpdate = true;
+			geometry.computeBoundingSphere();
+			return geometry;
+		};
+
+		// ---- the arches of the menu: the running text in the band between the opening and the outer line
+		// of the wedge stones, its top towards the outside, and the opening itself, filled when pointed at
 		const bandMiddle = (FACADE_ARCH.radius + FACADE_ARCH.band) / 2;
 		const bandHalf = ((FACADE_ARCH.band - FACADE_ARCH.radius) / 2) * 0.92;
 		const jamb = FACADE_ARCH.spring - FACADE_ARCH.ground;
@@ -261,30 +321,21 @@ if (root) {
 			};
 		};
 
-		const ribbonTexture = (name) => {
-			const label = `${name.toLocaleUpperCase('de')}   ·   `;
-			const context = document.createElement('canvas').getContext('2d');
-			context.font = RIBBON_FONT;
-			if ('letterSpacing' in context) context.letterSpacing = '6px';
-			const width = Math.ceil(context.measureText(label).width);
-			context.canvas.width = width;
-			context.canvas.height = RIBBON_CANVAS_HEIGHT;
-			context.font = RIBBON_FONT;
-			if ('letterSpacing' in context) context.letterSpacing = '6px';
-			context.fillStyle = '#ffffff';
-			context.textBaseline = 'middle';
-			context.fillText(label, 0, RIBBON_CANVAS_HEIGHT / 2 + 2);
-			const texture = new THREE.CanvasTexture(context.canvas);
-			texture.colorSpace = THREE.SRGBColorSpace;
-			texture.wrapS = THREE.RepeatWrapping;
-			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-			return { texture, repeat: (bandHalf * 2 * width) / RIBBON_CANVAS_HEIGHT };
-		};
+		const openingShape = new THREE.Shape();
+		openingShape.moveTo(-FACADE_ARCH.radius, FACADE_ARCH.ground);
+		openingShape.lineTo(-FACADE_ARCH.radius, FACADE_ARCH.spring);
+		openingShape.absarc(0, FACADE_ARCH.spring, FACADE_ARCH.radius, Math.PI, 0, true);
+		openingShape.lineTo(FACADE_ARCH.radius, FACADE_ARCH.ground);
+		openingShape.closePath();
+		const openingGeometry = onWallPlane(new THREE.ShapeGeometry(openingShape, 32), 0.02);
 
 		const ribbons = menu
 			.filter((item) => FACADE_ARCHES[item.arch])
 			.map((item) => {
-				const { texture, repeat } = ribbonTexture(item.name);
+				const archZ = FACADE_ARCHES[item.arch].z;
+				const { texture, width } = textCanvas(`${String(item.name).toLocaleUpperCase('de')}   ·   `);
+				texture.wrapS = THREE.RepeatWrapping;
+				const repeat = (bandHalf * 2 * width) / TEXT_CANVAS_HEIGHT;
 				const steps = 160;
 				const positions = new Float32Array((steps + 1) * 2 * 3);
 				const uvs = new Float32Array((steps + 1) * 2 * 2);
@@ -296,7 +347,7 @@ if (root) {
 						const v = i * 2 + k;
 						positions[v * 3] = wallX - 0.012;   // just in front of the wall face
 						positions[v * 3 + 1] = p.y + p.ny * bandHalf * side;
-						positions[v * 3 + 2] = FACADE_ARCHES[item.arch].z + p.z + p.nz * bandHalf * side;
+						positions[v * 3 + 2] = archZ + p.z + p.nz * bandHalf * side;
 						uvs[v * 2] = s / repeat;
 						uvs[v * 2 + 1] = k;   // 0 inner edge, 1 outer edge: the top of the letters points outwards
 					});
@@ -309,19 +360,48 @@ if (root) {
 				geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 				geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 				geometry.setIndex(index);
-				const material = new THREE.MeshBasicMaterial({
-					map: texture,
+				const mesh = new THREE.Mesh(geometry, textMaterial(texture));
+				mesh.visible = false;
+				sign.add(mesh);
+
+				const fill = new THREE.Mesh(openingGeometry, new THREE.MeshBasicMaterial({
 					color: FACADE_COLOR,
 					transparent: true,
 					opacity: 0,
 					depthWrite: false,
 					side: THREE.DoubleSide,
-				});
-				const mesh = new THREE.Mesh(geometry, material);
-				mesh.visible = false;
-				sign.add(mesh);
-				return { arch: item.arch, slug: item.slug, mesh, texture, repeat, glow: { value: 0 } };
+				}));
+				fill.position.z = archZ;
+				fill.visible = false;
+				sign.add(fill);
+
+				return { arch: item.arch, z: archZ, mesh, fill, texture, repeat, glow: { value: 0 } };
 			});
+
+		// ---- the footer lines in the foundation, one piece per line with a dot between them
+		const inscriptionTop = FACADE_ARCH.ground - INSCRIPTION.below;
+		const pieces = [];
+		footer.forEach((item, i) => {
+			if (i > 0) pieces.push({ text: '·', url: '' });
+			pieces.push({ text: String(item.text || '').toLocaleUpperCase('de'), url: item.url || '' });
+		});
+		const inscription = pieces.filter((piece) => piece.text).map((piece) => {
+			const { texture, width } = textCanvas(piece.text);
+			return { ...piece, texture, length: (INSCRIPTION.height * width) / TEXT_CANVAS_HEIGHT, glow: { value: 0 } };
+		});
+		const inscriptionLength = inscription.reduce((sum, piece) => sum + piece.length, 0) + INSCRIPTION.gap * Math.max(inscription.length - 1, 0);
+		let along = (FACADE_ARCHES[0].z + FACADE_ARCHES[FACADE_ARCHES.length - 1].z) / 2 - inscriptionLength / 2;
+		inscription.forEach((piece) => {
+			const mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, INSCRIPTION.height), textMaterial(piece.texture));
+			mesh.rotation.y = -Math.PI / 2;   // in the wall, reading along it to the right
+			mesh.position.set(wallX - 0.012, inscriptionTop - INSCRIPTION.height / 2, along + piece.length / 2);
+			mesh.visible = false;
+			sign.add(mesh);
+			piece.mesh = mesh;
+			piece.from = along;
+			piece.to = along + piece.length;
+			along += piece.length + INSCRIPTION.gap;
+		});
 
 		// ---- the shop behind the door: a photo all around the camera, shown only once the camera is inside
 		const doorArch = FACADE_ARCHES.find((arch) => arch.door);
@@ -374,11 +454,13 @@ if (root) {
 		composer.addPass(bloom);
 		composer.addPass(new OutputPass());
 
-		// ---- state: the angle comes from time, the view and the look inside the shop from motion.js
-		const state = { angle: reduced ? -0.42 : -0.25, view: { arch: -1, t: 0 }, yaw: 0, pitch: 0 };
+		// ---- state: the angle and the running texts come from time, everything else from motion.js
+		const state = { angle: reduced ? -0.42 : -0.25, street: { x: 0, y: 0 }, view: { arch: -1, t: 0 }, yaw: 0, pitch: 0 };
+		const ribbonSpeed = { value: RIBBON_SPEED };
 
 		// ---- camera poses: the hero view and, for every arch, in front of it and inside it
 		const hero = { position: new THREE.Vector3(), target: new THREE.Vector3() };
+		const street = { position: new THREE.Vector3(), target: new THREE.Vector3() };
 		const stops = FACADE_ARCHES.map(() => ({
 			front: { position: new THREE.Vector3(), target: new THREE.Vector3() },
 			inside: { position: new THREE.Vector3(), target: new THREE.Vector3() },
@@ -388,6 +470,8 @@ if (root) {
 			pose.target.set(wallX + lookDepth, EYE_HEIGHT, z).applyMatrix4(sign.matrixWorld);
 		};
 		const toSign = new THREE.Matrix4();
+		const downStreet = new THREE.Vector3();
+		const up = new THREE.Vector3(0, 1, 0);
 
 		const fit = () => {
 			const w = root.clientWidth;
@@ -407,6 +491,7 @@ if (root) {
 			sign.position.x = camera.aspect > 1.25 ? 0.55 : -0.2;
 			sign.updateMatrixWorld(true);
 			toSign.copy(sign.matrixWorld).invert();
+			downStreet.set(0, 0, -1).transformDirection(sign.matrixWorld);   // along the wall, to the left
 			hero.position.set(0, EYE_HEIGHT, heroDistance);
 			hero.target.set(0, EYE_HEIGHT + heroDistance * HERO_LIFT, 0);
 
@@ -422,31 +507,37 @@ if (root) {
 			scene.fog.far = framed + FACADE_FADE[1];
 		};
 
-		// ---- camera from the street through an arch: one smooth curve from the hero view past the
-		// framed view in front of the arch straight in through it. The view turns towards the arch in
-		// the first half and then looks straight through it.
+		// ---- camera: in the street the hero view moved along the wall and down; through an arch one smooth
+		// curve from there past the framed view in front of the arch straight in through it. The view turns
+		// towards the arch in the first half and then looks straight through it.
 		const smooth = (t) => t * t * (3 - 2 * t);
 		const phase = (t, from, to) => smooth(THREE.MathUtils.clamp((t - from) / (to - from), 0, 1));
-		const up = new THREE.Vector3(0, 1, 0);
 		const look = new THREE.Vector3();
 		const ahead = new THREE.Vector3();
 		const side = new THREE.Vector3();
 		const local = new THREE.Vector3();
 		const position = new THREE.Vector3();
 
+		const placeStreet = () => {
+			const shift = state.street.x * STREET_LENGTH;
+			const drop = -state.street.y * FOUNDATION_DROP;
+			street.position.copy(hero.position).addScaledVector(downStreet, shift).addScaledVector(up, drop);
+			street.target.copy(hero.target).addScaledVector(downStreet, shift).addScaledVector(up, drop);
+		};
+
 		const placeCamera = () => {
+			placeStreet();
 			const { arch, t } = state.view;
 			const stop = stops[arch];
+			look.subVectors(street.target, street.position).normalize();
 			if (!stop || t <= 0) {
-				position.copy(hero.position);
-				look.subVectors(hero.target, hero.position).normalize();
+				position.copy(street.position);
 			} else {
-				// cubic curve hero, front, front, inside: leaves towards the arch, arrives along its axis
+				// cubic curve street, front, front, inside: leaves towards the arch, arrives along its axis
 				const u = 1 - t;
-				position.copy(hero.position).multiplyScalar(u * u * u)
+				position.copy(street.position).multiplyScalar(u * u * u)
 					.addScaledVector(stop.front.position, 3 * u * u * t + 3 * u * t * t)
 					.addScaledVector(stop.inside.position, t * t * t);
-				look.subVectors(hero.target, hero.position).normalize();
 				ahead.subVectors(stop.inside.target, stop.inside.position).normalize();
 				look.lerp(ahead, phase(t, 0, 0.55)).normalize();
 			}
@@ -476,22 +567,29 @@ if (root) {
 			}
 		};
 
-		// the running texts come in at the end of the drawing and leave when the camera sets off
-		const placeRibbons = () => {
+		// the texts come in at the end of the drawing and leave when the camera sets off through an arch
+		const placeTexts = () => {
 			const shown = phase(drawing.value, 0.85, 1);
 			const { arch, t } = state.view;
+			const gone = 1 - phase(t, 0, 0.2);
+			const setOpacity = (mesh, opacity) => {
+				mesh.material.opacity = opacity;
+				mesh.visible = opacity > 0.002;
+			};
 			ribbons.forEach((ribbon) => {
-				const away = ribbon.arch === arch ? 1 - phase(t, 0.55, 0.85) : 1 - phase(t, 0, 0.2);
-				const opacity = (RIBBON_OPACITY + (1 - RIBBON_OPACITY) * ribbon.glow.value) * shown * away;
-				ribbon.mesh.material.opacity = opacity;
-				ribbon.mesh.visible = opacity > 0.002;
+				const away = ribbon.arch === arch ? 1 - phase(t, 0.55, 0.85) : gone;
+				setOpacity(ribbon.mesh, (RIBBON_OPACITY + (1 - RIBBON_OPACITY) * ribbon.glow.value) * shown * away);
+				setOpacity(ribbon.fill, OPENING_OPACITY * ribbon.glow.value * shown * away);
+			});
+			inscription.forEach((piece) => {
+				setOpacity(piece.mesh, (INSCRIPTION.opacity + (1 - INSCRIPTION.opacity) * piece.glow.value) * shown * gone);
 			});
 		};
 
 		const draw = () => {
 			disc.rotation.y = state.angle;
 			placeCamera();
-			placeRibbons();
+			placeTexts();
 			composer.render();
 		};
 
@@ -518,7 +616,7 @@ if (root) {
 			lastTime = now;
 			state.angle += TURN_SPEED * dt;
 			ribbons.forEach((ribbon) => {
-				ribbon.texture.offset.x = (ribbon.texture.offset.x + (RIBBON_SPEED / ribbon.repeat) * dt) % 1;
+				ribbon.texture.offset.x = (ribbon.texture.offset.x + (ribbonSpeed.value / ribbon.repeat) * dt) % 1;
 			});
 			const dark = darkInside();
 			if (!dark || !drawnDark) draw();
@@ -547,6 +645,10 @@ if (root) {
 		document.addEventListener('visibilitychange', update);
 
 		// ---- values from motion.js
+		window.addEventListener('jos:street', (event) => {
+			state.street = { x: event.detail.x, y: event.detail.y };
+			redraw();
+		});
 		window.addEventListener('jos:view', (event) => {
 			state.view = { arch: event.detail.arch, t: event.detail.t };
 			if (state.view.arch === doorIndex && state.view.t > 0) loadPanorama();
@@ -558,26 +660,34 @@ if (root) {
 			redraw();
 		});
 
-		// ---- pointing at an arch: its lines and its running text light up, a click opens its page
-		const IGNORE = 'a, button, input, textarea, select, summary, label, .hero__content, .room.is-open, .site-header, .site-footer';
+		// ---- pointing: a window or door (its opening and its band) lights up and opens its page on a
+		// click; a footer line in the foundation lights up and follows its link
+		const IGNORE = 'a, button, input, textarea, select, summary, label, .room.is-open, .site-header, .site-footer';
 		const pointer = new THREE.Vector2();
 		const ray = new THREE.Raycaster();
-		let pointed = -1;
+		let pointed = null;
 
-		const archAt = (clientX, clientY) => {
+		const targetAt = (clientX, clientY) => {
 			const rect = canvas.getBoundingClientRect();
 			pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
 			ray.setFromCamera(pointer, camera);
 			ray.ray.applyMatrix4(toSign);
 			const { origin, direction } = ray.ray;
-			if (direction.x <= 1e-6) return -1;
+			if (direction.x <= 1e-6) return null;
 			// where the ray meets the wall face, on the wall: along it (z) and up (y)
-			const along = (wallX - origin.x) / direction.x;
-			const z = origin.z + direction.z * along;
-			const y = origin.y + direction.y * along;
-			if (y < FACADE_ARCH.ground || y > FACADE_ARCH.top + 0.6) return -1;
-			const hit = ribbons.find((ribbon) => Math.abs(z - FACADE_ARCHES[ribbon.arch].z) < FACADE_ARCH.band + 0.2);
-			return hit ? hit.arch : -1;
+			const distance = (wallX - origin.x) / direction.x;
+			const z = origin.z + direction.z * distance;
+			const y = origin.y + direction.y * distance;
+			const reach = FACADE_ARCH.band + 0.08;
+			const ribbon = ribbons.find((item) => {
+				const dz = z - item.z;
+				return y >= FACADE_ARCH.ground && Math.abs(dz) <= reach
+					&& (y <= FACADE_ARCH.spring || Math.hypot(dz, y - FACADE_ARCH.spring) <= reach);
+			});
+			if (ribbon) return { ribbon };
+			if (y > inscriptionTop + 0.05 || y < inscriptionTop - INSCRIPTION.height - 0.05) return null;
+			const piece = inscription.find((item) => item.url && z >= item.from - 0.1 && z <= item.to + 0.1);
+			return piece ? { piece } : null;
 		};
 
 		const tweenTo = (target, value, duration) => {
@@ -589,36 +699,56 @@ if (root) {
 			window.gsap.to(target, { value, duration, ease: 'power2.out', overwrite: true, onUpdate: redraw });
 		};
 
-		const point = (arch) => {
-			if (arch === pointed) return;
-			pointed = arch;
-			document.body.classList.toggle('is-pointing-arch', arch >= 0);
-			if (arch >= 0) {
-				highlightArch.value = arch;
-				if (arch === doorIndex) loadPanorama();
+		const point = (target) => {
+			const ribbon = target && target.ribbon;
+			const piece = target && target.piece;
+			if ((pointed && pointed.ribbon) === ribbon && (pointed && pointed.piece) === piece) return;
+			pointed = target;
+			document.body.classList.toggle('is-pointing', Boolean(target));
+			if (ribbon) {
+				highlightArch.value = ribbon.arch;
+				if (ribbon.arch === doorIndex) loadPanorama();
 			}
-			tweenTo(highlightAmount, arch >= 0 ? 1 : 0, arch >= 0 ? 0.35 : 0.5);
-			ribbons.forEach((ribbon) => tweenTo(ribbon.glow, ribbon.arch === arch ? 1 : 0, 0.35));
+			tweenTo(highlightAmount, ribbon ? 1 : 0, ribbon ? 0.35 : 0.5);
+			ribbons.forEach((item) => tweenTo(item.glow, item === ribbon ? 1 : 0, 0.35));
+			inscription.forEach((item) => tweenTo(item.glow, item === piece ? 1 : 0, 0.3));
 		};
 
+		const html = document.documentElement;
 		const atStreet = () => ready && drawing.value >= 0.85 && state.view.t <= 0.001
-			&& !document.documentElement.classList.contains('is-room-open');
+			&& !html.classList.contains('is-room-open') && !html.classList.contains('is-dragging-street');
+		const free = (event) => !(event.target instanceof Element && event.target.closest(IGNORE));
 
+		let lastPointer = null;   // where the mouse stands, so the street can move under it
 		window.addEventListener('pointermove', (event) => {
 			if (event.pointerType === 'touch') return;
-			const free = atStreet() && !(event.target instanceof Element && event.target.closest(IGNORE));
-			point(free ? archAt(event.clientX, event.clientY) : -1);
+			lastPointer = { x: event.clientX, y: event.clientY, free: free(event) };
+			point(atStreet() && lastPointer.free ? targetAt(event.clientX, event.clientY) : null);
 		});
-		document.documentElement.addEventListener('pointerleave', () => point(-1));
+		html.addEventListener('pointerleave', () => {
+			lastPointer = null;
+			point(null);
+		});
 		window.addEventListener('click', (event) => {
-			if (!atStreet() || (event.target instanceof Element && event.target.closest(IGNORE))) return;
-			const arch = archAt(event.clientX, event.clientY);
-			if (arch < 0) return;
-			point(-1);
-			window.dispatchEvent(new CustomEvent('jos:open', { detail: arch }));
+			if (!atStreet() || !free(event)) return;
+			const target = targetAt(event.clientX, event.clientY);
+			if (!target) return;
+			point(null);
+			if (target.ribbon) window.dispatchEvent(new CustomEvent('jos:open', { detail: target.ribbon.arch }));
+			else window.dispatchEvent(new CustomEvent('jos:link', { detail: target.piece.url }));
 		});
 		window.addEventListener('jos:view', () => {
-			if (state.view.t > 0) point(-1);
+			if (state.view.t > 0) point(null);
+		});
+		// the street moves under a resting mouse (wheel, keys): what lies under it now
+		window.addEventListener('jos:street', () => {
+			if (!lastPointer || !lastPointer.free || !atStreet()) {
+				point(null);
+				return;
+			}
+			placeCamera();
+			camera.updateMatrixWorld();
+			point(targetAt(lastPointer.x, lastPointer.y));
 		});
 
 		// ---- logo texture, then the first frame and the drawing of the facade
@@ -636,6 +766,14 @@ if (root) {
 			const later = () => setTimeout(loadPanorama, 1500);
 			if (!reduced && window.gsap) {
 				window.gsap.to(drawing, { value: 1, duration: DRAW_DURATION, ease: 'none', delay: 0.3, onComplete: later });
+				// the running texts come in fast, once around the arch, and slow down to their calm speed
+				window.gsap.fromTo(ribbonSpeed, { value: RIBBON_SPIN }, {
+					value: RIBBON_SPEED,
+					duration: RIBBON_SPIN_TIME,
+					ease: 'power3.out',
+					delay: 0.3 + DRAW_DURATION * 0.85,
+					immediateRender: false,
+				});
 			} else {
 				drawing.value = 1;
 				draw();

@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.6.0
+Version: 0.7.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -277,12 +277,27 @@ canvas {
 	opacity: 1;
 }
 
-// a pointed arch is a link (scene.js)
-.is-pointing-arch {
+// the street can be grabbed and moved (motion.js); a pointed window, door or footer line is a link (scene.js)
+.has-arches .scene {
+	cursor: grab;
+	touch-action: none;
+}
+
+.is-pointing .scene {
 	cursor: pointer;
 }
 
-// ---------- hero with the 3D sign. Clicks go through it to the arches of the scene, except on the text.
+.is-dragging-street,
+.is-dragging-street .scene {
+	cursor: grabbing;
+}
+
+.is-dragging-street body {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+// ---------- hero with the 3D sign. Clicks and drags go through it to the scene, except on the button.
 
 .hero {
 	height: 100vh;
@@ -291,13 +306,18 @@ canvas {
 	overflow: hidden;   // the dark glow behind the text never widens the page on phones
 	pointer-events: none;
 
+	// only the button catches the pointer: over the title the street can still be grabbed and moved
 	&__content {
-		pointer-events: auto;
 		position: absolute;
 		left: clamp(#{s(5)}, 6vw, #{s(9)});
 		bottom: clamp(#{s(6)}, 10vh, #{s(9)});
 		max-width: 34rem;
 		padding-right: s(5);
+		pointer-events: none;
+
+		.button {
+			pointer-events: auto;
+		}
 
 		// keeps the text readable where it lies over the lines of the facade
 		&::before {
@@ -779,6 +799,23 @@ html {
 		}
 	}
 
+	// on the front page the footer lines are cut into the foundation of the facade (scene.js): this footer
+	// waits below the screen for keyboards and screen readers and slides in when one of its links has the focus
+	.has-arches & {
+		position: fixed;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 11;
+		background: var(--jos-bg);
+		transform: translateY(100%);
+		transition: transform 250ms ease;
+
+		&:focus-within {
+			transform: none;
+		}
+	}
+
 	&__legal {
 		display: flex;
 		gap: s(5);
@@ -809,6 +846,7 @@ html {
 	.scene__canvas,
 	.button,
 	.site-header__nav a,
+	.site-footer,
 	.wp-block-details summary::after {
 		transition: none;
 	}

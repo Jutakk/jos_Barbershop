@@ -1,25 +1,28 @@
 <?php
 /**
- * Footer.
+ * Footer: copyright, address and the legal pages (jos_footer_items()). On the front page the same lines
+ * are cut into the foundation of the facade (scene.js); this footer then stays for keyboards and
+ * screen readers and slides in when one of its links gets the focus.
  *
  * @package jos-barbershop
  */
 
-$jos_privacy = get_privacy_policy_url();
-$jos_imprint = get_page_by_path( 'impressum' );
+$jos_footer = jos_footer_items();
+$jos_legal  = array_filter( $jos_footer, fn( $item ) => 'legal' === $item['kind'] );
 ?>
 <footer class="site-footer">
-	<p class="site-footer__copy">&copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> Jo&rsquo;s Barbershop</p>
-	<?php $jos_shop = jos_shop(); ?>
-	<p class="site-footer__address"><a href="<?php echo esc_url( jos_maps_link() ); ?>"><?php echo esc_html( $jos_shop['street'] . ', ' . $jos_shop['postcode'] . ' ' . $jos_shop['city'] ); ?></a></p>
-	<?php if ( $jos_imprint || $jos_privacy ) : ?>
+	<?php foreach ( $jos_footer as $jos_item ) : ?>
+		<?php if ( 'copy' === $jos_item['kind'] ) : ?>
+			<p class="site-footer__copy"><?php echo esc_html( $jos_item['text'] ); ?></p>
+		<?php elseif ( 'address' === $jos_item['kind'] ) : ?>
+			<p class="site-footer__address"><a href="<?php echo esc_url( $jos_item['url'] ); ?>"><?php echo esc_html( $jos_item['text'] ); ?></a></p>
+		<?php endif; ?>
+	<?php endforeach; ?>
+	<?php if ( $jos_legal ) : ?>
 		<nav class="site-footer__legal" aria-label="<?php esc_attr_e( 'Rechtliches', 'jos-barbershop' ); ?>">
-			<?php if ( $jos_imprint ) : ?>
-				<a href="<?php echo esc_url( get_permalink( $jos_imprint ) ); ?>"><?php esc_html_e( 'Impressum', 'jos-barbershop' ); ?></a>
-			<?php endif; ?>
-			<?php if ( $jos_privacy ) : ?>
-				<a href="<?php echo esc_url( $jos_privacy ); ?>"><?php esc_html_e( 'Datenschutz', 'jos-barbershop' ); ?></a>
-			<?php endif; ?>
+			<?php foreach ( $jos_legal as $jos_item ) : ?>
+				<a href="<?php echo esc_url( $jos_item['url'] ); ?>"><?php echo esc_html( $jos_item['text'] ); ?></a>
+			<?php endforeach; ?>
 		</nav>
 	<?php endif; ?>
 </footer>

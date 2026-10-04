@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.6.0' );
+define( 'JOS_VERSION', '0.7.0' );
 
 /**
  * Theme supports.
@@ -221,6 +221,46 @@ function jos_shop(): array {
 function jos_maps_link(): string {
 	$shop = jos_shop();
 	return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $shop['name'] . ', ' . $shop['street'] . ', ' . $shop['postcode'] . ' ' . $shop['city'] );
+}
+
+/**
+ * Footer lines: copyright, address (to Google Maps), Impressum and Datenschutz once those pages exist.
+ * footer.php shows them as the footer; on the front page scene.js also cuts them into the foundation
+ * of the facade, under the ground line.
+ *
+ * @return array<int, array{kind: string, text: string, url: string}>
+ */
+function jos_footer_items(): array {
+	$shop    = jos_shop();
+	$items   = array(
+		array(
+			'kind' => 'copy',
+			'text' => '© ' . wp_date( 'Y' ) . ' ' . $shop['name'],
+			'url'  => '',
+		),
+		array(
+			'kind' => 'address',
+			'text' => $shop['street'] . ', ' . $shop['postcode'] . ' ' . $shop['city'],
+			'url'  => jos_maps_link(),
+		),
+	);
+	$imprint = get_page_by_path( 'impressum' );
+	if ( $imprint ) {
+		$items[] = array(
+			'kind' => 'legal',
+			'text' => __( 'Impressum', 'jos-barbershop' ),
+			'url'  => (string) get_permalink( $imprint ),
+		);
+	}
+	$privacy = get_privacy_policy_url();
+	if ( $privacy ) {
+		$items[] = array(
+			'kind' => 'legal',
+			'text' => __( 'Datenschutz', 'jos-barbershop' ),
+			'url'  => $privacy,
+		);
+	}
+	return $items;
 }
 
 /**
