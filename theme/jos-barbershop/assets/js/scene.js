@@ -51,7 +51,7 @@ const LINE_WIDTH = 1.5;          // px on the screen, the facade lines drawn a l
 const LINE_WIDTH_MOBILE = 1.3;
 // the paper is a big sphere around the whole scene: turning the building turns the paper with it
 const PAPER_RADIUS = 150;
-const PAPER_REPEAT = [24, 12];   // the paper tile this many times around and from top to bottom: fine grain, as on the page
+const PAPER_REPEAT = [12, 6];    // the paper tile this many times around and from top to bottom: grain as on the page
 const FACADE_FADE = [1, 24];     // the lines fade out between these distances behind the framed view
 const DRAW_DURATION = 5;         // s, the facade draws itself when the page loads, in the order of facade.js
 const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left

@@ -37,7 +37,7 @@ $size-meta: 12px;
 $bp-tablet: 768px;
 
 :root {
-	--jos-bg: #cecece;     // the paper (assets/images/paper.webp, a 400 px tile, tools/paper.py) while it loads
+	--jos-bg: #cecece;     // the paper (assets/images/paper.webp, an 800 px tile, tools/paper.py) while it loads
 	--jos-ink: #2b1d14;    // dark brown ink
 	--jos-line: #5b3517;   // brown: the lines of the facade and the thin rules
 	--jos-muted: #5e5148;
@@ -68,7 +68,7 @@ body::before {
 	position: fixed;
 	inset: 0;
 	z-index: -1;
-	background: var(--jos-bg) url("assets/images/paper.webp") 0 0 / 400px 400px repeat;
+	background: var(--jos-bg) url("assets/images/paper.webp") 0 0 / 800px 800px repeat;
 	pointer-events: none;
 }
 
@@ -192,7 +192,7 @@ canvas {
 		position: absolute;
 		inset: 0 0 (0 - s(6)) 0;
 		z-index: -1;
-		background: var(--jos-bg) url("assets/images/paper.webp") 0 0 / 400px 400px repeat fixed;
+		background: var(--jos-bg) url("assets/images/paper.webp") 0 0 / 800px 800px repeat fixed;
 		-webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
 		mask-image: linear-gradient(to bottom, #000 35%, transparent);
 
