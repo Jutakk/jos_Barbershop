@@ -13,16 +13,16 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
  * (images/fasada.jpg), drawn only as thin brown lines on the paper of the site (facade.js, made by
  * fasada/build_facade.py); the lines draw themselves when the page loads.
  * Dragging turns the building (left and right, up and down: turned up, the foundation with the footer lines
- * comes to the front), scrolling down goes down into the depth, below the street to the foundation with the
- * footer lines; sideways scrolling moves along the street.
+ * comes to the front), scrolling moves the camera along its Z axis into the depth of the picture and back;
+ * sideways scrolling moves along the street.
  * The arches are the menu: in the band of every arch the name of its page runs around (fast at first, then
  * slowly), the whole window or door is the button: pointing at it fills it with a transparent pale yellow,
  * a click takes the camera through it into the page. Behind the door is the shop.
  * motion.js (GSAP) owns the values and sends them as events, three.js only draws:
- *   'jos:street'   { x, lift, yaw, pitch }: the point of the wall the camera goes around, moved along the street
- *                  (x 0 = first view, 1 = the last arch) and down into the depth (lift, 0 = first view, down to
- *                  the foundation); yaw and pitch in radians: the building turned left and right, up and down.
- *                  scene.js writes the limits on the root element.
+ *   'jos:street'   { x, depth, yaw, pitch }: the point of the wall the camera goes around, moved along the street
+ *                  (x 0 = first view, 1 = the last arch); depth: the camera moved along its own Z axis into the
+ *                  picture, in disc radii (0 = first view); yaw and pitch in radians: the building turned left and
+ *                  right, up and down. scene.js writes the limits on the root element.
  *   'jos:view'     { arch, t }: arch index in FACADE_ARCHES (-1 = street), t 0 = street view, 1 = inside
  *   'jos:look'     { yaw, pitch } in radians: the view inside the shop, turned by dragging
  * The scene itself only reports clicks: 'jos:open' with the arch index, 'jos:link' with the address of a
@@ -60,6 +60,8 @@ const STREET_LENGTH = -FACADE_ARCHES[0].z;
 // Left and right up to this angle from straight in front of the wall, up and down up to TILT.
 const TURN_LIMIT = 1.4;
 const TILT = [-0.75, 0.75];
+// scrolling moves the camera along its Z axis into the picture, until it is this far from the wall
+const DEPTH_STOP = 1.2;
 
 // in front of an arch the whole window or door is in view, from the ground to above the keystone
 const FRAME = {
@@ -481,7 +483,7 @@ if (root) {
 		composer.addPass(new OutputPass());
 
 		// ---- state: the angle and the running texts come from time, everything else from motion.js
-		const state = { angle: reduced ? -0.42 : -0.25, street: { x: 0, lift: 0, yaw: 0, pitch: 0 }, view: { arch: -1, t: 0 }, yaw: 0, pitch: 0 };
+		const state = { angle: reduced ? -0.42 : -0.25, street: { x: 0, depth: 0, yaw: 0, pitch: 0 }, view: { arch: -1, t: 0 }, yaw: 0, pitch: 0 };
 		const ribbonSpeed = { value: RIBBON_SPEED };
 
 		// ---- camera poses: the hero view and, for every arch, in front of it and inside it
@@ -536,9 +538,8 @@ if (root) {
 			root.dataset.yawMax = (TURN_LIMIT - base).toFixed(3);
 			root.dataset.pitchMin = String(TILT[0]);
 			root.dataset.pitchMax = String(TILT[1]);
-			// scrolling down goes down into the depth until the footer lines are in the middle of the view
-			root.dataset.liftMin = (inscriptionTop - INSCRIPTION.height / 2 - pivot0.y).toFixed(3);
-			root.dataset.liftMax = '0';
+			// scrolling goes along the Z axis of the camera into the picture, up to DEPTH_STOP before the wall
+			root.dataset.depthMax = Math.max(cameraFromPivot.length() - DEPTH_STOP, 0).toFixed(3);
 
 			// in front of an arch: the whole window or door with its wedge joints fills the screen
 			const frontDistance = Math.max((FRAME.top - FRAME.bottom) / (2 * tan), FRAME.width / (2 * tan * camera.aspect));
@@ -567,16 +568,20 @@ if (root) {
 		// moves along the street
 		const pivot = new THREE.Vector3();
 		const across = new THREE.Vector3();
+		const forward = new THREE.Vector3();
 		const placeStreet = () => {
-			const { x, lift, yaw, pitch } = state.street;
+			const { x, depth, yaw, pitch } = state.street;
 			pivot.copy(pivot0);
 			pivot.z -= x * STREET_LENGTH;
-			pivot.y += lift;
 			street.position.copy(cameraFromPivot).applyAxisAngle(up, yaw);
 			street.target.copy(targetFromPivot).applyAxisAngle(up, yaw);
 			across.crossVectors(street.position, up).normalize();
 			street.position.applyAxisAngle(across, THREE.MathUtils.clamp(pitch, TILT[0], TILT[1])).add(pivot).applyMatrix4(sign.matrixWorld);
 			street.target.applyAxisAngle(across, THREE.MathUtils.clamp(pitch, TILT[0], TILT[1])).add(pivot).applyMatrix4(sign.matrixWorld);
+			// into the depth: camera and target move along the Z axis of the camera, the direction it looks in
+			forward.subVectors(street.target, street.position).normalize();
+			street.position.addScaledVector(forward, depth);
+			street.target.addScaledVector(forward, depth);
 		};
 
 		const placeCamera = () => {
@@ -700,8 +705,8 @@ if (root) {
 
 		// ---- values from motion.js
 		window.addEventListener('jos:street', (event) => {
-			const { x, lift, yaw, pitch } = event.detail;
-			state.street = { x, lift, yaw, pitch };
+			const { x, depth, yaw, pitch } = event.detail;
+			state.street = { x, depth, yaw, pitch };
 			redraw();
 		});
 		window.addEventListener('jos:view', (event) => {
