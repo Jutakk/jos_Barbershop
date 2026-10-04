@@ -8,6 +8,7 @@ Logo i grafički materijali za Jo's Barbershop.
 | `images/` | Fotografije i slike za web stranicu |
 | `hairs/` | Materijal za web stranicu |
 | `logo/` | Čisti master logo (SVG i PNG 2048 x 2048 px), opis u `logo/README.md` |
+| `fasada/` | Prizemlje fasade kao crtež linijama za hero (`build_facade.py`, `fasada-prizemlje.svg`) |
 | `theme/jos-barbershop/` | WordPress tema stranice |
 | `tools/` | Sinkronizacija s Localom (`jos-sync.ps1`) |
 
@@ -33,6 +34,17 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Na sredini luka iz nosača izlaze dva kratka vodoravna kraka do okomite pločice pričvršćene na zid.
 - Znak stoji okomito na zid: zid je s desne strane nosača.
 
+**Fasada iza znaka**
+
+- Zid kroz pločicu nosača je prizemlje prave zgrade s `images/fasada.jpg`, nacrtano samo tankim linijama:
+  vijenac, četiri luka s dubinom špalete, klinasti kamenovi oko lukova i fuge.
+- Znak visi na svom stvarnom mjestu, između trećeg i četvrtog luka. Fasada je zakrenuta tako da odgovara
+  položaju znaka: pločica nosača sjedi na zidu, a ulica odlazi ulijevo u dubinu, kao na `images/znak.jpg`.
+- Linije u daljini blijede u tamu i ne svijetle. Pri scrollu se zid udaljava zajedno sa znakom.
+- Mjere su uzete s ispravljene fotografije (`fasada/podaci/H_rect.npy`). Promjena crteža:
+  `python3 fasada/build_facade.py` napiše `theme/jos-barbershop/assets/js/facade.js` i `fasada/fasada-prizemlje.svg`,
+  a `--check` još i `fasada/provjera.png` s linijama preko fotografije.
+
 **Ponašanje**
 
 - Nosač i zid stoje mirno, disk se okreće oko okomite osi, kao viseća reklama.
@@ -46,6 +58,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 - `front-page.php`: hero s 3D znakom, naslov "your confidence starts here" (natpis s izloga trgovine), gumb "Termin buchen"
 - `assets/js/scene.js`: three.js scena znaka, učitana kao ES modul preko WordPress Script Modules API
+- `assets/js/facade.js`: linije prizemlja fasade, generira ih `fasada/build_facade.py`
 - `assets/js/motion.js`: GSAP i ScrollTrigger, prikvačuje hero za jedan ekran scrolla i šalje napredak sceni
 - `assets/scss/style.scss`: izvor stilova, prevodi se u `style.css`:
   `npx sass assets/scss/style.scss style.css --style=expanded --no-source-map` (u mapi teme)
@@ -54,5 +67,5 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.1.0: hero s 3D znakom. Slijede ostale sekcije, DE i EN verzija, FAQ, Impressum i Datenschutz.
+Status 0.2.0: hero s 3D znakom na fasadi nacrtanoj linijama. Slijede ostale sekcije, DE i EN verzija, FAQ, Impressum i Datenschutz.
 

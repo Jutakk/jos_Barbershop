@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.1.0' );
+define( 'JOS_VERSION', '0.2.0' );
 
 /**
  * Theme supports.

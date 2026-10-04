@@ -4,6 +4,7 @@ import { EffectComposer } from './vendor/addons/postprocessing/EffectComposer.js
 import { RenderPass } from './vendor/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from './vendor/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from './vendor/addons/postprocessing/OutputPass.js';
+import { FACADE_LINES } from './facade.js';
 
 /*
  * Hero: the round shop sign of Jo's Barbershop.
@@ -11,6 +12,8 @@ import { OutputPass } from './vendor/addons/postprocessing/OutputPass.js';
  * Only the logo on both faces of the disc glows. The disc turns slowly all the time; while the hero is
  * scrolled it turns faster and moves away towards the next section. The scroll progress comes from
  * motion.js as the 'jos:hero-progress' event.
+ * The wall behind the plate is the ground floor of the real facade (images/fasada.jpg), drawn only as thin
+ * lines (facade.js, made by fasada/build_facade.py). The sign hangs where it hangs on the building.
  */
 
 // Logo position on the disc, measured on the real sign: disc centre and radius in the
@@ -25,6 +28,11 @@ const BRACKET_TUBE = 0.04;
 const BASE_SPEED = 0.35;         // rad/s, slow constant turn
 const SCROLL_SPEED = 4.2;        // extra rad/s at the end of the hero scroll
 const BACKGROUND = 0x0d0c0c;     // same as --jos-bg
+const FACADE_COLOR = 0xf3f0ea;   // same as --jos-ink
+const FACADE_OPACITY = 0.34;
+const FACADE_OPACITY_MOBILE = 0.24;   // on phones the wall runs behind the text
+const FACADE_FADE = [1.5, 24];   // the lines fade out between these distances behind the sign
+const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left
 
 const root = document.querySelector('[data-scene]');
 
@@ -50,6 +58,8 @@ if (root) {
 
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color(BACKGROUND);
+		// fog only fades the facade lines into the dark; the sign itself ignores it
+		scene.fog = new THREE.Fog(BACKGROUND, 10, 30);
 
 		// reflections only on the metal parts; the black face of the disc stays matt
 		const pmrem = new THREE.PMREMGenerator(renderer);
@@ -64,16 +74,23 @@ if (root) {
 		const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
 
 		// ---- materials
-		const metal = new THREE.MeshStandardMaterial({ color: 0x0b0b0c, metalness: 0.85, roughness: 0.3, envMap: reflections, envMapIntensity: 0.6 });
-		const rim = new THREE.MeshStandardMaterial({ color: 0x0c0c0d, metalness: 0.9, roughness: 0.26, envMap: reflections, envMapIntensity: 0.6 });
-		const face = new THREE.MeshLambertMaterial({ color: 0x0e0c0c });   // matt black face, no highlight
+		const metal = new THREE.MeshStandardMaterial({ color: 0x0b0b0c, metalness: 0.85, roughness: 0.3, envMap: reflections, envMapIntensity: 0.6, fog: false });
+		const rim = new THREE.MeshStandardMaterial({ color: 0x0c0c0d, metalness: 0.9, roughness: 0.26, envMap: reflections, envMapIntensity: 0.6, fog: false });
+		const face = new THREE.MeshLambertMaterial({ color: 0x0e0c0c, fog: false });   // matt black face, no highlight
 		const logoMaterial = new THREE.MeshBasicMaterial({
 			color: new THREE.Color(1.6, 1.6, 1.57),   // above 1: the logo is the only thing that blooms
 			transparent: true,
 			depthWrite: false,
 			toneMapped: false,
+			fog: false,
 			polygonOffset: true,
 			polygonOffsetFactor: -2,
+		});
+		const lineMaterial = new THREE.LineBasicMaterial({   // dim: the facade never blooms
+			color: FACADE_COLOR,
+			transparent: true,
+			opacity: isMobile ? FACADE_OPACITY_MOBILE : FACADE_OPACITY,
+			depthWrite: false,
 		});
 
 		const segments = isMobile ? 72 : 128;
@@ -119,20 +136,35 @@ if (root) {
 
 		// ---- two short arms from the middle of the bracket to a vertical wall plate
 		const armLength = 0.34;
+		const plateDepth = 0.05;
+		const wallX = BRACKET_RADIUS + armLength + plateDepth;   // face of the wall
 		const armGeometry = new THREE.BoxGeometry(armLength, 0.055, 0.055);
 		[0.24, -0.24].forEach((y) => {
 			const arm = new THREE.Mesh(armGeometry, metal);
 			arm.position.set(BRACKET_RADIUS + armLength / 2, y, 0);
 			sign.add(arm);
 		});
-		const plate = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.82, 0.17), metal);
-		plate.position.set(BRACKET_RADIUS + armLength + 0.025, 0, 0);
+		const plate = new THREE.Mesh(new THREE.BoxGeometry(plateDepth, 0.82, 0.17), metal);
+		plate.position.set(wallX - plateDepth / 2, 0, 0);
 		sign.add(plate);
 
+		// ---- the wall: ground floor of the facade as lines, in the plane of the plate.
+		// facade.js gives depth behind the wall face, height and position along the wall, in disc radii.
+		const facadePositions = new Float32Array(FACADE_LINES.length);
+		for (let i = 0; i < FACADE_LINES.length; i += 3) {
+			facadePositions[i] = wallX + FACADE_LINES[i];
+			facadePositions[i + 1] = FACADE_LINES[i + 1];
+			facadePositions[i + 2] = FACADE_LINES[i + 2];
+		}
+		const facadeGeometry = new THREE.BufferGeometry();
+		facadeGeometry.setAttribute('position', new THREE.BufferAttribute(facadePositions, 3));
+		sign.add(new THREE.LineSegments(facadeGeometry, lineMaterial));
+
+		sign.rotation.y = VIEW_YAW;
 		scene.add(sign);
 
-		// ---- post processing: bloom only lifts the logo
-		const composer = new EffectComposer(renderer);
+		// ---- post processing: bloom only lifts the logo. Multisampled target, so the thin lines stay smooth.
+		const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
 		composer.addPass(new RenderPass(scene, camera));
 		const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.05, 1.0);
 		// tight glow along the letters: the wide blur levels hardly contribute, so the disc stays black
@@ -156,8 +188,11 @@ if (root) {
 			const vFov = THREE.MathUtils.degToRad(camera.fov);
 			const distH = (2.5 / 0.7) / (2 * Math.tan(vFov / 2));
 			const distW = (3.4 / 0.86) / (2 * Math.tan(vFov / 2) * camera.aspect);
-			camera.position.set(0, 0, Math.max(distH, distW));
+			const distance = Math.max(distH, distW);
+			camera.position.set(0, 0, distance);
 			camera.updateProjectionMatrix();
+			scene.fog.near = distance + FACADE_FADE[0];
+			scene.fog.far = distance + FACADE_FADE[1];
 			// on wide screens the sign sits right of centre, next to the text
 			baseX.value = camera.aspect > 1.25 ? 0.55 : -0.2;
 		};
