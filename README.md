@@ -10,7 +10,7 @@ Logo i grafički materijali za Jo's Barbershop.
 | `logo/` | Čisti master logo (SVG i PNG 2048 x 2048 px), opis u `logo/README.md` |
 | `fasada/` | Prizemlje fasade kao crtež linijama za hero (`build_facade.py`, `fasada-prizemlje.svg`) |
 | `theme/jos-barbershop/` | WordPress tema stranice |
-| `tools/` | Sinkronizacija s Localom (`jos-sync.ps1`) |
+| `tools/` | Sinkronizacija s Localom (`jos-sync.ps1`), 360 slika lokala (`panorama.py`), papir (`paper.py`) |
 
 ## Sinkronizacija s Localom
 
@@ -59,7 +59,9 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Nosač i zid stoje mirno, disk se okreće oko okomite osi, kao viseća reklama.
 - Svijetli samo logo ("Jo's" i red BARBERSHOP), disk i nosač ne svijetle.
 - Disk se uvijek okreće istom sporom brzinom (jedan krug za oko 24 sekunde).
-- Pozadina svih stranica je papir (`images/white-paper-texture.jpg`, u temi `assets/images/paper.webp`, 2000 px).
+- Pozadina svih stranica je papir iz `images/white-paper-texture.jpg`. `python3 tools/paper.py` od njega napravi
+  `assets/images/paper.webp`: pločicu 1024 x 1024 bez spojeva, s izravnanim osvjetljenjem i mekšim, finim zrnom
+  (55 % kontrasta fotografije). Na stranici se ponavlja u veličini 400 px.
   Na naslovnoj je papir u 3D prostoru, na unutarnjoj strani velike kugle oko cijele scene, pa se okreće zajedno sa
   zgradom kad je okrećeš. Linije fasade su malo podebljane (1,5 px, na mobitelu 1,3 px, three.js LineMaterial). Na naslovnoj zaglavlje
   nema svoju traku papira, pa je papir jedan cijeli; tekst stranica blijedi ispod zaglavlja. Linije fasade, trake u lukovima i natpis u temelju su smeđi (`#5b3517`), tekst je tamnosmeđa
