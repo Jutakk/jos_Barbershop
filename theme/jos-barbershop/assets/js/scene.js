@@ -13,16 +13,16 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
  * (images/fasada.jpg), drawn only as thin brown lines on the paper of the site (facade.js, made by
  * fasada/build_facade.py); the lines draw themselves when the page loads.
  * Dragging turns the building (left and right, up and down: turned up, the foundation with the footer lines
- * comes to the front), scrolling moves the camera along its Z axis into the depth of the picture and back;
+ * comes to the front), scrolling down pushes the building away along the Z axis into the depth, up brings it back;
  * sideways scrolling moves along the street.
  * The arches are the menu: in the band of every arch the name of its page runs around (fast at first, then
  * slowly), the whole window or door is the button: pointing at it fills it with a transparent pale yellow,
  * a click takes the camera through it into the page. Behind the door is the shop.
  * motion.js (GSAP) owns the values and sends them as events, three.js only draws:
  *   'jos:street'   { x, depth, yaw, pitch }: the point of the wall the camera goes around, moved along the street
- *                  (x 0 = first view, 1 = the last arch); depth: the camera moved along its own Z axis into the
- *                  picture, in disc radii (0 = first view); yaw and pitch in radians: the building turned left and
- *                  right, up and down. scene.js writes the limits on the root element.
+ *                  (x 0 = first view, 1 = the last arch); depth: the building pushed away along the Z axis into
+ *                  the depth of the picture, in disc radii (0 = first view); yaw and pitch in radians: the building
+ *                  turned left and right, up and down. scene.js writes the limits on the root element.
  *   'jos:view'     { arch, t }: arch index in FACADE_ARCHES (-1 = street), t 0 = street view, 1 = inside
  *   'jos:look'     { yaw, pitch } in radians: the view inside the shop, turned by dragging
  * The scene itself only reports clicks: 'jos:open' with the arch index, 'jos:link' with the address of a
@@ -60,8 +60,9 @@ const STREET_LENGTH = -FACADE_ARCHES[0].z;
 // Left and right up to this angle from straight in front of the wall, up and down up to TILT.
 const TURN_LIMIT = 1.4;
 const TILT = [-0.75, 0.75];
-// scrolling moves the camera along its Z axis into the picture, until it is this far from the wall
-const DEPTH_STOP = 1.2;
+// scrolling pushes the building away along the Z axis into the depth: the camera goes back along the
+// direction it looks in, up to this many times its first distance from the wall
+const DEPTH_BACK = 1.2;
 
 // in front of an arch the whole window or door is in view, from the ground to above the keystone
 const FRAME = {
@@ -498,6 +499,8 @@ if (root) {
 			pose.target.set(wallX + lookDepth, EYE_HEIGHT, z).applyMatrix4(sign.matrixWorld);
 		};
 		const toSign = new THREE.Matrix4();
+		let fogNear = 10;
+		let fogFar = 30;
 		const up = new THREE.Vector3(0, 1, 0);
 		// the first view in the wall's own space: the point of the wall it looks at, and camera and target from there
 		const pivot0 = new THREE.Vector3();
@@ -538,8 +541,8 @@ if (root) {
 			root.dataset.yawMax = (TURN_LIMIT - base).toFixed(3);
 			root.dataset.pitchMin = String(TILT[0]);
 			root.dataset.pitchMax = String(TILT[1]);
-			// scrolling goes along the Z axis of the camera into the picture, up to DEPTH_STOP before the wall
-			root.dataset.depthMax = Math.max(cameraFromPivot.length() - DEPTH_STOP, 0).toFixed(3);
+			// scrolling pushes the building into the depth, at most DEPTH_BACK times the first distance
+			root.dataset.depthMax = (cameraFromPivot.length() * DEPTH_BACK).toFixed(3);
 
 			// in front of an arch: the whole window or door with its wedge joints fills the screen
 			const frontDistance = Math.max((FRAME.top - FRAME.bottom) / (2 * tan), FRAME.width / (2 * tan * camera.aspect));
@@ -549,8 +552,8 @@ if (root) {
 			});
 
 			const framed = Math.max(heroDistance, frontDistance);
-			scene.fog.near = framed + FACADE_FADE[0];
-			scene.fog.far = framed + FACADE_FADE[1];
+			fogNear = framed + FACADE_FADE[0];
+			fogFar = framed + FACADE_FADE[1];
 		};
 
 		// ---- camera: in the street the hero view turned and moved along the wall; through an arch one smooth
@@ -578,10 +581,13 @@ if (root) {
 			across.crossVectors(street.position, up).normalize();
 			street.position.applyAxisAngle(across, THREE.MathUtils.clamp(pitch, TILT[0], TILT[1])).add(pivot).applyMatrix4(sign.matrixWorld);
 			street.target.applyAxisAngle(across, THREE.MathUtils.clamp(pitch, TILT[0], TILT[1])).add(pivot).applyMatrix4(sign.matrixWorld);
-			// into the depth: camera and target move along the Z axis of the camera, the direction it looks in
+			// the building into the depth: camera and target go back along the Z axis of the camera, and the fog
+			// goes back with them, so the building stays as clear as before, only further away
 			forward.subVectors(street.target, street.position).normalize();
-			street.position.addScaledVector(forward, depth);
-			street.target.addScaledVector(forward, depth);
+			street.position.addScaledVector(forward, -depth);
+			street.target.addScaledVector(forward, -depth);
+			scene.fog.near = fogNear + depth;
+			scene.fog.far = fogFar + depth;
 		};
 
 		const placeCamera = () => {

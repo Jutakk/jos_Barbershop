@@ -1,8 +1,8 @@
 /*
  * Motion layer of the front page (GSAP). In the street, dragging (or the arrow keys) turns the building left
  * and right, up and down: turned up, the foundation with the footer lines comes to the front. Scrolling down
- * (two fingers spread on a phone, Page Down) moves the camera along its Z axis into the depth of the picture,
- * scrolling up comes back out. Sideways scrolling (or shift and the arrow keys) moves along the street.
+ * (two fingers pinched on a phone, Page Down) pushes the building away along the Z axis into the depth,
+ * scrolling up brings it back. Sideways scrolling (or shift and the arrow keys) moves along the street.
  * The arches of the facade are the menu: a click on a window or door (scene.js sends 'jos:open'), on a menu link or on any link to #leistungen, #ueber-uns, #galerie or #kontakt takes the camera through that
  * arch and opens its page over the whole screen. The X, Esc or the back button of the browser lead back out
  * to the street. Behind the door is the shop: there the page stands still and dragging (or the arrow keys)
@@ -88,9 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const turnTo = (yaw, pitch, duration = 0.6) => glide(look, { yaw, pitch: gsap.utils.clamp(-0.7, 0.7, pitch) }, duration, sendLook);
 
 	// ---- in the street: the camera goes around a point of the wall. That point moves along the street (x, from
-	// a little to the right of the first view -0.25 down to the last arch 1); depth moves the camera along its
-	// own Z axis into the picture (0 = first view, in disc radii); the building is turned left and right (yaw)
-	// and up and down (pitch). The limits come from scene.js.
+	// a little to the right of the first view -0.25 down to the last arch 1); depth pushes the building away
+	// along the Z axis into the depth (0 = first view, in disc radii); the building is turned left and right
+	// (yaw) and up and down (pitch). The limits come from scene.js.
 	const STREET_X = [-0.25, 1];
 	const sceneRoot = document.querySelector('[data-scene]');
 	const limit = (name, fallback) => {
@@ -275,8 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (event.detail) window.location.assign(event.detail);
 	});
 
-	// ---- the wheel: scrolling down moves the camera along its Z axis into the depth of the picture, up comes
-	// back out to the first view; sideways (touchpad, or shift and wheel) moves along the street
+	// ---- the wheel: scrolling down pushes the building away along the Z axis into the depth, up brings it back
+	// to the first view; sideways (touchpad, or shift and wheel) moves along the street
 	window.addEventListener('wheel', (event) => {
 		if (current || event.ctrlKey) return;   // an open page scrolls itself; ctrl and wheel is the zoom
 		event.preventDefault();
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const TILT_PER_HEIGHT = 1.6;   // radians for a drag over the whole height
 	let grab = null;
 	let skipClick = false;
-	// two fingers on a phone: spread apart, the camera goes into the depth, pinched together it comes back
+	// two fingers on a phone: pinched together, the building goes into the depth, spread apart it comes back
 	const fingers = new Map();
 	let pinch = null;
 	if (scene) {
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (pinch && fingers.size === 2) {
 					const [a, b] = [...fingers.values()];
 					const distance = Math.hypot(a.x - b.x, a.y - b.y);
-					moveStreet({ depth: ((distance - pinch.distance) / window.innerWidth) * limit('depthMax', 15) * 1.5 }, 0.25);
+					moveStreet({ depth: ((pinch.distance - distance) / window.innerWidth) * limit('depthMax', 15) * 1.5 }, 0.25);
 					pinch.distance = distance;
 					return;
 				}
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener('keydown', (event) => {
 		if (!current) {
 			// in the street the arrow keys turn the building (with shift they move along the street),
-			// Page Down goes into the depth and Page Up back out
+			// Page Down pushes the building into the depth and Page Up brings it back
 			const steps = event.shiftKey
 				? { ArrowLeft: { x: 0.08 }, ArrowRight: { x: -0.08 } }
 				: { ArrowLeft: { yaw: 0.15 }, ArrowRight: { yaw: -0.15 }, ArrowUp: { pitch: -0.12 }, ArrowDown: { pitch: 0.12 } };

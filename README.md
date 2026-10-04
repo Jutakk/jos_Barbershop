@@ -68,10 +68,10 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 - Zgrada se hvata mišem ili prstom i okreće: lijevo i desno (do skoro bočnog pogleda), gore i dolje.
   Okrenuta prema gore pokaže temelj s footerom. Brzi potez se još malo okreće sam.
-- Scroll vozi kameru po njezinoj osi Z: prema dolje naprijed u dubinu slike, sve do zida, prema gore natrag do
-  prvog kadra. Na mobitelu isto radi s dva prsta (razmakni ih za naprijed).
+- Scroll prema dolje gura zgradu po osi Z u dubinu: zgrada se udaljava i smanjuje, pa se vidi cijela, s
+  footerom u temelju. Scroll prema gore je vraća do prvog kadra. Na mobitelu: dva prsta stisneš za u dubinu.
 - Scroll u stranu (touchpad, ili Shift i kotačić) vodi uz ulicu prema dalekim lukovima i natrag.
-- Tipkovnica: strelice okreću zgradu, Shift i strelice idu uz ulicu, Page Down vozi u dubinu, Page Up natrag.
+- Tipkovnica: strelice okreću zgradu, Shift i strelice idu uz ulicu, Page Down gura zgradu u dubinu, Page Up je vraća.
 - Povlačenje nikad ne otvara stranicu, otvara je samo pravi klik.
 
 **Footer u temelju**
@@ -148,7 +148,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.8.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll vozi kameru po osi Z u dubinu, lukovi s
+Status 0.8.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
 
