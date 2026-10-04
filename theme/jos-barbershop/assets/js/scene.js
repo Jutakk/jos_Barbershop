@@ -64,8 +64,8 @@ const TURN_LIMIT = 1.4;
 const TILT = [-0.75, 0.75];
 // scrolling goes into the depth, towards the point under the pointer, until the camera is this close to the
 // wall (times the first distance, never closer than NEAR_WALL)
-const NEAR_LIMIT = 0.35;
-const NEAR_WALL = 3.2;
+const NEAR_LIMIT = 0.1;
+const NEAR_WALL = 1.2;
 
 // in front of an arch the whole window or door is in view, from the ground to above the keystone
 const FRAME = {
