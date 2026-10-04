@@ -90,7 +90,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 **Izbornik na vijencu**
 
 - Na gornjoj crti vijenca (prednji rub, najgornja crta gledano s ulice) u jednom zbijenom redu stoji izbornik:
-  LEISTUNGEN, ÜBER UNS, GALERIE, KONTAKT, DE, EN, AR, bez točaka između. Red počinje točno na lijevom kutu
+  LEISTUNGEN, ÜBER UNS, GALERIE, KONTAKT, DE, EN, AR, bez točaka između, malo iznad crte. Red počinje točno na lijevom kutu
   zgrade i ide udesno; okreće se sa zgradom i ne blijedi u daljinu.
 - Gumbi su puni smeđi sa svijetlim slovima u fontu stranice. Pod mišem se rastežu kao Animated Top Dock iz
   ThreeUI (MIT licenca, `assets/js/vendor/threeui.LICENSE.txt`): gumb pod mišem i njegovi susjedi se šire
@@ -145,9 +145,10 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
 
-- `front-page.php`: hero s 3D znakom; dolje lijevo, riječ ispod riječi: JO'S / your / confidense / starts / here
-  (natpis s izloga trgovine), ispod BARBERSHOP in 1060 VIENNA, poravnato lijevo s natpisom u zaglavlju i jednako
-  daleko od dna. Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
+- `front-page.php`: hero s 3D znakom; riječ ispod riječi: JO'S / your / confidense / starts / here (natpis s izloga
+  trgovine), ispod BARBERSHOP in 1060 VIENNA. Tekst stoji uz donji lijevi kut kuće u prvom kadru: dno na liniji
+  tla, desni rub 24 px lijevo od kuće (`scene.js` izmjeri kut). Gdje nema mjesta (mobitel) stoji dolje lijevo
+  na ekranu. Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
   kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
   `jos:open`, klik na redak u temelju kao `jos:link`.

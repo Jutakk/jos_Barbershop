@@ -112,7 +112,8 @@ const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap
 // runs to the right; it is never faded by the fog. Every link is a button: light letters in a brown block.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
-const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
+const HERO_TEXT_GAP = 24;          // px between the hero text and the left edge of the house
+const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.13 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
 // The buttons stretch like the Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a proximity
 // spring widens the button under the pointer and its neighbours while the row keeps its length
 // (topDockController.js). Every button is plain brown with light letters in the font of the site.
@@ -643,6 +644,33 @@ if (root) {
 			const framed = Math.max(heroDistance, frontDistance);
 			fogNear = framed + FACADE_FADE[0];
 			fogFar = framed + FACADE_FADE[1];
+			placeHeroText();
+		};
+
+		// ---- the hero text stands against the bottom left corner of the house in the first view: its bottom on
+		// the ground line, its right edge HERO_TEXT_GAP px left of the house. Where there is no room for it
+		// (narrow screens) it keeps its place at the bottom left of the screen (style.scss).
+		const heroCamera = new THREE.PerspectiveCamera();
+		const corner = new THREE.Vector3();
+		const heroContent = document.querySelector('.hero__content');
+		const placeHeroText = () => {
+			if (!heroContent) return;
+			const w = root.clientWidth;
+			const h = root.clientHeight;
+			heroCamera.copy(camera);
+			heroCamera.fov = FOV;
+			heroCamera.position.copy(hero.position);
+			heroCamera.lookAt(hero.target);
+			heroCamera.updateProjectionMatrix();
+			heroCamera.updateMatrixWorld();
+			corner.set(wallX, FACADE_ARCH.ground, BUILDING_LEFT).applyMatrix4(sign.matrixWorld).project(heroCamera);
+			const x = (corner.x + 1) * 0.5 * w;
+			const y = (1 - corner.y) * 0.5 * h;
+			const fits = x - HERO_TEXT_GAP - heroContent.offsetWidth >= 16 && y > heroContent.offsetHeight + 80 && y <= h;
+			const style = document.documentElement.style;
+			document.documentElement.classList.toggle('has-house-corner', fits);
+			style.setProperty('--house-x', `${Math.round(x - HERO_TEXT_GAP)}px`);
+			style.setProperty('--house-y', `${Math.round(y)}px`);
 		};
 
 		// ---- camera: in the street the hero view turned and moved along the wall; through an arch one smooth

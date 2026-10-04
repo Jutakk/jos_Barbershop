@@ -385,9 +385,7 @@ canvas {
 		}
 	}
 
-	// one word per line
 	&__title {
-		width: min-content;
 		margin: 0 0 s(4);
 		font-size: clamp(2rem, 4.2vw, 3.75rem);
 		font-weight: 400;
@@ -395,8 +393,12 @@ canvas {
 		letter-spacing: -0.01em;
 	}
 
-	&__brand {
+	// one word per line
+	&__word {
 		display: block;
+	}
+
+	&__brand {
 		text-transform: uppercase;
 	}
 
@@ -818,6 +820,16 @@ canvas {
 	margin-bottom: s(5);
 	padding-inline-end: 0;
 	font-size: clamp(1.5rem, 2.4vw, 2.25rem);
+}
+
+// the hero text against the bottom left corner of the house: scene.js measures where the corner is in the
+// first view (--house-x: the right edge of the text, --house-y: the ground line) and sets .has-house-corner
+// where there is room for the text left of the house
+.has-house-corner .hero__content {
+	right: calc(100% - var(--house-x));
+	bottom: calc(100% - var(--house-y));
+	left: auto;
+	padding-right: 0;
 }
 
 // ---------- Arabic (dir="rtl"): the hero text stays on the left like in German, on the empty paper next to
