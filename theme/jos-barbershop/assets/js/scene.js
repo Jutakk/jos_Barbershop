@@ -35,13 +35,25 @@ const FACADE_COLOR = 0xf3f0ea;   // same as --jos-ink
 const FACADE_OPACITY = 0.34;
 const FACADE_OPACITY_MOBILE = 0.24;   // on phones the wall runs behind the text
 const FACADE_FADE = [1, 24];     // the lines fade out between these distances behind the framed view
-const DRAW_DURATION = 3.2;       // s, the facade draws itself when the page loads
+const DRAW_DURATION = 4.5;       // s, the facade draws itself when the page loads, in the order of facade.js
 const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left
+
+// hero view: standing in the street at eye level, the sign above and the whole ground floor down to the
+// ground. The camera stands back from the distance at which the sign alone would fill the screen.
+const HERO_PULL = 2.7;           // times the distance that fits the sign alone
+const HERO_PULL_MOBILE = 1.12;
+const HERO_LIFT = 0.03;          // looks slightly up, times the distance
 
 // route of the camera: arches from right to left (window, door, window, window), see FACADE_ARCHES
 const ROUTE = [3, 2, 1, 0];
-const ENTER_HEIGHT = FACADE_ARCH.spring + 0.6;   // the camera goes in through the arched top light
-const FRAME = { width: 5, height: 5.2 };          // part of the facade around an arch shown before going in
+// in front of an arch the whole window or door is in view, from the ground to above the keystone
+const FRAME = {
+	bottom: FACADE_ARCH.ground - 0.5,
+	top: FACADE_ARCH.top + 0.9,       // room for the header
+	width: FACADE_ARCH.band * 2 + 1.2,
+};
+// eye level of a person in the street; the camera looks at the middle of an arch from here and goes in
+const EYE_HEIGHT = (FRAME.bottom + FRAME.top) / 2;
 const INSIDE = FACADE_ARCH.reveal + 1.4;          // how far behind the wall face the camera stops
 const PANORAMA_RADIUS = 8;
 const PANORAMA_YAW = 0;          // rad: turns the photo of the shop so the view starts at the right place
@@ -213,7 +225,7 @@ if (root) {
 			}));
 			panorama.renderOrder = 10;   // over the facade lines and the sign
 			panorama.visible = false;
-			panorama.position.set(wallX + INSIDE, ENTER_HEIGHT, doorArch.z);
+			panorama.position.set(wallX + INSIDE, EYE_HEIGHT, doorArch.z);
 			panorama.rotation.y = PANORAMA_YAW;
 			sign.add(panorama);
 		}
@@ -252,8 +264,8 @@ if (root) {
 			inside: { position: new THREE.Vector3(), target: new THREE.Vector3() },
 		}));
 		const onWall = (pose, depth, lookDepth, z) => {
-			pose.position.set(wallX + depth, ENTER_HEIGHT, z).applyMatrix4(sign.matrixWorld);
-			pose.target.set(wallX + lookDepth, ENTER_HEIGHT, z).applyMatrix4(sign.matrixWorld);
+			pose.position.set(wallX + depth, EYE_HEIGHT, z).applyMatrix4(sign.matrixWorld);
+			pose.target.set(wallX + lookDepth, EYE_HEIGHT, z).applyMatrix4(sign.matrixWorld);
 		};
 
 		const fit = () => {
@@ -267,16 +279,17 @@ if (root) {
 			camera.updateProjectionMatrix();
 			const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
 
-			// hero: the whole sign (disc, bracket and plate, about 3.4 wide and 2.5 high) in view,
-			// on wide screens right of centre, next to the text
-			const heroDistance = Math.max((2.5 / 0.7) / (2 * tan), (3.4 / 0.86) / (2 * tan * camera.aspect));
+			// hero: the sign (disc, bracket and plate, about 3.4 wide and 2.5 high) and the facade behind it,
+			// on wide screens the sign right of centre, next to the text
+			const signDistance = Math.max((2.5 / 0.7) / (2 * tan), (3.4 / 0.86) / (2 * tan * camera.aspect));
+			const heroDistance = signDistance * (isMobile ? HERO_PULL_MOBILE : HERO_PULL);
 			sign.position.x = camera.aspect > 1.25 ? 0.55 : -0.2;
 			sign.updateMatrixWorld(true);
-			hero.position.set(0, 0, heroDistance);
-			hero.target.set(0, 0, 0);
+			hero.position.set(0, EYE_HEIGHT, heroDistance);
+			hero.target.set(0, EYE_HEIGHT + heroDistance * HERO_LIFT, 0);
 
-			// in front of an arch: the arch with its wedge joints fills the screen
-			const frontDistance = Math.max(FRAME.height / (2 * tan), FRAME.width / (2 * tan * camera.aspect));
+			// in front of an arch: the whole window or door with its wedge joints fills the screen
+			const frontDistance = Math.max((FRAME.top - FRAME.bottom) / (2 * tan), FRAME.width / (2 * tan * camera.aspect));
 			ROUTE.forEach((index, i) => {
 				const z = FACADE_ARCHES[index].z;
 				onWall(stops[i].front, -frontDistance, 0, z);
@@ -414,7 +427,7 @@ if (root) {
 			update();
 			if (!reduced) {
 				if (window.gsap) {
-					window.gsap.to(drawing, { value: 1, duration: DRAW_DURATION, ease: 'power1.inOut', delay: 0.3 });
+					window.gsap.to(drawing, { value: 1, duration: DRAW_DURATION, ease: 'none', delay: 0.3 });
 				} else {
 					drawing.value = 1;
 				}

@@ -41,7 +41,10 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Znak visi na svom stvarnom mjestu, između trećeg i četvrtog luka. Fasada je zakrenuta tako da odgovara
   položaju znaka: pločica nosača sjedi na zidu, a ulica odlazi ulijevo u dubinu, kao na `images/znak.jpg`.
 - Linije u daljini blijede u tamu i ne svijetle.
-- Pri učitavanju stranice linije se same iscrtaju: val kreće od znaka i širi se niz zid na obje strane.
+- Pri učitavanju stranice linije se iscrtaju redom, kao kad arhitekt crta: prvo vijenac i linija tla rastu od
+  znaka prema oba kraja zgrade, pa rubovi zgrade, pa lukovi jedan po jedan (od dva uz znak prema van), svaki od
+  tla uz oba dovratka do tjemena, a na kraju fuge, luk po luk, od vrha prema dolje.
+- Prvi kadar je pogled s ulice u visini očiju: znak gore, a ispod njega cijelo prizemlje do tla.
 - Mjere su uzete s ispravljene fotografije (`fasada/podaci/H_rect.npy`). Promjena crteža:
   `python3 fasada/build_facade.py` napiše `theme/jos-barbershop/assets/js/facade.js` i `fasada/fasada-prizemlje.svg`,
   a `--check` još i `fasada/provjera.png` s linijama preko fotografije.
@@ -56,7 +59,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 **Scroll: lukovi su stranice**
 
 - Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog. Scroll vodi kameru niz ulicu od luka do luka.
-- Kod svakog luka kamera stane ispred njega, uđe kroz luk i otvori se stranica preko cijelog ekrana.
+- Kod svakog luka kamera stane ispred njega tako da se vidi cijeli prozor ili vrata, od tla do zaglavnog kamena,
+  zatim uđe kroz luk u visini očiju i otvori se stranica preko cijelog ekrana.
 - Redom: Leistungen & Preise (izlog desno), Über uns (vrata), Galerie, Kontakt (izlog lijevo).
 - Kroz vrata kamera ulazi u lokal: 360 fotografija lokala oko kamere, pogled se sa scrollom okrene
   jednom u krug, a stranica Über uns dolazi preko lokala. Slika ide u
@@ -84,6 +88,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.3.0: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+Status 0.3.1: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
 (čeka 360 sliku). Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 
