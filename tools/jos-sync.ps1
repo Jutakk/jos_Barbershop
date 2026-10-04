@@ -10,26 +10,24 @@
 $repo    = 'D:\CLAUDE_CODE\jos-barbershop'
 $branch  = 'claude/jos-barbershop-logo-xgtbba'
 $src     = Join-Path $repo 'theme\jos-barbershop'
-$sites   = 'C:\Users\User\Local Sites'
+$site    = 'C:\Users\User\Local Sites\jos-barbershop'
 $uploads = @('reference', 'images', 'hairs')
 $who     = @('-c', 'user.name=Kresho', '-c', 'user.email=kresho@iks.haus')
 
 function Stamp { Get-Date -Format 'HH:mm:ss' }
 
-# LocalWP site folder of Jo's Barbershop: the one Local Sites folder whose name contains "barber"
-$site = @(Get-ChildItem -LiteralPath $sites -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'barber' })
-if ($site.Count -ne 1) {
-    Write-Host ('{0}  U {1} nisam nasao tocno jednu mapu s "barber" u imenu. Posalji Claudeu ovaj ispis:' -f (Stamp), $sites)
-    Get-ChildItem -LiteralPath $sites -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host ('    ' + $_.Name) }
+# LocalWP site of Jo's Barbershop (localhost:10098)
+if (-not (Test-Path -LiteralPath $site -PathType Container)) {
+    Write-Host ('{0}  Local stranica {1} ne postoji. Posalji Claudeu ovaj ispis.' -f (Stamp), $site)
     exit 1
 }
-$dst = Join-Path $site[0].FullName 'app\public\wp-content\themes\jos-barbershop'
+$dst = Join-Path $site 'app\public\wp-content\themes\jos-barbershop'
 
 git -C $repo fetch --quiet origin
 git -C $repo checkout --quiet $branch
 $last = ''
 $pendingBefore = ''
-Write-Host ('{0}  Sinkronizacija radi ({1}). Ostavi ovaj prozor otvoren.' -f (Stamp), $site[0].Name)
+Write-Host ('{0}  Sinkronizacija radi. Ostavi ovaj prozor otvoren.' -f (Stamp))
 while ($true) {
     git -C $repo fetch --quiet origin $branch 2>$null
     $current = git -C $repo branch --show-current

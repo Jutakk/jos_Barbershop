@@ -14,7 +14,7 @@ Logo i grafički materijali za Jo's Barbershop.
 
 Isto kao kod Zum kleinen Feinen: Claude pusha na granu `claude/jos-barbershop-logo-xgtbba`, a skripta
 `tools/jos-sync.ps1` na računalu svakih 5 sekundi povlači promjene i kopira temu `theme/jos-barbershop`
-u Local stranicu (mapa u `C:\Users\User\Local Sites` s "barber" u imenu). Nove datoteke ubačene u
+u Local stranicu `C:\Users\User\Local Sites\jos-barbershop` (localhost:10098). Nove datoteke ubačene u
 `reference`, `images` ili `hairs` skripta sama šalje na GitHub.
 
 - Izvor na računalu: `D:\CLAUDE_CODE\jos-barbershop`
