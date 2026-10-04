@@ -1,0 +1,245 @@
+/*!
+Theme Name: Jo's Barbershop
+Author: iks.haus
+Author URI: https://iks.haus
+Description: Custom theme for Jo's Barbershop, Wien 1060. Hero with the turning shop sign in three.js.
+Version: 0.1.0
+Requires at least: 6.5
+Requires PHP: 8.0
+License: Proprietary
+Text Domain: jos-barbershop
+*/
+:root {
+  --jos-bg: #0d0c0c;
+  --jos-ink: #f3f0ea;
+  --jos-muted: #a39d94;
+  --jos-accent: #c9a66b;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--jos-bg);
+  color: var(--jos-ink);
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 8px 16px;
+  background: var(--jos-ink);
+  color: var(--jos-bg);
+  transform: translateY(-200%);
+}
+.skip-link:focus-visible {
+  transform: none;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 32px;
+  border: 1px solid var(--jos-ink);
+  background: transparent;
+  color: var(--jos-ink);
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 200ms ease;
+}
+.button:hover {
+  background: var(--jos-ink);
+  color: var(--jos-bg);
+  transform: translateY(-1px);
+}
+.button:focus-visible {
+  outline: 2px solid var(--jos-accent);
+  outline-offset: 3px;
+}
+.button:active {
+  transform: translateY(1px);
+}
+.button:disabled, .button[aria-disabled=true] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.button--hint {
+  border-style: dashed;
+  color: var(--jos-muted);
+  white-space: normal;
+}
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 24px clamp(24px, 6vw, 96px);
+  pointer-events: none;
+}
+.site-header__brand {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  text-decoration: none;
+  pointer-events: auto;
+}
+.site-header__brand:focus-visible {
+  outline: 2px solid var(--jos-accent);
+  outline-offset: 4px;
+}
+
+.hero {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 45%;
+  background: linear-gradient(to bottom, rgba(13, 12, 12, 0), var(--jos-bg));
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .hero::after {
+    height: 30%;
+  }
+}
+.hero__content {
+  position: absolute;
+  left: clamp(24px, 6vw, 96px);
+  bottom: clamp(32px, 10vh, 96px);
+  z-index: 2;
+  max-width: 34rem;
+  padding-right: 24px;
+}
+.hero__title {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 4.2vw, 3.75rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+.hero__meta {
+  margin: 0 0 32px;
+  color: var(--jos-muted);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+}
+
+.scene__poster,
+.scene__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scene__canvas {
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+
+.scene.is-ready .scene__canvas {
+  opacity: 1;
+}
+
+.page {
+  max-width: 70ch;
+  margin: 0 auto;
+  padding: 96px 24px 64px;
+}
+.page__title {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 32px clamp(24px, 6vw, 96px);
+  color: var(--jos-muted);
+  font-size: 13px;
+}
+.site-footer p {
+  margin: 0;
+}
+.site-footer__legal {
+  display: flex;
+  gap: 24px;
+}
+.site-footer__legal a {
+  text-decoration: none;
+}
+.site-footer__legal a:hover {
+  color: var(--jos-ink);
+}
+.site-footer__legal a:focus-visible {
+  outline: 2px solid var(--jos-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene__canvas,
+  .button {
+    transition: none;
+  }
+}

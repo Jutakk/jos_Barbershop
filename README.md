@@ -8,6 +8,7 @@ Logo i grafički materijali za Jo's Barbershop.
 | `images/` | Fotografije i slike za web stranicu |
 | `hairs/` | Materijal za web stranicu |
 | `logo/` | Čisti master logo (SVG i PNG 2048 x 2048 px), opis u `logo/README.md` |
+| `theme/jos-barbershop/` | WordPress tema stranice |
 | `tools/` | Sinkronizacija s Localom (`jos-sync.ps1`) |
 
 ## Sinkronizacija s Localom
@@ -38,3 +39,20 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Svijetli samo logo ("Jo's" i red BARBERSHOP), disk i nosač ne svijetle.
 - Disk se stalno polako okreće. Pri scrollu se okretanje ubrza i znak se odmakne prema sljedećoj sekciji.
 - Pozadina je tamna.
+
+## Tema `theme/jos-barbershop`
+
+Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
+
+- `front-page.php`: hero s 3D znakom, naslov "your confidence starts here" (natpis s izloga trgovine), gumb "Termin buchen"
+- `assets/js/scene.js`: three.js scena znaka, učitana kao ES modul preko WordPress Script Modules API
+- `assets/js/motion.js`: GSAP i ScrollTrigger, prikvačuje hero za jedan ekran scrolla i šalje napredak sceni
+- `assets/scss/style.scss`: izvor stilova, prevodi se u `style.css`:
+  `npx sass assets/scss/style.scss style.css --style=expanded --no-source-map` (u mapi teme)
+- Gumb "Termin buchen": link se upisuje u Customizeru, sekcija "Jo's Barbershop", polje "Termin-Link"
+  (stranica za rezervaciju ili `tel:+43...`). Dok link nije upisan, gumb vidi samo prijavljeni urednik.
+
+Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
+
+Status 0.1.0: hero s 3D znakom. Slijede ostale sekcije, DE i EN verzija, FAQ, Impressum i Datenschutz.
+
