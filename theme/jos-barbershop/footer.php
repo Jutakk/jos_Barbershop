@@ -10,6 +10,8 @@ $jos_imprint = get_page_by_path( 'impressum' );
 ?>
 <footer class="site-footer">
 	<p class="site-footer__copy">&copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> Jo&rsquo;s Barbershop</p>
+	<?php $jos_shop = jos_shop(); ?>
+	<p class="site-footer__address"><a href="<?php echo esc_url( jos_maps_link() ); ?>"><?php echo esc_html( $jos_shop['street'] . ', ' . $jos_shop['postcode'] . ' ' . $jos_shop['city'] ); ?></a></p>
 	<?php if ( $jos_imprint || $jos_privacy ) : ?>
 		<nav class="site-footer__legal" aria-label="<?php esc_attr_e( 'Rechtliches', 'jos-barbershop' ); ?>">
 			<?php if ( $jos_imprint ) : ?>

@@ -99,6 +99,17 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   Izbornik u zaglavlju skače na njih.
 - FAQ: u stranici Kontakt svako pitanje je blok "Details" (pitanje u naslovu, odgovor u sadržaju). Iz tih blokova
   tema sama složi FAQPage schemu.
+- Prvi sadržaj stranica (04.10.2026, iz cjenika i opisa salona s booking stranice): tema ga jednom upiše u stranicu,
+  samo dok u njoj stoji "Inhalt folgt.", a poslije se stranice uređuju u WordPressu (`jos_room_texts()` u `functions.php`):
+  - Leistungen & Preise: cjenik po kategorijama (Herrenhaarschnitte, Bartpflege, Kinderhaarschnitte, Augenbrauen),
+    usluga, trajanje i cijena, unutar kategorije od najjeftinije.
+  - Über uns: uvod, tim (Inhaber Jwan; Deutsch, Englisch, Arabisch, Kurdisch) i "Was dich erwartet".
+  - Kontakt: adresa (Gumpendorfer Straße 127, 1060 Wien, poveznica na Google Maps), Bushaltestelle Sonnenuhrgasse,
+    radno vrijeme (Di bis Fr 10:00 bis 19:00, Sa 10:00 bis 18:00, Mo i So zatvoreno), plaćanje (gotovina, kreditna
+    kartica) i FAQ sa 7 pitanja.
+  - Galerie čeka fotografije.
+- Adresa stoji i u footeru. Za Google i AI tražilice naslovnica nosi HairSalon schemu (adresa, radno vrijeme,
+  plaćanje, jezici) iz `jos_shop()` u `functions.php`; promjena radnog vremena ide i tamo.
 - `assets/scss/style.scss`: izvor stilova, prevodi se u `style.css`:
   `npx sass assets/scss/style.scss style.css --style=expanded --no-source-map` (u mapi teme)
 - Gumb "Termin buchen": link se upisuje u Customizeru, sekcija "Jo's Barbershop", polje "Termin-Link"
@@ -106,6 +117,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.4.4: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
-s 360 fotografijom. Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
+Status 0.5.0: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+s 360 fotografijom. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
 

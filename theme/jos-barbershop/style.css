@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.4.4
+Version: 0.5.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -125,6 +125,13 @@ canvas {
   gap: 32px;
   padding: 24px clamp(24px, 6vw, 96px);
   pointer-events: none;
+}
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -32px 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, var(--jos-bg) 35%, rgba(19, 14, 11, 0));
 }
 .site-header__brand, .site-header__nav a {
   font-size: 12px;
@@ -308,6 +315,15 @@ canvas {
   text-align: right;
   white-space: nowrap;
 }
+.room__content .wp-block-table td:nth-child(2):not(:last-child) {
+  width: 8.5rem;
+  padding-left: 24px;
+  color: var(--jos-muted);
+  white-space: nowrap;
+}
+.room__content .wp-block-table td:nth-child(3):last-child {
+  width: 5rem;
+}
 .room__content .wp-block-gallery {
   margin: 0 0 32px;
   gap: 12px;
@@ -382,8 +398,8 @@ html {
 
 .journey > .shop-hint {
   position: fixed;
-  left: 50%;
-  bottom: clamp(32px, 8vh, 64px);
+  right: clamp(24px, 6vw, 96px);
+  bottom: clamp(24px, 8vh, 64px);
   z-index: 3;
   margin: 0;
   color: var(--jos-ink);
@@ -391,7 +407,6 @@ html {
   letter-spacing: 0.24em;
   text-transform: uppercase;
   white-space: nowrap;
-  transform: translateX(-50%);
   pointer-events: none;
   transition: opacity 600ms ease;
 }
@@ -401,11 +416,11 @@ html {
 @media (max-width: 767px) {
   .journey > .shop-hint {
     top: 96px;
+    right: auto;
     bottom: auto;
     left: 24px;
     max-width: calc(100vw - 72px - 72px);
     white-space: normal;
-    transform: none;
   }
 }
 
@@ -489,11 +504,23 @@ html {
   bottom: clamp(24px, 8vh, 64px);
   width: auto;
   max-width: min(34rem, 100vw - 48px);
-  max-height: 45vh;
+  max-height: calc(100vh - 224px);
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-color: var(--jos-line) transparent;
+  scrollbar-width: thin;
   opacity: 1 !important;
   pointer-events: auto;
+}
+@media (max-width: 767px) {
+  .is-in-shop .room--shop .room__inner {
+    max-height: 55vh;
+  }
+}
+
+.is-in-shop .room--shop .room__title {
+  margin-bottom: 24px;
+  font-size: clamp(1.5rem, 2.4vw, 2.25rem);
 }
 
 .is-in-shop .room--shop [data-reveal] {
@@ -529,6 +556,16 @@ html {
 }
 .site-footer p {
   margin: 0;
+}
+.site-footer__address a {
+  text-decoration: none;
+}
+.site-footer__address a:hover {
+  color: var(--jos-ink);
+}
+.site-footer__address a:focus-visible {
+  outline: 2px solid var(--jos-accent);
+  outline-offset: 3px;
 }
 .site-footer__legal {
   display: flex;

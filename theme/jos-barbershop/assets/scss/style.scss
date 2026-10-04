@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.4.4
+Version: 0.5.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -169,6 +169,15 @@ canvas {
 	gap: s(6);
 	padding: s(5) clamp(#{s(5)}, 6vw, #{s(9)});
 	pointer-events: none;
+
+	// long pages scroll under the header: a soft dark band keeps its text readable
+	&::before {
+		content: "";
+		position: absolute;
+		inset: 0 0 (0 - s(6)) 0;
+		z-index: -1;
+		background: linear-gradient(to bottom, var(--jos-bg) 35%, rgba(19, 14, 11, 0));
+	}
 
 	&__brand,
 	&__nav a {
@@ -391,6 +400,19 @@ canvas {
 				text-align: right;
 				white-space: nowrap;
 			}
+
+			// price list: the duration in the middle, quieter. Fixed widths, so the columns of all
+			// price tables line up below each other.
+			td:nth-child(2):not(:last-child) {
+				width: 8.5rem;
+				padding-left: s(5);
+				color: var(--jos-muted);
+				white-space: nowrap;
+			}
+
+			td:nth-child(3):last-child {
+				width: 5rem;
+			}
 		}
 
 		.wp-block-gallery {
@@ -486,8 +508,8 @@ html {
 
 .journey > .shop-hint {
 	position: fixed;
-	left: 50%;
-	bottom: clamp(#{s(6)}, 8vh, #{s(8)});
+	right: clamp(#{s(5)}, 6vw, #{s(9)});
+	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
 	z-index: 3;
 	margin: 0;
 	color: var(--jos-ink);
@@ -495,7 +517,6 @@ html {
 	letter-spacing: 0.24em;
 	text-transform: uppercase;
 	white-space: nowrap;
-	transform: translateX(-50%);
 	pointer-events: none;
 	transition: opacity 600ms ease;
 
@@ -506,11 +527,11 @@ html {
 	// on phones the text of the page lies at the bottom: the hint goes up, left of the X
 	@media (max-width: $bp-tablet - 1) {
 		top: s(9);
+		right: auto;
 		bottom: auto;
 		left: s(5);
 		max-width: calc(100vw - 72px - #{3 * s(5)});
 		white-space: normal;
-		transform: none;
 	}
 }
 
@@ -607,11 +628,22 @@ html {
 	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
 	width: auto;
 	max-width: min(34rem, calc(100vw - #{2 * s(5)}));
-	max-height: 45vh;
+	max-height: calc(100vh - #{s(9) + s(9) + s(6)});   // free of the header and the X; longer text scrolls inside
 	overflow-y: auto;
 	overscroll-behavior: contain;
+	scrollbar-color: var(--jos-line) transparent;
+	scrollbar-width: thin;
 	opacity: 1 !important;
 	pointer-events: auto;
+
+	@media (max-width: $bp-tablet - 1) {
+		max-height: 55vh;
+	}
+}
+
+.is-in-shop .room--shop .room__title {
+	margin-bottom: s(5);
+	font-size: clamp(1.5rem, 2.4vw, 2.25rem);
 }
 
 .is-in-shop .room--shop [data-reveal] {
@@ -650,6 +682,19 @@ html {
 
 	p {
 		margin: 0;
+	}
+
+	&__address a {
+		text-decoration: none;
+
+		&:hover {
+			color: var(--jos-ink);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--jos-accent);
+			outline-offset: 3px;
+		}
 	}
 
 	&__legal {
