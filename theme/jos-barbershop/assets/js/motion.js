@@ -1,14 +1,14 @@
 /*
  * Motion layer of the front page (GSAP). In the street, dragging (or the arrow keys) turns the building left
- * and right, up and down: turned up, the foundation with the footer lines comes to the front. Scrolling (or
- * Page Up and Page Down) moves along the street. The arches of the facade are the menu: a click on a window or door (scene.js sends 'jos:open'), on
+ * and right, up and down: turned up, the foundation with the footer lines comes to the front. Scrolling down
+ * (or pinching on a phone, or + and -) goes into the depth towards the pointer, so the footer can be read up
+ * close; sideways scrolling (or Page Up and Page Down) moves along the street. The arches of the facade are the menu: a click on a window or door (scene.js sends 'jos:open'), on
  * a menu link or on any link to #leistungen, #ueber-uns, #galerie or #kontakt takes the camera through that
  * arch and opens its page over the whole screen. The X, Esc or the back button of the browser lead back out
  * to the street. Behind the door is the shop: there the page stands still and dragging (or the arrow keys)
  * turns the view around the shop.
  * GSAP owns all values and sends them to the three.js scene (scene.js), which only draws:
- *   'jos:street'   { x, yaw, pitch }: x 0 = first view, 1 = down the street to the last arch; the building turned
- *                  left and right (yaw) and up and down (pitch), in radians, within the limits scene.js gives
+ *   'jos:street'   { x, lift, near, yaw, pitch }: where the camera stands in the street, see moveStreet below
  *   'jos:view'     { arch, t }: arch index (-1 = street), t 0 = street view, 1 = inside the arch
  *   'jos:look'     { yaw, pitch }: the view inside the shop
  */
@@ -87,22 +87,38 @@ document.addEventListener('DOMContentLoaded', () => {
 	};
 	const turnTo = (yaw, pitch, duration = 0.6) => glide(look, { yaw, pitch: gsap.utils.clamp(-0.7, 0.7, pitch) }, duration, sendLook);
 
-	// ---- in the street: x from a little to the right of the first view (-0.25) down to the last arch (1);
-	// the building turned left and right (yaw) and up and down (pitch), as far as scene.js allows
+	// ---- in the street: the camera goes around a point of the wall. That point moves along the street (x, from
+	// a little to the right of the first view -0.25 down to the last arch 1) and up or down (lift); near is the
+	// distance (1 = first view, smaller = deeper in); the building is turned left and right (yaw) and up and
+	// down (pitch). The limits come from scene.js.
 	const STREET_X = [-0.25, 1];
 	const sceneRoot = document.querySelector('[data-scene]');
 	const limit = (name, fallback) => {
 		const value = sceneRoot ? Number(sceneRoot.dataset[name]) : NaN;
 		return Number.isFinite(value) ? value : fallback;
 	};
-	const street = { x: 0, yaw: 0, pitch: 0 };
-	const aim = { x: 0, yaw: 0, pitch: 0 };
-	const sendStreet = () => send('jos:street', { x: street.x, yaw: street.yaw, pitch: street.pitch });
-	const moveStreet = (dx, dyaw, dpitch, duration = 0.9) => {
-		aim.x = gsap.utils.clamp(STREET_X[0], STREET_X[1], aim.x + dx);
-		aim.yaw = gsap.utils.clamp(limit('yawMin', -1.9), limit('yawMax', 0.9), aim.yaw + dyaw);
-		aim.pitch = gsap.utils.clamp(limit('pitchMin', -0.75), limit('pitchMax', 0.75), aim.pitch + dpitch);
-		glide(street, { x: aim.x, yaw: aim.yaw, pitch: aim.pitch }, duration, sendStreet);
+	const street = { x: 0, lift: 0, near: 1, yaw: 0, pitch: 0 };
+	const aim = { ...street };
+	const sendStreet = () => send('jos:street', { ...street });
+	const moveStreet = (change, duration = 0.9) => {
+		const clamp = gsap.utils.clamp;
+		aim.x = clamp(STREET_X[0], STREET_X[1], aim.x + (change.x || 0));
+		aim.lift = clamp(limit('liftMin', -6), limit('liftMax', 4), aim.lift + (change.lift || 0));
+		aim.near = clamp(limit('nearMin', 0.22), 1, change.near === undefined ? aim.near : change.near);
+		aim.yaw = clamp(limit('yawMin', -1.9), limit('yawMax', 0.9), aim.yaw + (change.yaw || 0));
+		aim.pitch = clamp(limit('pitchMin', -0.75), limit('pitchMax', 0.75), aim.pitch + (change.pitch || 0));
+		glide(street, { ...aim }, duration, sendStreet);
+	};
+	// into the depth (factor below 1) or back out, towards the point of the wall under the screen point:
+	// that point stays where it is on the screen, like zooming a map
+	const zoomAt = (clientX, clientY, factor, duration = 0.5) => {
+		const near = gsap.utils.clamp(limit('nearMin', 0.22), 1, aim.near * factor);
+		const f = near / aim.near;
+		if (Math.abs(f - 1) < 1e-4) return;
+		const query = { x: clientX, y: clientY, point: null };
+		send('jos:wall-point', query);
+		const point = query.point || { dx: 0, dy: 0 };
+		moveStreet({ x: point.dx * (1 - f), lift: point.dy * (1 - f), near }, duration);
 	};
 
 	// ---- the page itself; its link in the menu is marked as the current one
@@ -269,12 +285,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (event.detail) window.location.assign(event.detail);
 	});
 
-	// ---- moving along the street: the wheel (both directions of a touchpad too) goes down the street and back
+	// ---- the wheel: scrolling down goes into the depth towards the pointer, up comes back out;
+	// sideways (touchpad, or shift and wheel) moves along the street
 	window.addEventListener('wheel', (event) => {
 		if (current || event.ctrlKey) return;   // an open page scrolls itself; ctrl and wheel is the zoom
 		event.preventDefault();
 		const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
-		moveStreet(((event.deltaY + event.deltaX) * unit) / 1500, 0, 0);
+		const down = event.deltaY * unit;
+		const sideways = event.deltaX * unit;
+		if (Math.abs(sideways) > Math.abs(down)) moveStreet({ x: sideways / 1500 });
+		else zoomAt(event.clientX, event.clientY, Math.exp(-down * 0.0015));
 	}, { passive: false });
 
 	// grab the building and turn it: it follows the pointer, and a quick throw turns on a little
@@ -283,13 +303,37 @@ document.addEventListener('DOMContentLoaded', () => {
 	const TILT_PER_HEIGHT = 1.6;   // radians for a drag over the whole height
 	let grab = null;
 	let skipClick = false;
+	// two fingers on a phone: pinching goes into the depth and back out, like the wheel
+	const fingers = new Map();
+	let pinch = null;
 	if (scene) {
 		scene.addEventListener('pointerdown', (event) => {
 			if (current || event.button !== 0) return;
+			if (event.pointerType === 'touch') {
+				fingers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+				if (fingers.size === 2) {
+					const [a, b] = [...fingers.values()];
+					pinch = { distance: Math.hypot(a.x - b.x, a.y - b.y) };
+					if (grab && grab.moved) html.classList.remove('is-dragging-street');
+					grab = null;
+					skipClick = true;
+					return;
+				}
+			}
 			const now = performance.now();
 			grab = { id: event.pointerId, x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY, time: now, vx: 0, vy: 0, moved: false };
 		});
 		window.addEventListener('pointermove', (event) => {
+			if (fingers.has(event.pointerId)) {
+				fingers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+				if (pinch && fingers.size === 2) {
+					const [a, b] = [...fingers.values()];
+					const distance = Math.hypot(a.x - b.x, a.y - b.y);
+					if (distance > 0 && pinch.distance > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, pinch.distance / distance, 0.25);
+					pinch.distance = distance;
+					return;
+				}
+			}
 			if (!grab || event.pointerId !== grab.id) return;
 			if (!grab.moved) {
 				if (Math.hypot(event.clientX - grab.x, event.clientY - grab.y) < 6) return;
@@ -306,13 +350,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			grab.lastX = event.clientX;
 			grab.lastY = event.clientY;
 			grab.time = now;
-			moveStreet(0, dyaw, dpitch, 0.45);
+			moveStreet({ yaw: dyaw, pitch: dpitch }, 0.45);
 		});
 		const release = (event) => {
+			fingers.delete(event.pointerId);
+			if (fingers.size < 2) pinch = null;
 			if (!grab || event.pointerId !== grab.id) return;
 			if (grab.moved) {
 				skipClick = true;   // the end of a drag is no click on a window
-				if (performance.now() - grab.time < 120) moveStreet(0, grab.vx * 0.25, grab.vy * 0.25, 1.2);
+				if (performance.now() - grab.time < 120) moveStreet({ yaw: grab.vx * 0.25, pitch: grab.vy * 0.25 }, 1.2);
 				html.classList.remove('is-dragging-street');
 			}
 			grab = null;
@@ -329,19 +375,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	window.addEventListener('keydown', (event) => {
 		if (!current) {
-			// in the street the arrow keys turn the building, Page Up and Page Down move along the street
+			// in the street the arrow keys turn the building, + and - go into the depth and back,
+			// Page Up and Page Down move along the street
 			const steps = {
-				ArrowLeft: [0, 0.15, 0],
-				ArrowRight: [0, -0.15, 0],
-				ArrowUp: [0, 0, -0.12],
-				ArrowDown: [0, 0, 0.12],
-				PageDown: [0.12, 0, 0],
-				PageUp: [-0.12, 0, 0],
+				ArrowLeft: { yaw: 0.15 },
+				ArrowRight: { yaw: -0.15 },
+				ArrowUp: { pitch: -0.12 },
+				ArrowDown: { pitch: 0.12 },
+				PageDown: { x: 0.12 },
+				PageUp: { x: -0.12 },
 			};
+			const depth = { '+': 0.8, '=': 0.8, '-': 1.25 };
 			const typing = event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]');
-			if (steps[event.key] && !typing && !event.altKey && !event.metaKey && !event.ctrlKey) {
+			if (typing || event.altKey || event.metaKey || event.ctrlKey) return;
+			if (steps[event.key]) {
 				event.preventDefault();
-				moveStreet(...steps[event.key], 0.6);
+				moveStreet(steps[event.key], 0.6);
+			} else if (depth[event.key]) {
+				event.preventDefault();
+				zoomAt(window.innerWidth / 2, window.innerHeight / 2, depth[event.key], 0.6);
 			}
 			return;
 		}
