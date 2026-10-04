@@ -108,7 +108,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   `ueber-uns`, `galerie`, `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns,
   Kontakt s FAQ), poslije se uređuju u WordPressu. Prijevodi su u `jos_room_words()` u `functions.php`.
 - Kratki tekstovi teme (gumb, izbornik, uputa u lokalu, footer) su u `inc/languages.php`.
-- Slogan s izloga "your confidence starts here" ostaje engleski u njemačkoj i engleskoj verziji, u arapskoj je
+- Slogan s izloga "your confidense starts here" ostaje engleski u njemačkoj i engleskoj verziji, u arapskoj je
   "ثقتك تبدأ هنا". Arapski tekst heroja stoji lijevo kao u njemačkoj, na praznom papiru pored zgrade.
 - Arapski prijevod je moj: prije objave neka ga pogleda Jwan.
 
