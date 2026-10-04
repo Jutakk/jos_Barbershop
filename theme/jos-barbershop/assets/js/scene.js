@@ -20,7 +20,7 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
  * comes to the front), scrolling down pushes the building away along the Z axis into the depth, up brings it back;
  * sideways scrolling moves along the street.
  * The arches are the menu: in the band of every arch the name of its page runs around (fast at first, then
- * slowly), the whole window or door is the button: pointing at it fills it with a transparent pale yellow,
+ * slowly) on the brown band, the whole window or door is the button: pointing at it fills it with white,
  * a click takes the camera through it into the page. Behind the door is the shop.
  * motion.js (GSAP) owns the values and sends them as events, three.js only draws:
  *   'jos:street'   { x, depth, yaw, pitch }: the point of the wall the camera goes around, moved along the street
@@ -96,13 +96,15 @@ const FOV = 30;                  // view on the street
 const RIBBON_SPEED = 0.22;       // disc radii per second along the band
 const RIBBON_SPIN = 16;          // speed when the texts come in
 const RIBBON_SPIN_TIME = 3.5;    // s, from the fast start down to the calm speed
-const RIBBON_OPACITY = 0.85;
+const RIBBON_OPACITY = 1;
+// the band is brown, the running text in the colour of the paper
+const RIBBON_COLORS = { fill: '#5b3517', ink: '#cecece' };
 const TEXT_FONT = '44px Arial, "Helvetica Neue", Helvetica, sans-serif';
 const TEXT_CANVAS_HEIGHT = 72;
 const HOVER_COLOR = 0.45;        // a pointed arch: its lines go towards dark ink ...
 const HOVER_OPACITY = 0.3;       // ... and get this much more opaque
-const OPENING_COLOR = 0xffd23c;  // ... and the whole window or door fills with a transparent yellow
-const OPENING_OPACITY = 0.45;
+const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with white
+const OPENING_OPACITY = 0.8;
 
 // the footer lines, cut into the foundation under the ground line, centred under the arches
 const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap: 0.8, opacity: 0.75 };
@@ -112,7 +114,7 @@ const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap
 // runs to the right; it is never faded by the fog. Every link is a button: light letters in a brown block.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
-const HERO_TEXT_GAP = 24;          // px between the hero text and the left edge of the house
+const HERO_TEXT_GAP = 16;          // px between the hero text and the left edge of the house
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.13 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
 // The buttons stretch like the Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a proximity
 // spring widens the button under the pointer and its neighbours while the row keeps its length
@@ -313,9 +315,9 @@ if (root) {
 		facadeGeometry.setAttribute('archGroup', new THREE.InstancedBufferAttribute(new Float32Array(FACADE_GROUP), 1));
 		sign.add(new LineSegments2(facadeGeometry, lineMaterial));
 
-		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material; or a button:
-		// light letters in a brown block, in their own colours
-		const textCanvas = (label, block = false) => {
+		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material (block: with room
+		// left and right for a button); with colors the canvas is filled and the letters drawn in their own colours
+		const textCanvas = (label, block = false, colors = null) => {
 			const context = document.createElement('canvas').getContext('2d');
 			// Arabic letters are joined: no spacing between them
 			const arabic = /[\u0600-\u06ff]/.test(label);
@@ -330,7 +332,11 @@ if (root) {
 			context.canvas.width = width;
 			context.canvas.height = TEXT_CANVAS_HEIGHT;
 			setFont();
-			context.fillStyle = '#ffffff';
+			if (colors) {
+				context.fillStyle = colors.fill;
+				context.fillRect(0, 0, width, TEXT_CANVAS_HEIGHT);
+			}
+			context.fillStyle = colors ? colors.ink : '#ffffff';
 			context.textBaseline = 'middle';
 			context.fillText(label, pad, TEXT_CANVAS_HEIGHT / 2 + 2);
 			const texture = new THREE.CanvasTexture(context.canvas);
@@ -391,10 +397,11 @@ if (root) {
 			return geometry;
 		};
 
-		// ---- the arches of the menu: the running text in the band between the opening and the outer line
-		// of the wedge stones, its top towards the outside, and the opening itself, filled when pointed at
+		// ---- the arches of the menu: the band between the opening and the outer line of the wedge stones is
+		// brown, the running text on it in the colour of the paper, its top towards the outside; the opening
+		// itself fills with white when pointed at
 		const bandMiddle = (FACADE_ARCH.radius + FACADE_ARCH.band) / 2;
-		const bandHalf = ((FACADE_ARCH.band - FACADE_ARCH.radius) / 2) * 0.92;
+		const bandHalf = (FACADE_ARCH.band - FACADE_ARCH.radius) / 2;   // the whole band, from line to line
 		const jamb = FACADE_ARCH.spring - FACADE_ARCH.ground;
 		const arcLength = Math.PI * bandMiddle;
 		const pathLength = jamb * 2 + arcLength;
@@ -424,7 +431,7 @@ if (root) {
 			.filter((item) => FACADE_ARCHES[item.arch])
 			.map((item) => {
 				const archZ = FACADE_ARCHES[item.arch].z;
-				const { texture, width } = textCanvas(`${String(item.name).toLocaleUpperCase('de')}   ·   `);
+				const { texture, width } = textCanvas(`${String(item.name).toLocaleUpperCase('de')}   ·   `, false, RIBBON_COLORS);
 				texture.wrapS = THREE.RepeatWrapping;
 				const repeat = (bandHalf * 2 * width) / TEXT_CANVAS_HEIGHT;
 				const steps = 160;
@@ -451,7 +458,13 @@ if (root) {
 				geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 				geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 				geometry.setIndex(index);
-				const mesh = new THREE.Mesh(geometry, textMaterial(texture));
+				const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+					map: texture,
+					transparent: true,
+					opacity: 0,
+					depthWrite: false,
+					side: THREE.DoubleSide,
+				}));
 				mesh.visible = false;
 				sign.add(mesh);
 

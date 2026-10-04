@@ -65,7 +65,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   Na naslovnoj je papir u 3D prostoru, na unutarnjoj strani velike kugle oko cijele scene, pa se okreće zajedno sa
   zgradom kad je okrećeš. Linije fasade su malo podebljane (1,5 px, na mobitelu 1,3 px, three.js LineMaterial). Na naslovnoj zaglavlje
   nema svoju traku papira, pa je papir jedan cijeli; tekst stranica blijedi ispod zaglavlja. Linije fasade, trake u lukovima i natpis u temelju su smeđi (`#5b3517`), tekst je tamnosmeđa
-  tinta (`#2b1d14`). Pod mišem se otvor prozora ili vrata ispuni prozirnom žutom. Znak ostaje tamnosmeđi metal sa
+  tinta (`#2b1d14`). Pod mišem se otvor prozora ili vrata ispuni bijelom. Znak ostaje tamnosmeđi metal sa
   svijetlim logom. U lokalu tekst stoji na svijetlom staklu boje papira.
 
 **Okretanje zgrade**
@@ -115,7 +115,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 **Lukovi su izbornik**
 
 - Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog.
-- U rubu svakog luka (između dva luka kamenova) teče traka s imenom stranice, npr. `LEISTUNGEN  ·`: gore uz
+- Rub svakog luka (između dva luka kamenova) je smeđ, a po njemu u boji papira teče traka s imenom stranice, npr. `LEISTUNGEN  ·`: gore uz
   lijevi dovratak, preko luka i dolje uz desni. Kad se fasada iscrta, traka jednom brzo protrči okolo, uspori
   i dalje teče polako.
 - Cijeli prozor ili cijela vrata su gumb: pod mišem se otvor ispuni prozirnom blijedo žutom, linije luka i
@@ -145,10 +145,11 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
 
-- `front-page.php`: hero s 3D znakom; riječ ispod riječi: JO'S / your / confidense / starts / here (natpis s izloga
-  trgovine), ispod BARBERSHOP in 1060 VIENNA. Tekst stoji uz donji lijevi kut kuće u prvom kadru: dno na liniji
-  tla, desni rub 24 px lijevo od kuće (`scene.js` izmjeri kut). Gdje nema mjesta (mobitel) stoji dolje lijevo
-  na ekranu. Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
+- `front-page.php`: hero s 3D znakom; malo JO'S (kao red ispod slogana), pa riječ ispod riječi: your / confidense /
+  starts / here (natpis s izloga trgovine), ispod BARBERSHOP in 1060 VIENNA. Tekst stoji uz donji lijevi kut kuće
+  u prvom kadru: dno na liniji tla, desni rub 16 px lijevo od kuće (`scene.js` izmjeri kut na ekranu, tekst je
+  fiksiran na ekran kao i scena, pa ga ni traka administratora WordPressa ne pomiče). Gdje nema mjesta (mobitel)
+  stoji dolje lijevo na ekranu. Natpis JO'S BARBERSHOP u zaglavlju stoji uvijek lijevo gore, i na arapskom. Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
   kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
   `jos:open`, klik na redak u temelju kao `jos:link`.

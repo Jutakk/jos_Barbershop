@@ -172,6 +172,8 @@ canvas {
 
 // ---------- header
 
+// the name stays in the same place in every language and whatever the menu next to it does: always on the
+// left, at the top
 .site-header {
 	position: fixed;
 	top: 0;
@@ -179,8 +181,9 @@ canvas {
 	right: 0;
 	z-index: 10;
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
+	direction: ltr;
 	gap: s(6);
 	padding: s(5) clamp(#{s(5)}, 6vw, #{s(9)});
 	pointer-events: none;
@@ -398,7 +401,13 @@ canvas {
 		display: block;
 	}
 
+	// JO'S above the slogan: small, like the line below it
 	&__brand {
+		margin-bottom: s(3);
+		color: var(--jos-muted);
+		font-size: $size-meta;
+		line-height: 1.6;
+		letter-spacing: 0.24em;
 		text-transform: uppercase;
 	}
 
@@ -825,11 +834,30 @@ canvas {
 // the hero text against the bottom left corner of the house: scene.js measures where the corner is in the
 // first view (--house-x: the right edge of the text, --house-y: the ground line) and sets .has-house-corner
 // where there is room for the text left of the house
+// measured on the screen, like the scene: so the admin bar of WordPress (which moves the page down) never moves it
+.has-arches .hero__content {
+	position: fixed;
+}
+
 .has-house-corner .hero__content {
 	right: calc(100% - var(--house-x));
 	bottom: calc(100% - var(--house-y));
 	left: auto;
 	padding-right: 0;
+}
+
+// logged in, WordPress shows its admin bar at the top: the header goes below it
+.admin-bar .site-header {
+	top: 32px;
+
+	@media (max-width: 782px) {
+		top: 46px;
+	}
+}
+
+// the Arabic menu of the header reads from right to left, while the header itself stays left to right
+[dir="rtl"] .site-header__nav > ul:first-child {
+	direction: rtl;
 }
 
 // ---------- Arabic (dir="rtl"): the hero text stays on the left like in German, on the empty paper next to
