@@ -113,10 +113,15 @@ const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
-const BLOCK_COLOR = '#5b3517';     // brown, same as FACADE_COLOR
-const BLOCK_TEXT = '#ece8df';      // light paper colour
+// The buttons behave like the retro Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a
+// proximity spring widens the cell under the pointer and its neighbours while the strip keeps its length
+// (topDockController.js), every cell is the ordered-dither pixel field of retroPixelField.js in browns, and
+// CRT scanlines lie over it. The labels are in the font of the site.
+const DOCK = { proximity: 132, spring: 0.19, damping: 0.7, widthGrowth: 54, pixelSize: 3, levels: 6, noise: 1, speed: 1, scanlines: 0.32 };
+const DOCK_PALETTE = ['#1c1009', '#2b180c', '#3d2210', '#5b3517', '#6f4420', '#8a5a2e', '#a87a48', '#c9a66b'];   // dark to light
+const DOCK_INK = { rest: '#e8d9bf', near: '#fff4d6', pressed: '#2b1d14' };
+const DOCK_PAPER = '#ece8df';      // the current language: the paper state
 const BLOCK_PAD = 22;              // px of the canvas left and right of the letters
-const BLOCK_PRESSED = 0.72;        // a pointed button (and the current language) gets this much darker
 
 const root = document.querySelector('[data-scene]');
 
@@ -314,7 +319,8 @@ if (root) {
 		const textCanvas = (label, block = false) => {
 			const context = document.createElement('canvas').getContext('2d');
 			// Arabic letters are joined: no spacing between them
-			const spacing = /[\u0600-\u06ff]/.test(label) ? '0px' : '6px';
+			const arabic = /[\u0600-\u06ff]/.test(label);
+			const spacing = arabic ? '0px' : '6px';
 			const setFont = () => {
 				context.font = TEXT_FONT;
 				if ('letterSpacing' in context) context.letterSpacing = spacing;
@@ -325,11 +331,7 @@ if (root) {
 			context.canvas.width = width;
 			context.canvas.height = TEXT_CANVAS_HEIGHT;
 			setFont();
-			if (block) {
-				context.fillStyle = BLOCK_COLOR;
-				context.fillRect(0, 0, width, TEXT_CANVAS_HEIGHT);
-			}
-			context.fillStyle = block ? BLOCK_TEXT : '#ffffff';
+			context.fillStyle = '#ffffff';
 			context.textBaseline = 'middle';
 			context.fillText(label, pad, TEXT_CANVAS_HEIGHT / 2 + 2);
 			const texture = new THREE.CanvasTexture(context.canvas);
@@ -337,15 +339,132 @@ if (root) {
 			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 			return { texture, width };
 		};
-		const textMaterial = (texture, fog = true, block = false) => new THREE.MeshBasicMaterial({
+		const textMaterial = (texture, fog = true) => new THREE.MeshBasicMaterial({
 			map: texture,
-			color: block ? 0xffffff : FACADE_COLOR,
+			color: FACADE_COLOR,
 			transparent: true,
 			opacity: 0,
 			depthWrite: false,
 			side: THREE.DoubleSide,
 			fog,
 		});
+		// ---- a dock cell: the field of retroPixelField.js computed on the cell's own pixel grid (uRes field
+		// pixels, pixelSize screen px each), the palette in browns; the label centred and never stretched when
+		// the cell widens; CRT scanlines at screen resolution, one dark css px row of every three
+		const dockTime = { value: 0 };
+		const dockMaterial = (label) => new THREE.ShaderMaterial({
+			uniforms: {
+				uTime: dockTime,
+				uNoise: { value: DOCK.noise },
+				uLevels: { value: DOCK.levels },
+				uRes: { value: new THREE.Vector2(32, 4) },
+				uLabel: { value: label },
+				uScale: { value: 1 },
+				uNear: { value: 0 },
+				uPressed: { value: 0 },
+				uOpacity: { value: 0 },
+				uScan: { value: DOCK.scanlines },
+				uDpr: { value: 1 },
+				uPalette: { value: DOCK_PALETTE.map((hex) => new THREE.Color(hex)) },
+				uInkRest: { value: new THREE.Color(DOCK_INK.rest) },
+				uInkNear: { value: new THREE.Color(DOCK_INK.near) },
+				uInkPressed: { value: new THREE.Color(DOCK_INK.pressed) },
+				uPaper: { value: new THREE.Color(DOCK_PAPER) },
+			},
+			vertexShader: `
+				varying vec2 vUv;
+				void main() {
+					vUv = uv;
+					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+				}`,
+			fragmentShader: `
+				uniform vec2 uRes;
+				uniform float uTime;
+				uniform float uNoise;
+				uniform float uLevels;
+				uniform sampler2D uLabel;
+				uniform float uScale;
+				uniform float uNear;
+				uniform float uPressed;
+				uniform float uOpacity;
+				uniform float uScan;
+				uniform float uDpr;
+				uniform vec3 uPalette[8];
+				uniform vec3 uInkRest;
+				uniform vec3 uInkNear;
+				uniform vec3 uInkPressed;
+				uniform vec3 uPaper;
+				varying vec2 vUv;
+
+				float hash(vec2 p){ p = fract(p * vec2(127.1, 311.7)); p += dot(p, p + 34.23); return fract(p.x * p.y); }
+
+				float vnoise(vec2 p){
+					vec2 i = floor(p), f = fract(p);
+					f = f * f * (3.0 - 2.0 * f);
+					float a = hash(i), b = hash(i + vec2(1.0, 0.0)), c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+					return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+				}
+
+				float fbm(vec2 p){
+					float sum = 0.0, amp = 0.5;
+					for (int i = 0; i < 5; i++){ sum += amp * vnoise(p); p = p * 2.03 + 11.7; amp *= 0.5; }
+					return sum;
+				}
+
+				float bayer2(vec2 a){ a = floor(a); return fract(a.x * 0.5 + a.y * a.y * 0.75); }
+				float bayer4(vec2 a){ return bayer2(a * 0.5) * 0.25 + bayer2(a); }
+				float bayer8(vec2 a){ return bayer4(a * 0.5) * 0.25 + bayer2(a); }
+
+				vec3 stop(float index){
+					if (index < 0.5) return uPalette[0];
+					if (index < 1.5) return uPalette[1];
+					if (index < 2.5) return uPalette[2];
+					if (index < 3.5) return uPalette[3];
+					if (index < 4.5) return uPalette[4];
+					if (index < 5.5) return uPalette[5];
+					if (index < 6.5) return uPalette[6];
+					return uPalette[7];
+				}
+
+				void main(){
+					vec2 pixel = floor(vUv * uRes) + 0.5;   // the field pixel, as gl_FragCoord.xy in the authored canvas
+					vec2 uv = pixel / uRes;
+					float t = uTime;
+
+					vec2 cloud = vec2(uv.x * 3.4, uv.y * 2.1);
+					float weather = fbm(cloud + vec2(t * 0.055, t * -0.021));
+					weather = mix(weather, fbm(cloud * 1.9 + vec2(-t * 0.032, t * 0.044)), 0.42);
+
+					float sky = smoothstep(0.98, 0.20, uv.y) * 0.36;
+					float heat = smoothstep(0.60, 0.16, uv.y) * 0.32;
+					float ground = smoothstep(0.26, 0.08, uv.y);
+					float sun = smoothstep(0.38, 0.0, length((uv - vec2(0.5, 0.29)) * vec2(0.70, 1.5))) * 0.20;
+					float field = 0.11 + sky + heat + sun - ground * 0.80 + (weather - 0.5) * 0.82 * uNoise;
+
+					float grain = hash(floor(pixel) + floor(t * 12.0)) - 0.5;
+					field += grain * 0.055 * uNoise;
+					field *= 1.0 - 0.34 * smoothstep(0.45, 1.05, length((uv - vec2(0.5, 0.46)) * vec2(1.06, 1.0)));
+					field += 0.16 * uNear;   // a cell near the pointer lights up, as the authored near state
+
+					float levels = max(uLevels, 2.0);
+					float dither = bayer8(pixel) - 0.5;
+					float quantised = clamp(field + dither / levels, 0.0, 0.9999);
+					vec3 color = stop(floor(quantised * levels) * (7.0 / (levels - 1.0)));
+					color = mix(color, uPaper, uPressed);
+
+					float u = (vUv.x - 0.5) * uScale + 0.5;
+					float ink = (u >= 0.0 && u <= 1.0) ? texture2D(uLabel, vec2(u, vUv.y)).a : 0.0;
+					color = mix(color, mix(mix(uInkRest, uInkNear, uNear), uInkPressed, uPressed), ink);
+
+					float line = mod(floor(gl_FragCoord.y / uDpr), 3.0) < 1.0 ? 0.42 * min(uScan * 1.5, 1.0) : 0.0;
+					gl_FragColor = vec4(color * (1.0 - line), uOpacity);
+				}`,
+			transparent: true,
+			depthWrite: false,
+			side: THREE.DoubleSide,
+		});
+		const unitPlane = new THREE.PlaneGeometry(1, 1);
+
 		// a flat shape drawn with x along the wall and y up, moved into the wall plane at this depth
 		const onWallPlane = (geometry, depth) => {
 			const position = geometry.attributes.position;
@@ -447,7 +566,11 @@ if (root) {
 			const words = pieces.filter((piece) => piece.text.trim()).map((piece) => {
 				const block = Boolean(row.blocks) && (piece.arch !== undefined || piece.url !== undefined);
 				const { texture, width } = textCanvas(piece.text, block);
-				return { ...piece, row, block, texture, length: (row.height * width) / TEXT_CANVAS_HEIGHT, glow: { value: piece.current ? 1 : 0 } };
+				const length = (row.height * width) / TEXT_CANVAS_HEIGHT;
+				return {
+					...piece, row, block, texture, length, base: length, glow: { value: piece.current ? 1 : 0 },
+					value: 0, velocity: 0, target: 0, near: false,
+				};
 			});
 			if (rtl) words.reverse();
 			const length = words.reduce((sum, piece) => sum + piece.length, 0) + row.gap * Math.max(words.length - 1, 0);
@@ -455,7 +578,10 @@ if (root) {
 				? row.start
 				: (FACADE_ARCHES[0].z + FACADE_ARCHES[FACADE_ARCHES.length - 1].z) / 2 - length / 2;
 			words.forEach((piece) => {
-				const mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false, piece.block));
+				const mesh = piece.block
+					? new THREE.Mesh(unitPlane, dockMaterial(piece.texture))
+					: new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false));
+				if (piece.block) mesh.scale.set(piece.length, row.height, 1);
 				mesh.rotation.y = -Math.PI / 2;   // in the wall, reading along it to the right
 				mesh.position.set(wallX + row.depth - 0.012, row.top - row.height / 2, along + piece.length / 2);
 				mesh.visible = false;
@@ -468,12 +594,18 @@ if (root) {
 			return words;
 		};
 		const inscription = writeRow(footer.map((item) => ({ text: item.text, url: item.url || '' })), INSCRIPTION);
-		const menuRow = writeRow([
-			...menu.filter((item) => FACADE_ARCHES[item.arch]).map((item) => ({ text: item.name, arch: item.arch })),
-			...languages.map((item) => ({ text: item.label, url: item.current ? '' : item.url, current: item.current })),
-		], MENU_ROW);
-		const words = [...inscription, ...menuRow];
+		const words = [...inscription];
 		const isLink = (piece) => Boolean(piece.url) || piece.arch !== undefined;
+
+		// ---- the menu: its buttons are the cells of the dock (placeDock)
+		const menuRow = writeRow([
+			...menu.filter((item) => FACADE_ARCHES[item.arch]).map((item) => ({ text: item.name, arch: item.arch, slug: item.slug })),
+			...languages.map((item) => ({ text: item.label, url: item.current ? '' : item.url, current: item.current, code: item.code })),
+		], MENU_ROW);
+		words.push(...menuRow);
+		const dock = { cells: menuRow.filter((piece) => piece.block), strip: 0, pointer: null, focus: -1 };
+		dock.strip = dock.cells.reduce((sum, cell) => sum + cell.base, 0);
+		const finePointer = window.matchMedia('(hover:hover) and (pointer:fine)');
 
 		// ---- the shop behind the door: a photo all around the camera, shown only once the camera is inside
 		const doorArch = FACADE_ARCHES.find((arch) => arch.door);
@@ -690,14 +822,107 @@ if (root) {
 				setOpacity(ribbon.fill, OPENING_OPACITY * ribbon.glow.value * shown * away);
 			});
 			words.forEach((piece) => {
-				setOpacity(piece.mesh, (piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value) * shown * gone);
-				if (piece.block) piece.mesh.material.color.setScalar(1 - (1 - BLOCK_PRESSED) * piece.glow.value);
+				const opacity = (piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value) * shown * gone;
+				if (piece.block) {
+					piece.mesh.material.uniforms.uOpacity.value = opacity;
+					piece.mesh.visible = opacity > 0.002;
+				} else {
+					setOpacity(piece.mesh, opacity);
+				}
 			});
+		};
+
+		// ---- the dock (topDockController.js): every cell springs towards its target, the pointer's closeness
+		// along the strip (smoothstep over DOCK.proximity screen px) or the keyboard focus (1, neighbours 0.24);
+		// the cells share the strip's length in proportion to their widths plus DOCK.widthGrowth px each
+		const dockScreen = new THREE.Vector3();
+		const toScreen = (z, y) => {
+			dockScreen.set(wallX + MENU_ROW.depth, y, z).applyMatrix4(sign.matrixWorld).project(camera);
+			return { x: (dockScreen.x + 1) * 0.5 * root.clientWidth, y: (1 - dockScreen.y) * 0.5 * root.clientHeight };
+		};
+		const dockMoves = () => !reduced && window.innerWidth > 600 && finePointer.matches;
+		const placeDock = () => {
+			const { cells } = dock;
+			if (!cells.length) return;
+			const middle = MENU_ROW.top - MENU_ROW.height / 2;
+			const moves = dockMoves();
+			const screen = cells.map((cell) => {
+				const from = toScreen(cell.from, middle);
+				const to = toScreen(cell.to, middle);
+				const top = toScreen((cell.from + cell.to) / 2, MENU_ROW.top);
+				const bottom = toScreen((cell.from + cell.to) / 2, MENU_ROW.top - MENU_ROW.height);
+				const width = Math.max(1, Math.hypot(to.x - from.x, to.y - from.y));
+				return {
+					x: (from.x + to.x) / 2, y: (from.y + to.y) / 2, width,
+					height: Math.max(1, Math.hypot(top.x - bottom.x, top.y - bottom.y)),
+					perUnit: width / Math.max(cell.to - cell.from, 1e-4),
+				};
+			});
+			// the strip's own axis on the screen
+			const first = screen[0];
+			const last = screen[screen.length - 1];
+			const axis = Math.hypot(last.x - first.x, last.y - first.y) > 1
+				? { x: (last.x - first.x) / Math.hypot(last.x - first.x, last.y - first.y), y: (last.y - first.y) / Math.hypot(last.x - first.x, last.y - first.y) }
+				: { x: 1, y: 0 };
+			cells.forEach((cell, i) => {
+				if (!moves) cell.target = 0;
+				else if (dock.pointer) {
+					const d = Math.abs((dock.pointer.x - screen[i].x) * axis.x + (dock.pointer.y - screen[i].y) * axis.y);
+					const x = THREE.MathUtils.clamp(1 - d / Math.max(1, DOCK.proximity), 0, 1);
+					cell.target = x * x * (3 - 2 * x);
+				} else if (dock.focus >= 0) {
+					cell.target = i === dock.focus ? 1 : Math.abs(i - dock.focus) === 1 ? 0.24 : 0;
+				} else {
+					cell.target = 0;
+				}
+				cell.near = cell.target > 0.08;
+				cell.velocity += (cell.target - cell.value) * DOCK.spring;
+				cell.velocity *= DOCK.damping;
+				cell.value += cell.velocity;
+				if (Math.abs(cell.target - cell.value) < 1e-3 && Math.abs(cell.velocity) < 1e-3) {
+					cell.value = cell.target;
+					cell.velocity = 0;
+				}
+			});
+			const wanted = cells.map((cell, i) => cell.base + (DOCK.widthGrowth / screen[i].perUnit) * THREE.MathUtils.clamp(cell.value, 0, 1.08));
+			const total = wanted.reduce((sum, w) => sum + w, 0);
+			let along = MENU_ROW.start;
+			cells.forEach((cell, i) => {
+				const length = (dock.strip * wanted[i]) / total;
+				cell.from = along;
+				cell.to = along + length;
+				cell.mesh.scale.x = length;
+				cell.mesh.position.z = along + length / 2;
+				const { uniforms } = cell.mesh.material;
+				uniforms.uScale.value = length / cell.base;
+				uniforms.uNear.value = cell.near ? 1 : 0;
+				uniforms.uPressed.value = cell.current ? 1 : 0;
+				uniforms.uRes.value.set(Math.max(2, Math.round((screen[i].perUnit * length) / DOCK.pixelSize)), Math.max(2, Math.round(screen[i].height / DOCK.pixelSize)));
+				uniforms.uDpr.value = renderer.getPixelRatio();
+				along += length + MENU_ROW.gap;
+			});
+		};
+		const dockAt = (clientX, clientY) => {
+			if (!dock.cells.length) return null;
+			const rect = canvas.getBoundingClientRect();
+			pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+			ray.setFromCamera(pointer, camera);
+			ray.ray.applyMatrix4(toSign);
+			const { origin, direction } = ray.ray;
+			if (direction.x <= 1e-6) return null;
+			const distance = (wallX + MENU_ROW.depth - origin.x) / direction.x;
+			const z = origin.z + direction.z * distance;
+			const y = origin.y + direction.y * distance;
+			const end = dock.cells[dock.cells.length - 1].to;
+			const inside = y <= MENU_ROW.top + 0.12 && y >= MENU_ROW.top - MENU_ROW.height - 0.12 && z >= MENU_ROW.start - 0.12 && z <= end + 0.12;
+			return inside ? { x: clientX - rect.left, y: clientY - rect.top } : null;
 		};
 
 		const draw = () => {
 			disc.rotation.y = state.angle;
 			placeCamera();
+			camera.updateMatrixWorld();
+			placeDock();
 			placeTexts();
 			composer.render();
 		};
@@ -724,6 +949,7 @@ if (root) {
 			const dt = lastTime === null ? 0 : Math.min((now - lastTime) / 1000, 0.1);
 			lastTime = now;
 			state.angle += TURN_SPEED * dt;
+			dockTime.value += Math.min(0.096, dt) * DOCK.speed;
 			ribbons.forEach((ribbon) => {
 				ribbon.texture.offset.x = (ribbon.texture.offset.x + (ribbonSpeed.value / ribbon.repeat) * dt) % 1;
 			});
@@ -841,11 +1067,24 @@ if (root) {
 			if (event.pointerType === 'touch') return;
 			lastPointer = { x: event.clientX, y: event.clientY, free: free(event) };
 			point(atStreet() && lastPointer.free ? targetAt(event.clientX, event.clientY) : null);
+			dock.pointer = atStreet() && lastPointer.free ? dockAt(event.clientX, event.clientY) : null;
 		});
 		html.addEventListener('pointerleave', () => {
 			lastPointer = null;
+			dock.pointer = null;
 			point(null);
 		});
+		// keyboard focus on the menu of the header mirrors the pointer on the cornice
+		document.addEventListener('focusin', (event) => {
+			const link = event.target instanceof Element ? event.target.closest('.site-header__nav a') : null;
+			if (!link) return;
+			const slug = link.dataset.open;
+			const code = link.dataset.lang;
+			dock.focus = dock.cells.findIndex((cell) => (slug && cell.slug === slug) || (code && cell.code === code));
+		});
+		document.addEventListener('focusout', () => requestAnimationFrame(() => {
+			if (!(document.activeElement instanceof Element && document.activeElement.closest('.site-header__nav'))) dock.focus = -1;
+		}));
 		window.addEventListener('click', (event) => {
 			if (!atStreet() || !free(event)) return;
 			const target = targetAt(event.clientX, event.clientY);

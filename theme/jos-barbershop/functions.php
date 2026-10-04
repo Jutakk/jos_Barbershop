@@ -716,12 +716,13 @@ function jos_nav(): void {
 	echo '</ul><ul class="site-header__languages" aria-label="' . esc_attr( jos_t( 'Sprache' ) ) . '">';
 	foreach ( jos_language_links() as $link ) {
 		printf(
-			'<li><a href="%1$s" hreflang="%2$s" lang="%2$s"%3$s title="%4$s">%5$s</a></li>',
+			'<li><a href="%1$s" hreflang="%2$s" lang="%2$s" data-lang="%6$s"%3$s title="%4$s">%5$s</a></li>',
 			esc_url( $link['url'] ),
 			esc_attr( jos_languages()[ $link['code'] ]['locale'] ),
 			$link['current'] ? ' aria-current="true"' : '',
 			esc_attr( $link['name'] ),
-			esc_html( $link['label'] )
+			esc_html( $link['label'] ),
+			esc_attr( $link['code'] )
 		);
 	}
 	echo '</ul></nav>';
