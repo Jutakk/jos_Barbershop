@@ -294,7 +294,7 @@ canvas {
 }
 .hero__content {
   position: absolute;
-  inset-inline-start: clamp(24px, 6vw, 96px);
+  left: clamp(24px, 6vw, 96px);
   bottom: clamp(32px, 10vh, 96px);
   max-width: 34rem;
   padding-inline-end: 24px;
@@ -665,6 +665,15 @@ canvas {
   margin-bottom: 24px;
   padding-inline-end: 0;
   font-size: clamp(1.5rem, 2.4vw, 2.25rem);
+}
+
+[dir=rtl] .hero__content {
+  text-align: left;
+}
+
+[dir=rtl] .hero__title {
+  margin-right: auto;
+  margin-left: 0;
 }
 
 :lang(ar) .hero__meta,

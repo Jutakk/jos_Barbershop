@@ -76,7 +76,8 @@ function jos_language_links(): array {
 }
 
 /**
- * Short texts of the theme in the language of this request; the German text is the key.
+ * Short texts of the theme in the language of this request; the German text is the key. The slogan from
+ * the shop window stays English in German and English, in Arabic it is translated.
  *
  * @param string $de German text.
  */
@@ -112,6 +113,7 @@ function jos_strings(): array {
 			'Inhalt folgt.'               => 'Content follows.',
 		),
 		'ar' => array(
+			'your confidence starts here' => 'ثقتك تبدأ هنا',
 			'Zum Inhalt'                  => 'انتقل إلى المحتوى',
 			'Hauptmenü'                   => 'القائمة الرئيسية',
 			'Sprache'                     => 'اللغة',

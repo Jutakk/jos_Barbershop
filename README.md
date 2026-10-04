@@ -89,9 +89,9 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 **Izbornik na vijencu**
 
-- Na vijencu na vrhu prizemlja (vodoravni pojas profila) u jednom redu piše izbornik:
+- Na gornjoj liniji vijenca na vrhu prizemlja u jednom zbijenom redu stoji izbornik:
   LEISTUNGEN · ÜBER UNS · GALERIE · KONTAKT · DE · EN · AR. Red završava lijevo od znaka, pa u prvom kadru
-  stoji cijeli na vidljivom dijelu vijenca; okreće se sa zgradom i ne blijedi u daljinu.
+  stoji cijeli na ekranu; okreće se sa zgradom i ne blijedi u daljinu.
 - Pod mišem riječ potamni; klik na stranicu vodi kameru kroz njezin luk, klik na jezik otvara tu verziju.
   Trenutni jezik je tamniji.
 - Na računalu je obični izbornik u zaglavlju skriven (ostaje za tipkovnicu i čitače ekrana i pojavi se kad
@@ -105,6 +105,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   `ueber-uns`, `galerie`, `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns,
   Kontakt s FAQ), poslije se uređuju u WordPressu. Prijevodi su u `jos_room_words()` u `functions.php`.
 - Kratki tekstovi teme (gumb, izbornik, uputa u lokalu, footer) su u `inc/languages.php`.
+- Slogan s izloga "your confidence starts here" ostaje engleski u njemačkoj i engleskoj verziji, u arapskoj je
+  "ثقتك تبدأ هنا". Arapski tekst heroja stoji lijevo kao u njemačkoj, na praznom papiru pored zgrade.
 - Arapski prijevod je moj: prije objave neka ga pogleda Jwan.
 
 **Lukovi su izbornik**

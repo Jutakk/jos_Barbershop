@@ -363,7 +363,8 @@ canvas {
 	// only the button catches the pointer: over the title the street can still be grabbed and moved
 	&__content {
 		position: absolute;
-		inset-inline-start: clamp(#{s(5)}, 6vw, #{s(9)});
+		// always on the left, on the empty paper next to the building, in Arabic too
+		left: clamp(#{s(5)}, 6vw, #{s(9)});
 		bottom: clamp(#{s(6)}, 10vh, #{s(9)});
 		max-width: 34rem;
 		padding-inline-end: s(5);
@@ -813,7 +814,17 @@ canvas {
 	font-size: clamp(1.5rem, 2.4vw, 2.25rem);
 }
 
-// ---------- Arabic (dir="rtl"): the letters are joined, so no spacing between them anywhere
+// ---------- Arabic (dir="rtl"): the hero text stays on the left like in German, on the empty paper next to
+// the building; the letters are joined, so no spacing between them anywhere
+
+[dir="rtl"] .hero__content {
+	text-align: left;
+}
+
+[dir="rtl"] .hero__title {
+	margin-right: auto;
+	margin-left: 0;
+}
 
 :lang(ar) {
 	.hero__meta,

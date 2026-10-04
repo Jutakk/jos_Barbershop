@@ -41,7 +41,7 @@ foreach ( jos_rooms() as $jos_room ) {
 	<section class="hero" aria-labelledby="hero-title">
 		<div class="hero__content">
 			<h1 id="hero-title" class="hero__title" data-reveal>
-				<span class="visually-hidden">Jo&rsquo;s Barbershop. </span>your confidence starts here
+				<span class="visually-hidden">Jo&rsquo;s Barbershop. </span><?php echo esc_html( jos_t( 'your confidence starts here' ) ); ?>
 			</h1>
 			<p class="hero__meta" data-reveal><?php echo esc_html( jos_t( 'Barbershop in 1060 Wien' ) ); ?></p>
 			<?php jos_booking_button(); ?>
