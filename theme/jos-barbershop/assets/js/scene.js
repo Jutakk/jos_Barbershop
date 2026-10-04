@@ -108,11 +108,11 @@ const OPENING_OPACITY = 0.45;
 const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap: 0.8, opacity: 0.75 };
 // the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
 // edge of its crown, which is the highest line from the street (fasada/build_facade.py, CORNICE: 284.5 px,
-// 0.78 in front of the wall). The row ends at END along the wall, left of the sign, so in the first view it
-// lies whole on screen; it is never faded by the fog.
+// 0.78 in front of the wall). The row starts flush with the left corner of the building (X_LEFT, 70 px) and
+// runs to the right; it is never faded by the fog. Every link is a button: light letters in a brown block.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
-// Every link of the menu is a button: light letters in a brown block.
-const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, end: -8.6, fog: false, blocks: true };
+const BUILDING_LEFT = (70 - 790) / 37.5;
+const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
 const BLOCK_COLOR = '#5b3517';     // brown, same as FACADE_COLOR
 const BLOCK_TEXT = '#ece8df';      // light paper colour
 const BLOCK_PAD = 22;              // px of the canvas left and right of the letters
@@ -435,13 +435,13 @@ if (root) {
 				return { arch: item.arch, z: archZ, mesh, fill, texture, repeat, glow: { value: 0 } };
 			});
 
-		// ---- rows of words written along the facade, centred over the arches or ending at row.end: the
-		// footer lines in the foundation and the menu on the cornice. Every word is one piece with a dot between them; a piece
+		// ---- rows of words written along the facade, centred over the arches or starting at row.start: the
+		// footer lines in the foundation (a dot between the lines) and the menu on the cornice (buttons). A piece
 		// with an address (url) or an arch is a link. In Arabic the row runs from right to left.
 		const writeRow = (items, row) => {
 			const pieces = [];
 			items.forEach((item, i) => {
-				if (i > 0) pieces.push({ text: '·' });
+				if (i > 0 && !row.blocks) pieces.push({ text: '·' });   // buttons stand apart without dots
 				pieces.push({ ...item, text: String(item.text || '').toLocaleUpperCase('de') });
 			});
 			const words = pieces.filter((piece) => piece.text.trim()).map((piece) => {
@@ -451,8 +451,8 @@ if (root) {
 			});
 			if (rtl) words.reverse();
 			const length = words.reduce((sum, piece) => sum + piece.length, 0) + row.gap * Math.max(words.length - 1, 0);
-			let along = row.end !== undefined
-				? row.end - length
+			let along = row.start !== undefined
+				? row.start
 				: (FACADE_ARCHES[0].z + FACADE_ARCHES[FACADE_ARCHES.length - 1].z) / 2 - length / 2;
 			words.forEach((piece) => {
 				const mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false, piece.block));
