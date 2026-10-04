@@ -40,7 +40,7 @@ const DISC_DEPTH = 0.26;         // thickness of the disc, disc radius = 1
 const BRACKET_RADIUS = 1.16;     // radius of the C shaped bracket
 const BRACKET_TUBE = 0.04;
 const TURN_SPEED = 0.26;         // rad/s, always the same slow turn (one turn in about 24 s)
-const BACKGROUND = 0xcdcdcd;     // the paper (paper.webp, data-paper) while it loads and in the fog, same as --jos-bg
+const BACKGROUND = 0xcecece;     // the paper (paper.webp, data-paper) while it loads and in the fog, same as --jos-bg
 const FACADE_COLOR = 0x5b3517;   // brown ink, same as --jos-line
 const FACADE_OPACITY = 0.9;
 const FACADE_OPACITY_MOBILE = 0.8;   // on phones the wall runs behind the text

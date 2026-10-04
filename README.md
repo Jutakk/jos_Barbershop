@@ -59,7 +59,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Nosač i zid stoje mirno, disk se okreće oko okomite osi, kao viseća reklama.
 - Svijetli samo logo ("Jo's" i red BARBERSHOP), disk i nosač ne svijetle.
 - Disk se uvijek okreće istom sporom brzinom (jedan krug za oko 24 sekunde).
-- Pozadina svih stranica je papir (`images/white-paper-texture-2.jpg`, u temi `assets/images/paper.webp`, 1400 px),
+- Pozadina svih stranica je papir (`images/white-paper-texture.jpg`, u temi `assets/images/paper.webp`, 2000 px),
   i iza 3D scene. Linije fasade, trake u lukovima i natpis u temelju su smeđi (`#5b3517`), tekst je tamnosmeđa
   tinta (`#2b1d14`). Pod mišem se otvor prozora ili vrata ispuni prozirnom žutom. Znak ostaje tamnosmeđi metal sa
   svijetlim logom. U lokalu tekst stoji na svijetlom staklu boje papira.
