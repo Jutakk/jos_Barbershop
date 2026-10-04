@@ -66,12 +66,10 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 - Zgrada se hvata mišem ili prstom i okreće: lijevo i desno (do skoro bočnog pogleda), gore i dolje.
   Okrenuta prema gore pokaže temelj s footerom. Brzi potez se još malo okreće sam.
-- Scroll prema dolje vodi u dubinu, prema mjestu na koje pokazuje miš (kao zumiranje karte), pa se footer u
-  temelju može približiti i pročitati, sve do oko desetine početne udaljenosti od zida. Scroll prema gore vraća
-  natrag do prvog kadra. Na mobitelu isto radi s
-  dva prsta.
+- Scroll prema dolje spušta pogled u dubinu, ispod ulice do temelja: zgrada ode gore, a footer dođe na sredinu
+  ekrana. Scroll prema gore vraća do prvog kadra. Na mobitelu isto radi s dva prsta.
 - Scroll u stranu (touchpad, ili Shift i kotačić) vodi uz ulicu prema dalekim lukovima i natrag.
-- Tipkovnica: strelice okreću zgradu, + i - idu u dubinu i natrag, Page Up i Page Down idu uz ulicu.
+- Tipkovnica: strelice okreću zgradu, Shift i strelice idu uz ulicu, Page Down spušta u dubinu, Page Up vraća.
 - Povlačenje nikad ne otvara stranicu, otvara je samo pravi klik.
 
 **Footer u temelju**
