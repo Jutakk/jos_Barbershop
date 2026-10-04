@@ -62,7 +62,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Nosač i zid stoje mirno, disk se okreće oko okomite osi, kao viseća reklama.
 - Svijetli samo logo ("Jo's" i red BARBERSHOP), disk i nosač ne svijetle.
 - Disk se uvijek okreće istom sporom brzinom (jedan krug za oko 24 sekunde), i kod scrolla.
-- Boje: sve što je bilo crno je vrlo tamno smeđe (`#170f0a`: pozadina, disk, nosač, tamno staklo), a linije
+- Boje: sve što je bilo crno je vrlo tamna, hladnija smeđa (`#0f0c0a`: pozadina, disk, nosač, tamno staklo), a linije
   fasade i tanke crte su blijedo žute (`#f1e2a0`). Svijetli logo ostaje bijel.
 
 **Scroll: lukovi su stranice**
@@ -106,6 +106,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.4.1: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+Status 0.4.2: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
 s 360 fotografijom. Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 
