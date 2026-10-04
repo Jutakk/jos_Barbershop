@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (room) {
 			event.preventDefault();
 			open(room);
-		} else if (!url.hash && current) {
+		} else if (!url.hash && current && url.search === window.location.search) {
 			// the name in the header leads back to the street
 			event.preventDefault();
 			close();

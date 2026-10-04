@@ -87,6 +87,26 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Obični HTML footer ostaje za tipkovnicu, čitače ekrana i Google: stoji ispod ekrana i izađe kad neki
   njegov link dobije fokus.
 
+**Izbornik na vijencu**
+
+- Na vijencu na vrhu prizemlja (vodoravni pojas profila) u jednom redu piše izbornik:
+  LEISTUNGEN · ÜBER UNS · GALERIE · KONTAKT · DE · EN · AR. Red završava lijevo od znaka, pa u prvom kadru
+  stoji cijeli na vidljivom dijelu vijenca; okreće se sa zgradom i ne blijedi u daljinu.
+- Pod mišem riječ potamni; klik na stranicu vodi kameru kroz njezin luk, klik na jezik otvara tu verziju.
+  Trenutni jezik je tamniji.
+- Na računalu je obični izbornik u zaglavlju skriven (ostaje za tipkovnicu i čitače ekrana i pojavi se kad
+  dobije fokus). Na mobitelu ostaje u zaglavlju, a DE EN AR stoje gore desno.
+
+**Jezici: DE, EN, AR**
+
+- Njemački je osnovni, engleski je `/?lang=en`, arapski `/?lang=ar` (zdesna nalijevo, `dir="rtl"`).
+  Naslovnica u `<head>` navodi sve tri verzije (hreflang) za Google.
+- Stranice iza lukova postoje po jeziku: `leistungen`, `leistungen-en`, `leistungen-ar` i tako za
+  `ueber-uns`, `galerie`, `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns,
+  Kontakt s FAQ), poslije se uređuju u WordPressu. Prijevodi su u `jos_room_words()` u `functions.php`.
+- Kratki tekstovi teme (gumb, izbornik, uputa u lokalu, footer) su u `inc/languages.php`.
+- Arapski prijevod je moj: prije objave neka ga pogleda Jwan.
+
 **Lukovi su izbornik**
 
 - Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog.
@@ -152,7 +172,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.8.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.9.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
-iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
+iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački, engleski i arapski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Front page: the turning shop sign on the facade, drawn in lines. Scrolling or dragging moves the camera
+ * Front page (in German, English or Arabic, inc/languages.php): the turning shop sign on the facade, drawn in lines. Scrolling or dragging moves the camera
  * along the street (and down to the foundation, where the footer lines are cut in). The arches are the
  * menu: a running text in the band of every arch names its page, the whole opening is the button, a click
  * takes the camera through the arch and the page opens; behind the door is the shop. The X, Esc or the
@@ -30,6 +30,8 @@ foreach ( jos_rooms() as $jos_room ) {
 		data-paper="<?php echo esc_url( jos_image( 'paper.webp' ) ); ?>"
 		data-arches="<?php echo esc_attr( wp_json_encode( $jos_arches, JSON_UNESCAPED_UNICODE ) ); ?>"
 		data-footer="<?php echo esc_attr( wp_json_encode( jos_footer_items(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
+		data-languages="<?php echo esc_attr( wp_json_encode( jos_language_links(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
+		data-dir="<?php echo esc_attr( jos_languages()[ jos_lang() ]['dir'] ); ?>"
 		<?php echo $jos_panorama ? 'data-panorama="' . esc_url( $jos_panorama ) . '"' : ''; ?>
 		<?php echo $jos_panorama_mobile ? 'data-panorama-mobile="' . esc_url( $jos_panorama_mobile ) . '"' : ''; ?>>
 		<img class="scene__poster" src="<?php echo esc_url( jos_image( 'scene-poster.webp' ) ); ?>" alt="" width="1600" height="1000" fetchpriority="high">
@@ -41,7 +43,7 @@ foreach ( jos_rooms() as $jos_room ) {
 			<h1 id="hero-title" class="hero__title" data-reveal>
 				<span class="visually-hidden">Jo&rsquo;s Barbershop. </span>your confidence starts here
 			</h1>
-			<p class="hero__meta" data-reveal><?php esc_html_e( 'Barbershop in 1060 Wien', 'jos-barbershop' ); ?></p>
+			<p class="hero__meta" data-reveal><?php echo esc_html( jos_t( 'Barbershop in 1060 Wien' ) ); ?></p>
 			<?php jos_booking_button(); ?>
 		</div>
 	</section>
@@ -54,10 +56,10 @@ foreach ( jos_rooms() as $jos_room ) {
 
 	<?php // inside the shop: drag to look around (motion.js) ?>
 	<div class="shop-drag" data-shop-drag hidden aria-hidden="true"></div>
-	<p class="shop-hint" data-shop-hint hidden><?php esc_html_e( 'Ziehen, um sich umzusehen', 'jos-barbershop' ); ?></p>
+	<p class="shop-hint" data-shop-hint hidden><?php echo esc_html( jos_t( 'Ziehen, um sich umzusehen' ) ); ?></p>
 
 	<?php // leads out of a page or the shop, back to the street ?>
-	<button class="view-exit" type="button" data-exit hidden aria-label="<?php esc_attr_e( 'Zurück auf die Straße', 'jos-barbershop' ); ?>">
+	<button class="view-exit" type="button" data-exit hidden aria-label="<?php echo esc_attr( jos_t( 'Zurück auf die Straße' ) ); ?>">
 		<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M15 15 33 33M33 15 15 33"/></svg>
 	</button>
 </main>

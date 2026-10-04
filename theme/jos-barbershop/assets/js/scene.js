@@ -15,6 +15,7 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
  * plate. Only the logo on both faces of the disc glows. The wall is the ground floor of the real facade
  * (images/fasada.jpg), drawn only as thin brown lines on the paper of the site (facade.js, made by
  * fasada/build_facade.py); the lines draw themselves when the page loads.
+ * On the cornice at the top of the ground floor the menu is written in one row: the pages and DE, EN, AR.
  * Dragging turns the building (left and right, up and down: turned up, the foundation with the footer lines
  * comes to the front), scrolling down pushes the building away along the Z axis into the depth, up brings it back;
  * sideways scrolling moves along the street.
@@ -104,7 +105,12 @@ const OPENING_COLOR = 0xffd23c;  // ... and the whole window or door fills with 
 const OPENING_OPACITY = 0.45;
 
 // the footer lines, cut into the foundation under the ground line, centred under the arches
-const INSCRIPTION = { height: 0.42, below: 0.2, gap: 0.8, opacity: 0.75 };
+const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap: 0.8, opacity: 0.75 };
+// the menu (the pages and the languages) in one row on the corona of the cornice at the top of the ground floor,
+// which stands this far in front of the wall (fasada/build_facade.py, CORNICE)
+// The row ends at END along the wall, left of the sign, so in the first view it lies whole on the visible
+// stretch of the cornice; it is never faded by the fog.
+const MENU_ROW = { height: 0.34, top: 3.43, depth: -0.67, gap: 0.6, opacity: 1, end: -4, fog: false };
 
 const root = document.querySelector('[data-scene]');
 
@@ -125,6 +131,8 @@ if (root) {
 	// the menu: which page lies behind which arch; the footer lines (front-page.php)
 	const menu = readJson(root.dataset.arches);
 	const footer = readJson(root.dataset.footer);
+	const languages = readJson(root.dataset.languages);
+	const rtl = root.dataset.dir === 'rtl';   // Arabic: rows of words read from right to left
 
 	let renderer = null;
 	try {
@@ -298,9 +306,11 @@ if (root) {
 		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material
 		const textCanvas = (label) => {
 			const context = document.createElement('canvas').getContext('2d');
+			// Arabic letters are joined: no spacing between them
+			const spacing = /[\u0600-\u06ff]/.test(label) ? '0px' : '6px';
 			const setFont = () => {
 				context.font = TEXT_FONT;
-				if ('letterSpacing' in context) context.letterSpacing = '6px';
+				if ('letterSpacing' in context) context.letterSpacing = spacing;
 			};
 			setFont();
 			const width = Math.max(1, Math.ceil(context.measureText(label).width));
@@ -315,13 +325,14 @@ if (root) {
 			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 			return { texture, width };
 		};
-		const textMaterial = (texture) => new THREE.MeshBasicMaterial({
+		const textMaterial = (texture, fog = true) => new THREE.MeshBasicMaterial({
 			map: texture,
 			color: FACADE_COLOR,
 			transparent: true,
 			opacity: 0,
 			depthWrite: false,
 			side: THREE.DoubleSide,
+			fog,
 		});
 		// a flat shape drawn with x along the wall and y up, moved into the wall plane at this depth
 		const onWallPlane = (geometry, depth) => {
@@ -412,30 +423,44 @@ if (root) {
 				return { arch: item.arch, z: archZ, mesh, fill, texture, repeat, glow: { value: 0 } };
 			});
 
-		// ---- the footer lines in the foundation, one piece per line with a dot between them
-		const inscriptionTop = FACADE_ARCH.ground - INSCRIPTION.below;
-		const pieces = [];
-		footer.forEach((item, i) => {
-			if (i > 0) pieces.push({ text: '·', url: '' });
-			pieces.push({ text: String(item.text || '').toLocaleUpperCase('de'), url: item.url || '' });
-		});
-		const inscription = pieces.filter((piece) => piece.text).map((piece) => {
-			const { texture, width } = textCanvas(piece.text);
-			return { ...piece, texture, length: (INSCRIPTION.height * width) / TEXT_CANVAS_HEIGHT, glow: { value: 0 } };
-		});
-		const inscriptionLength = inscription.reduce((sum, piece) => sum + piece.length, 0) + INSCRIPTION.gap * Math.max(inscription.length - 1, 0);
-		let along = (FACADE_ARCHES[0].z + FACADE_ARCHES[FACADE_ARCHES.length - 1].z) / 2 - inscriptionLength / 2;
-		inscription.forEach((piece) => {
-			const mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, INSCRIPTION.height), textMaterial(piece.texture));
-			mesh.rotation.y = -Math.PI / 2;   // in the wall, reading along it to the right
-			mesh.position.set(wallX - 0.012, inscriptionTop - INSCRIPTION.height / 2, along + piece.length / 2);
-			mesh.visible = false;
-			sign.add(mesh);
-			piece.mesh = mesh;
-			piece.from = along;
-			piece.to = along + piece.length;
-			along += piece.length + INSCRIPTION.gap;
-		});
+		// ---- rows of words written along the facade, centred over the arches or ending at row.end: the
+		// footer lines in the foundation and the menu on the cornice. Every word is one piece with a dot between them; a piece
+		// with an address (url) or an arch is a link. In Arabic the row runs from right to left.
+		const writeRow = (items, row) => {
+			const pieces = [];
+			items.forEach((item, i) => {
+				if (i > 0) pieces.push({ text: '·' });
+				pieces.push({ ...item, text: String(item.text || '').toLocaleUpperCase('de') });
+			});
+			const words = pieces.filter((piece) => piece.text.trim()).map((piece) => {
+				const { texture, width } = textCanvas(piece.text);
+				return { ...piece, row, texture, length: (row.height * width) / TEXT_CANVAS_HEIGHT, glow: { value: piece.current ? 1 : 0 } };
+			});
+			if (rtl) words.reverse();
+			const length = words.reduce((sum, piece) => sum + piece.length, 0) + row.gap * Math.max(words.length - 1, 0);
+			let along = row.end !== undefined
+				? row.end - length
+				: (FACADE_ARCHES[0].z + FACADE_ARCHES[FACADE_ARCHES.length - 1].z) / 2 - length / 2;
+			words.forEach((piece) => {
+				const mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false));
+				mesh.rotation.y = -Math.PI / 2;   // in the wall, reading along it to the right
+				mesh.position.set(wallX + row.depth - 0.012, row.top - row.height / 2, along + piece.length / 2);
+				mesh.visible = false;
+				sign.add(mesh);
+				piece.mesh = mesh;
+				piece.from = along;
+				piece.to = along + piece.length;
+				along += piece.length + row.gap;
+			});
+			return words;
+		};
+		const inscription = writeRow(footer.map((item) => ({ text: item.text, url: item.url || '' })), INSCRIPTION);
+		const menuRow = writeRow([
+			...menu.filter((item) => FACADE_ARCHES[item.arch]).map((item) => ({ text: item.name, arch: item.arch })),
+			...languages.map((item) => ({ text: item.label, url: item.current ? '' : item.url, current: item.current })),
+		], MENU_ROW);
+		const words = [...inscription, ...menuRow];
+		const isLink = (piece) => Boolean(piece.url) || piece.arch !== undefined;
 
 		// ---- the shop behind the door: a photo all around the camera, shown only once the camera is inside
 		const doorArch = FACADE_ARCHES.find((arch) => arch.door);
@@ -651,8 +676,8 @@ if (root) {
 				setOpacity(ribbon.mesh, (RIBBON_OPACITY + (1 - RIBBON_OPACITY) * ribbon.glow.value) * shown * away);
 				setOpacity(ribbon.fill, OPENING_OPACITY * ribbon.glow.value * shown * away);
 			});
-			inscription.forEach((piece) => {
-				setOpacity(piece.mesh, (INSCRIPTION.opacity + (1 - INSCRIPTION.opacity) * piece.glow.value) * shown * gone);
+			words.forEach((piece) => {
+				setOpacity(piece.mesh, (piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value) * shown * gone);
 			});
 		};
 
@@ -756,8 +781,15 @@ if (root) {
 					&& (y <= FACADE_ARCH.spring || Math.hypot(dz, y - FACADE_ARCH.spring) <= reach);
 			});
 			if (ribbon) return { ribbon };
-			if (y > inscriptionTop + 0.05 || y < inscriptionTop - INSCRIPTION.height - 0.05) return null;
-			const piece = inscription.find((item) => item.url && z >= item.from - 0.1 && z <= item.to + 0.1);
+			// the rows of words: where the ray meets the plane of each row
+			const piece = words.find((item) => {
+				if (!isLink(item)) return false;
+				const along = (wallX + item.row.depth - origin.x) / direction.x;
+				const wz = origin.z + direction.z * along;
+				const wy = origin.y + direction.y * along;
+				return wy <= item.row.top + 0.05 && wy >= item.row.top - item.row.height - 0.05
+					&& wz >= item.from - 0.1 && wz <= item.to + 0.1;
+			});
 			return piece ? { piece } : null;
 		};
 
@@ -782,7 +814,7 @@ if (root) {
 			}
 			tweenTo(highlightAmount, ribbon ? 1 : 0, ribbon ? 0.35 : 0.5);
 			ribbons.forEach((item) => tweenTo(item.glow, item === ribbon ? 1 : 0, 0.35));
-			inscription.forEach((item) => tweenTo(item.glow, item === piece ? 1 : 0, 0.3));
+			words.forEach((item) => tweenTo(item.glow, item === piece || item.current ? 1 : 0, 0.3));
 		};
 
 		const html = document.documentElement;
@@ -806,6 +838,7 @@ if (root) {
 			if (!target) return;
 			point(null);
 			if (target.ribbon) window.dispatchEvent(new CustomEvent('jos:open', { detail: target.ribbon.arch }));
+			else if (target.piece.arch !== undefined) window.dispatchEvent(new CustomEvent('jos:open', { detail: target.piece.arch }));
 			else window.dispatchEvent(new CustomEvent('jos:link', { detail: target.piece.url }));
 		});
 		window.addEventListener('jos:view', () => {

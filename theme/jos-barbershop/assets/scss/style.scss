@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.8.0
+Version: 0.9.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -106,7 +106,7 @@ canvas {
 .skip-link {
 	position: absolute;
 	top: s(3);
-	left: s(3);
+	inset-inline-start: s(3);
 	z-index: 100;
 	padding: s(2) s(4);
 	background: var(--jos-ink);
@@ -223,8 +223,26 @@ canvas {
 	}
 
 	&__nav {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: s(2) s(7);
+
 		@media (max-width: $bp-tablet - 1) {
 			width: 100%;
+		}
+
+		// on the front page the menu and the languages are written on the cornice of the building (scene.js);
+		// here they wait for keyboards and screen readers and show up when one of their links has the focus
+		@media (min-width: $bp-tablet) {
+			.has-arches &:not(:focus-within) {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				overflow: hidden;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
+			}
 		}
 
 		ul {
@@ -260,6 +278,20 @@ canvas {
 			&:active {
 				color: var(--jos-accent);
 			}
+
+			// Arabic letters are joined: no spacing between them
+			&:lang(ar) {
+				letter-spacing: 0;
+			}
+		}
+	}
+
+	// DE EN AR; on phones up in the row of the name
+	&__languages {
+		@media (max-width: $bp-tablet - 1) {
+			position: absolute;
+			top: s(4);
+			inset-inline-end: s(5);
 		}
 	}
 }
@@ -331,10 +363,10 @@ canvas {
 	// only the button catches the pointer: over the title the street can still be grabbed and moved
 	&__content {
 		position: absolute;
-		left: clamp(#{s(5)}, 6vw, #{s(9)});
+		inset-inline-start: clamp(#{s(5)}, 6vw, #{s(9)});
 		bottom: clamp(#{s(6)}, 10vh, #{s(9)});
 		max-width: 34rem;
-		padding-right: s(5);
+		padding-inline-end: s(5);
 		pointer-events: none;
 
 		.button {
@@ -448,14 +480,14 @@ canvas {
 				padding: s(3) 0;
 				border: 0;
 				border-bottom: 1px solid var(--jos-rule);
-				text-align: left;
+				text-align: start;
 				vertical-align: top;
 			}
 
 			td:last-child,
 			th:last-child {
-				padding-left: s(5);
-				text-align: right;
+				padding-inline-start: s(5);
+				text-align: end;
 				white-space: nowrap;
 			}
 
@@ -463,7 +495,7 @@ canvas {
 			// price tables line up below each other.
 			td:nth-child(2):not(:last-child) {
 				width: 8.5rem;
-				padding-left: s(5);
+				padding-inline-start: s(5);
 				color: var(--jos-muted);
 				white-space: nowrap;
 			}
@@ -476,13 +508,13 @@ canvas {
 			@media (max-width: $bp-tablet - 1) {
 				td:nth-child(2):not(:last-child) {
 					width: 6rem;
-					padding-left: s(3);
+					padding-inline-start: s(3);
 					white-space: normal;
 				}
 
 				td:last-child,
 				th:last-child {
-					padding-left: s(3);
+					padding-inline-start: s(3);
 				}
 
 				td:nth-child(3):last-child {
@@ -595,7 +627,7 @@ canvas {
 		padding-top: s(4);
 
 		.room__title {
-			padding-right: 64px;
+			padding-inline-end: 64px;
 		}
 	}
 }
@@ -623,7 +655,7 @@ canvas {
 
 .journey > .shop-hint {
 	position: fixed;
-	right: clamp(#{s(5)}, 6vw, #{s(9)});
+	inset-inline-end: clamp(#{s(5)}, 6vw, #{s(9)});
 	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
 	z-index: 3;
 	margin: 0;
@@ -644,9 +676,9 @@ canvas {
 	// on phones the text of the page lies at the bottom: the hint goes up, left of the X
 	@media (max-width: $bp-tablet - 1) {
 		top: 112px;
-		right: auto;
+		inset-inline-end: auto;
 		bottom: auto;
-		left: s(5);
+		inset-inline-start: s(5);
 		max-width: calc(100vw - 56px - #{3 * s(5)});
 		white-space: normal;
 	}
@@ -655,7 +687,7 @@ canvas {
 .journey > .view-exit {
 	position: fixed;
 	top: clamp(#{s(8)}, 12vh, #{s(9)});
-	right: clamp(#{s(5)}, 6vw, #{s(9)});
+	inset-inline-end: clamp(#{s(5)}, 6vw, #{s(9)});
 	z-index: 12;
 	display: grid;
 	place-items: center;
@@ -717,7 +749,7 @@ canvas {
 	// on phones under the two rows of the header
 	@media (max-width: $bp-tablet - 1) {
 		top: 104px;
-		right: s(5);
+		inset-inline-end: s(5);
 		width: 56px;
 		height: 56px;
 
@@ -758,7 +790,7 @@ canvas {
 
 .is-in-shop .room--shop .room__inner {
 	position: fixed;
-	left: clamp(#{s(5)}, 6vw, #{s(9)});
+	inset-inline-start: clamp(#{s(5)}, 6vw, #{s(9)});
 	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
 	width: auto;
 	max-width: min(34rem, calc(100vw - #{2 * s(5)}));
@@ -777,8 +809,18 @@ canvas {
 
 .is-in-shop .room--shop .room__title {
 	margin-bottom: s(5);
-	padding-right: 0;
+	padding-inline-end: 0;
 	font-size: clamp(1.5rem, 2.4vw, 2.25rem);
+}
+
+// ---------- Arabic (dir="rtl"): the letters are joined, so no spacing between them anywhere
+
+:lang(ar) {
+	.hero__meta,
+	.button,
+	.shop-hint {
+		letter-spacing: 0;
+	}
 }
 
 // ---------- pages and footer

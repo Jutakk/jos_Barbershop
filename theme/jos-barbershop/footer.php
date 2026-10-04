@@ -19,7 +19,7 @@ $jos_legal  = array_filter( $jos_footer, fn( $item ) => 'legal' === $item['kind'
 		<?php endif; ?>
 	<?php endforeach; ?>
 	<?php if ( $jos_legal ) : ?>
-		<nav class="site-footer__legal" aria-label="<?php esc_attr_e( 'Rechtliches', 'jos-barbershop' ); ?>">
+		<nav class="site-footer__legal" aria-label="<?php echo esc_attr( jos_t( 'Rechtliches' ) ); ?>">
 			<?php foreach ( $jos_legal as $jos_item ) : ?>
 				<a href="<?php echo esc_url( $jos_item['url'] ); ?>"><?php echo esc_html( $jos_item['text'] ); ?></a>
 			<?php endforeach; ?>

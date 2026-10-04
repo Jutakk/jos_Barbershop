@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.8.0
+Version: 0.9.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -76,7 +76,7 @@ canvas {
 .skip-link {
   position: absolute;
   top: 12px;
-  left: 12px;
+  inset-inline-start: 12px;
   z-index: 100;
   padding: 8px 16px;
   background: var(--jos-ink);
@@ -170,9 +170,25 @@ canvas {
     padding: 16px 24px;
   }
 }
+.site-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 48px;
+}
 @media (max-width: 767px) {
   .site-header__nav {
     width: 100%;
+  }
+}
+@media (min-width: 768px) {
+  .has-arches .site-header__nav:not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 }
 .site-header__nav ul {
@@ -206,6 +222,16 @@ canvas {
 }
 .site-header__nav a:active {
   color: var(--jos-accent);
+}
+.site-header__nav a:lang(ar) {
+  letter-spacing: 0;
+}
+@media (max-width: 767px) {
+  .site-header__languages {
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 24px;
+  }
 }
 
 .journey {
@@ -268,10 +294,10 @@ canvas {
 }
 .hero__content {
   position: absolute;
-  left: clamp(24px, 6vw, 96px);
+  inset-inline-start: clamp(24px, 6vw, 96px);
   bottom: clamp(32px, 10vh, 96px);
   max-width: 34rem;
-  padding-right: 24px;
+  padding-inline-end: 24px;
   pointer-events: none;
 }
 .hero__content .button {
@@ -361,18 +387,18 @@ canvas {
   padding: 12px 0;
   border: 0;
   border-bottom: 1px solid var(--jos-rule);
-  text-align: left;
+  text-align: start;
   vertical-align: top;
 }
 .room__content .wp-block-table td:last-child,
 .room__content .wp-block-table th:last-child {
-  padding-left: 24px;
-  text-align: right;
+  padding-inline-start: 24px;
+  text-align: end;
   white-space: nowrap;
 }
 .room__content .wp-block-table td:nth-child(2):not(:last-child) {
   width: 8.5rem;
-  padding-left: 24px;
+  padding-inline-start: 24px;
   color: var(--jos-muted);
   white-space: nowrap;
 }
@@ -382,12 +408,12 @@ canvas {
 @media (max-width: 767px) {
   .room__content .wp-block-table td:nth-child(2):not(:last-child) {
     width: 6rem;
-    padding-left: 12px;
+    padding-inline-start: 12px;
     white-space: normal;
   }
   .room__content .wp-block-table td:last-child,
   .room__content .wp-block-table th:last-child {
-    padding-left: 12px;
+    padding-inline-start: 12px;
   }
   .room__content .wp-block-table td:nth-child(3):last-child {
     width: 3.75rem;
@@ -477,7 +503,7 @@ canvas {
     padding-top: 16px;
   }
   .has-arches .journey > .room .room__title {
-    padding-right: 64px;
+    padding-inline-end: 64px;
   }
 }
 
@@ -498,7 +524,7 @@ canvas {
 
 .journey > .shop-hint {
   position: fixed;
-  right: clamp(24px, 6vw, 96px);
+  inset-inline-end: clamp(24px, 6vw, 96px);
   bottom: clamp(24px, 8vh, 64px);
   z-index: 3;
   margin: 0;
@@ -518,9 +544,9 @@ canvas {
 @media (max-width: 767px) {
   .journey > .shop-hint {
     top: 112px;
-    right: auto;
+    inset-inline-end: auto;
     bottom: auto;
-    left: 24px;
+    inset-inline-start: 24px;
     max-width: calc(100vw - 56px - 72px);
     white-space: normal;
   }
@@ -529,7 +555,7 @@ canvas {
 .journey > .view-exit {
   position: fixed;
   top: clamp(64px, 12vh, 96px);
-  right: clamp(24px, 6vw, 96px);
+  inset-inline-end: clamp(24px, 6vw, 96px);
   z-index: 12;
   display: grid;
   place-items: center;
@@ -583,7 +609,7 @@ canvas {
 @media (max-width: 767px) {
   .journey > .view-exit {
     top: 104px;
-    right: 24px;
+    inset-inline-end: 24px;
     width: 56px;
     height: 56px;
   }
@@ -617,7 +643,7 @@ canvas {
 
 .is-in-shop .room--shop .room__inner {
   position: fixed;
-  left: clamp(24px, 6vw, 96px);
+  inset-inline-start: clamp(24px, 6vw, 96px);
   bottom: clamp(24px, 8vh, 64px);
   width: auto;
   max-width: min(34rem, 100vw - 48px);
@@ -637,8 +663,14 @@ canvas {
 
 .is-in-shop .room--shop .room__title {
   margin-bottom: 24px;
-  padding-right: 0;
+  padding-inline-end: 0;
   font-size: clamp(1.5rem, 2.4vw, 2.25rem);
+}
+
+:lang(ar) .hero__meta,
+:lang(ar) .button,
+:lang(ar) .shop-hint {
+  letter-spacing: 0;
 }
 
 .page {

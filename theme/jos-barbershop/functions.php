@@ -9,7 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.8.0' );
+define( 'JOS_VERSION', '0.9.0' );
+
+require_once get_template_directory() . '/inc/languages.php';
 
 /**
  * Theme supports.
@@ -161,7 +163,7 @@ function jos_booking_button(): void {
 		printf(
 			'<a class="button" href="%1$s" data-reveal>%2$s</a>',
 			esc_url( $link, array( 'https', 'http', 'tel' ) ),
-			esc_html__( 'Termin buchen', 'jos-barbershop' )
+			esc_html( jos_t( 'Termin buchen' ) )
 		);
 	} elseif ( current_user_can( 'customize' ) ) {
 		printf(
@@ -248,7 +250,7 @@ function jos_footer_items(): array {
 	if ( $imprint ) {
 		$items[] = array(
 			'kind' => 'legal',
-			'text' => __( 'Impressum', 'jos-barbershop' ),
+			'text' => jos_t( 'Impressum' ),
 			'url'  => (string) get_permalink( $imprint ),
 		);
 	}
@@ -256,7 +258,7 @@ function jos_footer_items(): array {
 	if ( $privacy ) {
 		$items[] = array(
 			'kind' => 'legal',
-			'text' => __( 'Datenschutz', 'jos-barbershop' ),
+			'text' => jos_t( 'Datenschutz' ),
 			'url'  => $privacy,
 		);
 	}
@@ -304,40 +306,32 @@ add_action( 'wp_head', 'jos_shop_schema' );
 /**
  * Pages behind the arches of the facade, from right to left. arch is the index of the arch in
  * FACADE_ARCHES (assets/js/facade.js, from the left: window, window, door, window); the second arch from
- * the right is the door into the shop.
+ * the right is the door into the shop. slug is the anchor on the front page (#kontakt) in every language,
+ * page the address of the WordPress page in that language (kontakt, kontakt-en, kontakt-ar).
  *
- * @return array<int, array{slug: string, title: string, nav: string, door: bool, arch: int}>
+ * @param string|null $lang Language, default the language of this request.
+ * @return array<int, array{slug: string, page: string, title: string, nav: string, door: bool, arch: int}>
  */
-function jos_rooms(): array {
-	return array(
-		array(
-			'slug'  => 'leistungen',
-			'title' => __( 'Leistungen & Preise', 'jos-barbershop' ),
-			'nav'   => __( 'Leistungen', 'jos-barbershop' ),
-			'door'  => false,
-			'arch'  => 3,
+function jos_rooms( ?string $lang = null ): array {
+	$lang  = $lang ?? jos_lang();
+	$rooms = array(
+		array( 'leistungen', 'Leistungen & Preise', 'Leistungen', false, 3 ),
+		array( 'ueber-uns', 'Über uns', 'Über uns', true, 2 ),
+		array( 'galerie', 'Galerie', 'Galerie', false, 1 ),
+		array( 'kontakt', 'Kontakt', 'Kontakt', false, 0 ),
+	);
+	$strings = jos_strings();
+	$say     = static fn( string $de ): string => 'de' === $lang ? $de : ( $strings[ $lang ][ $de ] ?? $de );
+	return array_map(
+		static fn( array $room ): array => array(
+			'slug'  => $room[0],
+			'page'  => 'de' === $lang ? $room[0] : $room[0] . '-' . $lang,
+			'title' => $say( $room[1] ),
+			'nav'   => $say( $room[2] ),
+			'door'  => $room[3],
+			'arch'  => $room[4],
 		),
-		array(
-			'slug'  => 'ueber-uns',
-			'title' => __( 'Über uns', 'jos-barbershop' ),
-			'nav'   => __( 'Über uns', 'jos-barbershop' ),
-			'door'  => true,
-			'arch'  => 2,
-		),
-		array(
-			'slug'  => 'galerie',
-			'title' => __( 'Galerie', 'jos-barbershop' ),
-			'nav'   => __( 'Galerie', 'jos-barbershop' ),
-			'door'  => false,
-			'arch'  => 1,
-		),
-		array(
-			'slug'  => 'kontakt',
-			'title' => __( 'Kontakt', 'jos-barbershop' ),
-			'nav'   => __( 'Kontakt', 'jos-barbershop' ),
-			'door'  => false,
-			'arch'  => 0,
-		),
+		$rooms
 	);
 }
 
@@ -345,22 +339,26 @@ function jos_rooms(): array {
  * Creates the pages of the arches once, if they do not exist yet. Their content is then edited in WordPress.
  */
 function jos_create_rooms(): void {
-	if ( get_option( 'jos_rooms_created' ) || ! current_user_can( 'publish_pages' ) ) {
+	if ( JOS_VERSION === get_option( 'jos_rooms_created' ) || ! current_user_can( 'publish_pages' ) ) {
 		return;
 	}
-	foreach ( jos_rooms() as $room ) {
-		if ( get_page_by_path( $room['slug'] ) ) {
-			continue;
+	$strings = jos_strings();
+	foreach ( array_keys( jos_languages() ) as $lang ) {
+		$placeholder = 'de' === $lang ? 'Inhalt folgt.' : $strings[ $lang ]['Inhalt folgt.'];
+		foreach ( jos_rooms( $lang ) as $room ) {
+			if ( get_page_by_path( $room['page'] ) ) {
+				continue;
+			}
+			wp_insert_post(
+				array(
+					'post_type'    => 'page',
+					'post_status'  => 'publish',
+					'post_title'   => $room['title'],
+					'post_name'    => $room['page'],
+					'post_content' => "<!-- wp:paragraph -->\n<p>" . $placeholder . "</p>\n<!-- /wp:paragraph -->",
+				)
+			);
 		}
-		wp_insert_post(
-			array(
-				'post_type'    => 'page',
-				'post_status'  => 'publish',
-				'post_title'   => $room['title'],
-				'post_name'    => $room['slug'],
-				'post_content' => "<!-- wp:paragraph -->\n<p>Inhalt folgt.</p>\n<!-- /wp:paragraph -->",
-			)
-		);
 	}
 	update_option( 'jos_rooms_created', JOS_VERSION, false );
 }
@@ -385,7 +383,8 @@ function jos_fill_rooms(): void {
 		if ( ! $page ) {
 			continue;
 		}
-		if ( 'Inhalt folgt.' === trim( wp_strip_all_tags( $page->post_content ) ) ) {
+		$placeholders = array_merge( array( 'Inhalt folgt.' ), array_column( jos_strings(), 'Inhalt folgt.' ) );
+		if ( in_array( trim( wp_strip_all_tags( $page->post_content ) ), $placeholders, true ) ) {
 			wp_update_post(
 				array(
 					'ID'           => $page->ID,
@@ -402,59 +401,108 @@ function jos_fill_rooms(): void {
 add_action( 'init', 'jos_fill_rooms', 30 );
 
 /**
- * Block markup of the first content of the pages, by address.
+ * First content of the pages behind the arches, in every language, by the address of the page
+ * (leistungen, leistungen-en, leistungen-ar, ...). jos_fill_rooms() writes it once into a page that
+ * still only says "Inhalt folgt."; after that the pages are edited in WordPress.
  *
  * @return array<string, string>
  */
 function jos_room_texts(): array {
+	$texts = array();
+	foreach ( array_keys( jos_languages() ) as $lang ) {
+		$suffix = 'de' === $lang ? '' : '-' . $lang;
+		foreach ( jos_room_texts_in( $lang ) as $slug => $content ) {
+			$texts[ $slug . $suffix ] = $content;
+		}
+	}
+	return $texts;
+}
+
+/**
+ * Content of the pages in one language.
+ *
+ * @param string $lang Language.
+ * @return array<string, string>
+ */
+function jos_room_texts_in( string $lang ): array {
+	$t = jos_room_words()[ $lang ];
+
 	$leistungen = '';
-	$prices     = array(
-		'Herrenhaarschnitte'          => array(
-			array( 'Student’s Cut', '30 Min.', '25 €' ),
-			array( 'Haarschnitt mit Shampoo', '30 Min.', '32 €' ),
-			array( 'Scherenschnitt', '45 Min.', '37 €' ),
-			array( 'Combo Cut & Eyebrows', '45 Min.', '38 €' ),
-			array( 'Combo Cut & Trim', '1 Std.', '45 €' ),
-			array( 'Kompletter Service', '1 Std. 15 Min.', '62 €' ),
-		),
-		'Bartpflege'                  => array(
-			array( 'Bartschnitt', '30 Min.', '19 €' ),
-			array( 'Hot Towel Rasur', '45 Min.', '25 €' ),
-			array( 'Haarschnitt und Bart trimmen', '1 Std. 15 Min.', '45 €' ),
-			array( 'Combo Cut & Hot Towel', '1 Std. 15 Min.', '52 €' ),
-			array( 'Combo Cut & Vikings Hot Towel', '1 Std. 15 Min.', '52 €' ),
-		),
-		'Kinderhaarschnitte'          => array(
-			array( 'Kinderhaarschnitt', '30 Min.', '16 €' ),
-		),
-		'Augenbrauen Formen & Design' => array(
-			array( 'Augenbrauen definieren', '15 Min.', '9 €' ),
-		),
-	);
-	foreach ( $prices as $group => $rows ) {
+	foreach ( $t['prices'] as $group => $rows ) {
 		$leistungen .= jos_block_heading( $group ) . jos_block_table( $rows );
 	}
 
-	$ueber_uns = jos_block_paragraph( 'Jo’s Barbershop liegt in Wien Mariahilf, im 6. Bezirk. Bei uns dreht sich alles um präzise Haarschnitte, akkurate Bärte und Zeit für dich.' )
-		. jos_block_heading( 'Das Team' )
-		. jos_block_paragraph( 'Inhaber Jwan bildet sich ständig weiter und kennt die neuesten Trends und Techniken. So bekommst du einen Look, der zu dir passt. Im Salon sprechen wir Deutsch, Englisch, Arabisch und Kurdisch.' )
-		. jos_block_heading( 'Was dich erwartet' )
-		. jos_block_list(
-			array(
+	$ueber_uns = jos_block_paragraph( $t['intro'] )
+		. jos_block_heading( $t['team_title'] )
+		. jos_block_paragraph( $t['team'] )
+		. jos_block_heading( $t['expect_title'] )
+		. jos_block_list( $t['expect'] );
+
+	$shop    = jos_shop();
+	$kontakt = jos_block_heading( $t['address_title'] )
+		. jos_block_paragraph( $shop['street'] . ', ' . $shop['postcode'] . ' ' . $shop['city'], jos_maps_link() )
+		. jos_block_paragraph( $t['bus'] )
+		. jos_block_heading( $t['hours_title'] )
+		. jos_block_table( $t['hours'] )
+		. jos_block_heading( $t['payment_title'] )
+		. jos_block_paragraph( $t['payment'] )
+		. jos_block_heading( $t['faq_title'] );
+	foreach ( $t['faq'] as $question => $answer ) {
+		$kontakt .= jos_block_question( $question, $answer );
+	}
+
+	return array(
+		'leistungen' => $leistungen,
+		'ueber-uns'  => $ueber_uns,
+		'kontakt'    => $kontakt,
+	);
+}
+
+/**
+ * The words of the pages in German, English and Arabic (prices and opening hours as on the booking page).
+ *
+ * @return array<string, array<string, mixed>>
+ */
+function jos_room_words(): array {
+	return array(
+		'de' => array(
+			'prices'        => array(
+				'Herrenhaarschnitte'          => array(
+					array( 'Student’s Cut', '30 Min.', '25 €' ),
+					array( 'Haarschnitt mit Shampoo', '30 Min.', '32 €' ),
+					array( 'Scherenschnitt', '45 Min.', '37 €' ),
+					array( 'Combo Cut & Eyebrows', '45 Min.', '38 €' ),
+					array( 'Combo Cut & Trim', '1 Std.', '45 €' ),
+					array( 'Kompletter Service', '1 Std. 15 Min.', '62 €' ),
+				),
+				'Bartpflege'                  => array(
+					array( 'Bartschnitt', '30 Min.', '19 €' ),
+					array( 'Hot Towel Rasur', '45 Min.', '25 €' ),
+					array( 'Haarschnitt und Bart trimmen', '1 Std. 15 Min.', '45 €' ),
+					array( 'Combo Cut & Hot Towel', '1 Std. 15 Min.', '52 €' ),
+					array( 'Combo Cut & Vikings Hot Towel', '1 Std. 15 Min.', '52 €' ),
+				),
+				'Kinderhaarschnitte'          => array(
+					array( 'Kinderhaarschnitt', '30 Min.', '16 €' ),
+				),
+				'Augenbrauen Formen & Design' => array(
+					array( 'Augenbrauen definieren', '15 Min.', '9 €' ),
+				),
+			),
+			'intro'         => 'Jo’s Barbershop liegt in Wien Mariahilf, im 6. Bezirk. Bei uns dreht sich alles um präzise Haarschnitte, akkurate Bärte und Zeit für dich.',
+			'team_title'    => 'Das Team',
+			'team'          => 'Inhaber Jwan bildet sich ständig weiter und kennt die neuesten Trends und Techniken. So bekommst du einen Look, der zu dir passt. Im Salon sprechen wir Deutsch, Englisch, Arabisch und Kurdisch.',
+			'expect_title'  => 'Was dich erwartet',
+			'expect'        => array(
 				array( 'Atmosphäre:', 'modern und gemütlich, zum Wohlfühlen' ),
 				array( 'Schwerpunkt:', 'Herrenhaarschnitte und Bartpflege' ),
 				array( 'Produkte:', 'La Biosthétique' ),
 				array( 'Extras:', 'kostenlose Getränke, kostenloses WLAN, Haustiere willkommen' ),
-			)
-		);
-
-	$shop    = jos_shop();
-	$kontakt = jos_block_heading( 'Adresse und Anfahrt' )
-		. jos_block_paragraph( $shop['street'] . ', ' . $shop['postcode'] . ' ' . $shop['city'], jos_maps_link() )
-		. jos_block_paragraph( 'Die Bushaltestelle Sonnenuhrgasse liegt nur wenige Schritte vom Salon entfernt.' )
-		. jos_block_heading( 'Öffnungszeiten' )
-		. jos_block_table(
-			array(
+			),
+			'address_title' => 'Adresse und Anfahrt',
+			'bus'           => 'Die Bushaltestelle Sonnenuhrgasse liegt nur wenige Schritte vom Salon entfernt.',
+			'hours_title'   => 'Öffnungszeiten',
+			'hours'         => array(
 				array( 'Montag', 'geschlossen' ),
 				array( 'Dienstag', '10:00 bis 19:00' ),
 				array( 'Mittwoch', '10:00 bis 19:00' ),
@@ -462,24 +510,141 @@ function jos_room_texts(): array {
 				array( 'Freitag', '10:00 bis 19:00' ),
 				array( 'Samstag', '10:00 bis 18:00' ),
 				array( 'Sonntag', 'geschlossen' ),
-			)
-		)
-		. jos_block_heading( 'Bezahlung' )
-		. jos_block_paragraph( 'Du kannst bar oder mit Kreditkarte bezahlen.' )
-		. jos_block_heading( 'Häufige Fragen' )
-		. jos_block_question( 'Wo finde ich euch?', 'In der Gumpendorfer Straße 127 in 1060 Wien, im 6. Bezirk.' )
-		. jos_block_question( 'Wann habt ihr geöffnet?', 'Dienstag bis Freitag von 10:00 bis 19:00 Uhr, Samstag von 10:00 bis 18:00 Uhr. Montag und Sonntag ist geschlossen.' )
-		. jos_block_question( 'Kann ich mit Karte zahlen?', 'Ja, du kannst bar oder mit Kreditkarte bezahlen.' )
-		. jos_block_question( 'Welche Sprachen sprecht ihr?', 'Deutsch, Englisch, Arabisch und Kurdisch.' )
-		. jos_block_question( 'Wie komme ich mit den Öffis zu euch?', 'Mit dem Bus bis zur Haltestelle Sonnenuhrgasse, von dort sind es nur wenige Schritte.' )
-		. jos_block_question( 'Welche Produkte verwendet ihr?', 'Wir arbeiten mit Produkten von La Biosthétique.' )
-		. jos_block_question( 'Gibt es Getränke und WLAN?', 'Ja, beides ist bei uns kostenlos.' )
-		. jos_block_question( 'Darf ich mein Haustier mitbringen?', 'Ja, Haustiere sind bei uns willkommen.' );
-
-	return array(
-		'leistungen' => $leistungen,
-		'ueber-uns'  => $ueber_uns,
-		'kontakt'    => $kontakt,
+			),
+			'payment_title' => 'Bezahlung',
+			'payment'       => 'Du kannst bar oder mit Kreditkarte bezahlen.',
+			'faq_title'     => 'Häufige Fragen',
+			'faq'           => array(
+				'Wo finde ich euch?'                  => 'In der Gumpendorfer Straße 127 in 1060 Wien, im 6. Bezirk.',
+				'Wann habt ihr geöffnet?'             => 'Dienstag bis Freitag von 10:00 bis 19:00 Uhr, Samstag von 10:00 bis 18:00 Uhr. Montag und Sonntag ist geschlossen.',
+				'Kann ich mit Karte zahlen?'          => 'Ja, du kannst bar oder mit Kreditkarte bezahlen.',
+				'Welche Sprachen sprecht ihr?'        => 'Deutsch, Englisch, Arabisch und Kurdisch.',
+				'Wie komme ich mit den Öffis zu euch?' => 'Mit dem Bus bis zur Haltestelle Sonnenuhrgasse, von dort sind es nur wenige Schritte.',
+				'Welche Produkte verwendet ihr?'      => 'Wir arbeiten mit Produkten von La Biosthétique.',
+				'Gibt es Getränke und WLAN?'          => 'Ja, beides ist bei uns kostenlos.',
+				'Darf ich mein Haustier mitbringen?'  => 'Ja, Haustiere sind bei uns willkommen.',
+			),
+		),
+		'en' => array(
+			'prices'        => array(
+				'Men’s haircuts'            => array(
+					array( 'Student’s Cut', '30 min', '25 €' ),
+					array( 'Haircut with shampoo', '30 min', '32 €' ),
+					array( 'Scissor cut', '45 min', '37 €' ),
+					array( 'Combo Cut & Eyebrows', '45 min', '38 €' ),
+					array( 'Combo Cut & Trim', '1 h', '45 €' ),
+					array( 'Full service', '1 h 15 min', '62 €' ),
+				),
+				'Beard care'                => array(
+					array( 'Beard trim', '30 min', '19 €' ),
+					array( 'Hot towel shave', '45 min', '25 €' ),
+					array( 'Haircut and beard trim', '1 h 15 min', '45 €' ),
+					array( 'Combo Cut & Hot Towel', '1 h 15 min', '52 €' ),
+					array( 'Combo Cut & Vikings Hot Towel', '1 h 15 min', '52 €' ),
+				),
+				'Children’s haircuts'       => array(
+					array( 'Children’s haircut', '30 min', '16 €' ),
+				),
+				'Eyebrow shaping & design'  => array(
+					array( 'Eyebrow definition', '15 min', '9 €' ),
+				),
+			),
+			'intro'         => 'Jo’s Barbershop is in Vienna’s Mariahilf, the 6th district. Everything here is about precise haircuts, sharp beards and time for you.',
+			'team_title'    => 'The team',
+			'team'          => 'Owner Jwan keeps on training and knows the latest trends and techniques, so you get a look that suits you. In the salon we speak German, English, Arabic and Kurdish.',
+			'expect_title'  => 'What to expect',
+			'expect'        => array(
+				array( 'Atmosphere:', 'modern and cosy, a place to feel good' ),
+				array( 'Focus:', 'men’s haircuts and beard care' ),
+				array( 'Products:', 'La Biosthétique' ),
+				array( 'Extras:', 'free drinks, free Wi-Fi, pets welcome' ),
+			),
+			'address_title' => 'Address and directions',
+			'bus'           => 'The Sonnenuhrgasse bus stop is just a few steps from the salon.',
+			'hours_title'   => 'Opening hours',
+			'hours'         => array(
+				array( 'Monday', 'closed' ),
+				array( 'Tuesday', '10:00 to 19:00' ),
+				array( 'Wednesday', '10:00 to 19:00' ),
+				array( 'Thursday', '10:00 to 19:00' ),
+				array( 'Friday', '10:00 to 19:00' ),
+				array( 'Saturday', '10:00 to 18:00' ),
+				array( 'Sunday', 'closed' ),
+			),
+			'payment_title' => 'Payment',
+			'payment'       => 'You can pay in cash or by credit card.',
+			'faq_title'     => 'Frequently asked questions',
+			'faq'           => array(
+				'Where can I find you?'                     => 'At Gumpendorfer Straße 127 in 1060 Vienna, in the 6th district.',
+				'When are you open?'                        => 'Tuesday to Friday from 10:00 to 19:00, Saturday from 10:00 to 18:00. Closed on Monday and Sunday.',
+				'Can I pay by card?'                        => 'Yes, you can pay in cash or by credit card.',
+				'Which languages do you speak?'             => 'German, English, Arabic and Kurdish.',
+				'How do I get to you by public transport?'  => 'Take the bus to the Sonnenuhrgasse stop, from there it is only a few steps.',
+				'Which products do you use?'                => 'We work with products by La Biosthétique.',
+				'Are there drinks and Wi-Fi?'               => 'Yes, both are free.',
+				'Can I bring my pet?'                       => 'Yes, pets are welcome.',
+			),
+		),
+		'ar' => array(
+			'prices'        => array(
+				'قصات الشعر للرجال'       => array(
+					array( 'قصة الطلاب', '30 دقيقة', '25 €' ),
+					array( 'قصة شعر مع شامبو', '30 دقيقة', '32 €' ),
+					array( 'قصة بالمقص', '45 دقيقة', '37 €' ),
+					array( 'قصة شعر مع تشكيل الحواجب', '45 دقيقة', '38 €' ),
+					array( 'قصة شعر مع تهذيب اللحية', 'ساعة', '45 €' ),
+					array( 'الخدمة الكاملة', 'ساعة و15 دقيقة', '62 €' ),
+				),
+				'العناية باللحية'         => array(
+					array( 'قص اللحية', '30 دقيقة', '19 €' ),
+					array( 'حلاقة بالمنشفة الساخنة', '45 دقيقة', '25 €' ),
+					array( 'قصة شعر وتهذيب اللحية', 'ساعة و15 دقيقة', '45 €' ),
+					array( 'قصة شعر مع المنشفة الساخنة', 'ساعة و15 دقيقة', '52 €' ),
+					array( 'قصة شعر مع منشفة الفايكنغ الساخنة', 'ساعة و15 دقيقة', '52 €' ),
+				),
+				'قصات الشعر للأطفال'      => array(
+					array( 'قصة شعر للأطفال', '30 دقيقة', '16 €' ),
+				),
+				'تشكيل الحواجب وتصميمها'  => array(
+					array( 'تحديد الحواجب', '15 دقيقة', '9 €' ),
+				),
+			),
+			'intro'         => 'يقع Jo’s Barbershop في حي ماريا هيلف في فيينا، في الدائرة السادسة. كل شيء هنا يدور حول قصات الشعر الدقيقة واللحى المرتبة ووقت مخصص لك.',
+			'team_title'    => 'الفريق',
+			'team'          => 'يواصل صاحب الصالون جوان التعلم باستمرار ويعرف أحدث الصيحات والتقنيات، لتحصل على مظهر يناسبك. نتحدث في الصالون الألمانية والإنجليزية والعربية والكردية.',
+			'expect_title'  => 'ما الذي ينتظرك',
+			'expect'        => array(
+				array( 'الأجواء:', 'عصرية ومريحة، لتشعر بالراحة' ),
+				array( 'التخصص:', 'قصات الشعر للرجال والعناية باللحية' ),
+				array( 'المنتجات:', 'La Biosthétique' ),
+				array( 'إضافات:', 'مشروبات مجانية، واي فاي مجاني، الحيوانات الأليفة مرحب بها' ),
+			),
+			'address_title' => 'العنوان وطريقة الوصول',
+			'bus'           => 'تقع محطة الحافلات Sonnenuhrgasse على بعد خطوات قليلة من الصالون.',
+			'hours_title'   => 'أوقات العمل',
+			'hours'         => array(
+				array( 'الاثنين', 'مغلق' ),
+				array( 'الثلاثاء', '10:00 حتى 19:00' ),
+				array( 'الأربعاء', '10:00 حتى 19:00' ),
+				array( 'الخميس', '10:00 حتى 19:00' ),
+				array( 'الجمعة', '10:00 حتى 19:00' ),
+				array( 'السبت', '10:00 حتى 18:00' ),
+				array( 'الأحد', 'مغلق' ),
+			),
+			'payment_title' => 'الدفع',
+			'payment'       => 'يمكنك الدفع نقدًا أو ببطاقة الائتمان.',
+			'faq_title'     => 'أسئلة شائعة',
+			'faq'           => array(
+				'أين أجدكم؟'                          => 'في Gumpendorfer Straße 127 في 1060 فيينا، في الدائرة السادسة.',
+				'متى تفتحون؟'                         => 'من الثلاثاء إلى الجمعة من 10:00 حتى 19:00، والسبت من 10:00 حتى 18:00. نغلق يومي الاثنين والأحد.',
+				'هل يمكنني الدفع بالبطاقة؟'           => 'نعم، يمكنك الدفع نقدًا أو ببطاقة الائتمان.',
+				'ما اللغات التي تتحدثونها؟'           => 'الألمانية والإنجليزية والعربية والكردية.',
+				'كيف أصل إليكم بالمواصلات العامة؟'   => 'بالحافلة حتى محطة Sonnenuhrgasse، ومن هناك بضع خطوات فقط.',
+				'ما المنتجات التي تستخدمونها؟'        => 'نعمل بمنتجات La Biosthétique.',
+				'هل تتوفر مشروبات وواي فاي؟'          => 'نعم، كلاهما مجاني لدينا.',
+				'هل يمكنني إحضار حيواني الأليف؟'     => 'نعم، الحيوانات الأليفة مرحب بها لدينا.',
+			),
+		),
 	);
 }
 
@@ -543,10 +708,21 @@ function jos_block_question( string $question, string $answer ): string {
  * Menu of the header: the pages of the arches as jump marks on the front page.
  */
 function jos_nav(): void {
-	$base = is_front_page() ? '' : home_url( '/' );
-	echo '<nav class="site-header__nav" aria-label="' . esc_attr__( 'Hauptmenü', 'jos-barbershop' ) . '"><ul>';
+	$base = is_front_page() ? '' : jos_url( home_url( '/' ) );
+	echo '<nav class="site-header__nav" aria-label="' . esc_attr( jos_t( 'Hauptmenü' ) ) . '"><ul>';
 	foreach ( jos_rooms() as $room ) {
 		printf( '<li><a href="%1$s" data-open="%2$s">%3$s</a></li>', esc_url( $base . '#' . $room['slug'] ), esc_attr( $room['slug'] ), esc_html( $room['nav'] ) );
+	}
+	echo '</ul><ul class="site-header__languages" aria-label="' . esc_attr( jos_t( 'Sprache' ) ) . '">';
+	foreach ( jos_language_links() as $link ) {
+		printf(
+			'<li><a href="%1$s" hreflang="%2$s" lang="%2$s"%3$s title="%4$s">%5$s</a></li>',
+			esc_url( $link['url'] ),
+			esc_attr( jos_languages()[ $link['code'] ]['locale'] ),
+			$link['current'] ? ' aria-current="true"' : '',
+			esc_attr( $link['name'] ),
+			esc_html( $link['label'] )
+		);
 	}
 	echo '</ul></nav>';
 }
@@ -557,7 +733,7 @@ function jos_nav(): void {
  * @param array{slug: string, title: string, nav: string, door: bool, arch: int} $room Room from jos_rooms().
  */
 function jos_room( array $room ): void {
-	$page  = get_page_by_path( $room['slug'] );
+	$page  = get_page_by_path( $room['page'] );
 	$title = $page ? get_the_title( $page ) : $room['title'];
 	$id    = $room['slug'];
 	?>
@@ -579,7 +755,7 @@ function jos_room( array $room ): void {
 					<?php if ( $page ) : ?>
 						<a href="<?php echo esc_url( (string) get_edit_post_link( $page ) ); ?>"><?php esc_html_e( 'Seite bearbeiten', 'jos-barbershop' ); ?></a>
 					<?php else : ?>
-						<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=page' ) ); ?>"><?php echo esc_html( sprintf( /* translators: %s: slug of the missing page */ __( 'Seite mit der Adresse "%s" anlegen', 'jos-barbershop' ), $room['slug'] ) ); ?></a>
+						<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=page' ) ); ?>"><?php echo esc_html( sprintf( /* translators: %s: slug of the missing page */ __( 'Seite mit der Adresse "%s" anlegen', 'jos-barbershop' ), $room['page'] ) ); ?></a>
 					<?php endif; ?>
 				</p>
 			<?php endif; ?>
