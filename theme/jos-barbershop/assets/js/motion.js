@@ -1,13 +1,14 @@
 /*
- * Motion layer of the front page (GSAP). In the street, scrolling, dragging or the arrow keys move the camera
- * along the facade; dragging up (or the down arrow) lowers it to the foundation, where the footer lines are
- * cut in. The arches of the facade are the menu: a click on a window or door (scene.js sends 'jos:open'), on
+ * Motion layer of the front page (GSAP). In the street, dragging (or the arrow keys) turns the building left
+ * and right, up and down: turned up, the foundation with the footer lines comes to the front. Scrolling (or
+ * Page Up and Page Down) moves along the street. The arches of the facade are the menu: a click on a window or door (scene.js sends 'jos:open'), on
  * a menu link or on any link to #leistungen, #ueber-uns, #galerie or #kontakt takes the camera through that
  * arch and opens its page over the whole screen. The X, Esc or the back button of the browser lead back out
  * to the street. Behind the door is the shop: there the page stands still and dragging (or the arrow keys)
  * turns the view around the shop.
  * GSAP owns all values and sends them to the three.js scene (scene.js), which only draws:
- *   'jos:street'   { x, y }: x 0 = first view, 1 = down the street to the last arch; y 0 = eye level, 1 = foundation
+ *   'jos:street'   { x, yaw, pitch }: x 0 = first view, 1 = down the street to the last arch; the building turned
+ *                  left and right (yaw) and up and down (pitch), in radians, within the limits scene.js gives
  *   'jos:view'     { arch, t }: arch index (-1 = street), t 0 = street view, 1 = inside the arch
  *   'jos:look'     { yaw, pitch }: the view inside the shop
  */
@@ -86,16 +87,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	};
 	const turnTo = (yaw, pitch, duration = 0.6) => glide(look, { yaw, pitch: gsap.utils.clamp(-0.7, 0.7, pitch) }, duration, sendLook);
 
-	// ---- along the street: x from a little to the right of the first view (-0.25) down to the last arch (1),
-	// y from eye level (0) down to the foundation (1)
+	// ---- in the street: x from a little to the right of the first view (-0.25) down to the last arch (1);
+	// the building turned left and right (yaw) and up and down (pitch), as far as scene.js allows
 	const STREET_X = [-0.25, 1];
-	const street = { x: 0, y: 0 };
-	const aim = { x: 0, y: 0 };
-	const sendStreet = () => send('jos:street', { x: street.x, y: street.y });
-	const moveStreet = (dx, dy, duration = 0.9) => {
+	const sceneRoot = document.querySelector('[data-scene]');
+	const limit = (name, fallback) => {
+		const value = sceneRoot ? Number(sceneRoot.dataset[name]) : NaN;
+		return Number.isFinite(value) ? value : fallback;
+	};
+	const street = { x: 0, yaw: 0, pitch: 0 };
+	const aim = { x: 0, yaw: 0, pitch: 0 };
+	const sendStreet = () => send('jos:street', { x: street.x, yaw: street.yaw, pitch: street.pitch });
+	const moveStreet = (dx, dyaw, dpitch, duration = 0.9) => {
 		aim.x = gsap.utils.clamp(STREET_X[0], STREET_X[1], aim.x + dx);
-		aim.y = gsap.utils.clamp(0, 1, aim.y + dy);
-		glide(street, { x: aim.x, y: aim.y }, duration, sendStreet);
+		aim.yaw = gsap.utils.clamp(limit('yawMin', -1.9), limit('yawMax', 0.9), aim.yaw + dyaw);
+		aim.pitch = gsap.utils.clamp(limit('pitchMin', -0.75), limit('pitchMax', 0.75), aim.pitch + dpitch);
+		glide(street, { x: aim.x, yaw: aim.yaw, pitch: aim.pitch }, duration, sendStreet);
 	};
 
 	// ---- the page itself; its link in the menu is marked as the current one
@@ -267,16 +274,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (current || event.ctrlKey) return;   // an open page scrolls itself; ctrl and wheel is the zoom
 		event.preventDefault();
 		const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
-		moveStreet(((event.deltaY + event.deltaX) * unit) / 1500, 0);
+		moveStreet(((event.deltaY + event.deltaX) * unit) / 1500, 0, 0);
 	}, { passive: false });
 
-	// grab the building and move it: it follows the pointer, and a quick throw glides on a little
-	const scene = document.querySelector('[data-scene]');
+	// grab the building and turn it: it follows the pointer, and a quick throw turns on a little
+	const scene = sceneRoot;
+	const TURN_PER_WIDTH = 2.6;    // radians for a drag across the whole screen
+	const TILT_PER_HEIGHT = 1.6;   // radians for a drag over the whole height
 	let grab = null;
 	let skipClick = false;
 	if (scene) {
-		const across = () => (window.innerWidth > window.innerHeight ? 1 : 0.4);   // street per screen width
-		const downwards = () => (window.innerWidth > window.innerHeight ? 2 : 1);  // foundation per screen height
 		scene.addEventListener('pointerdown', (event) => {
 			if (current || event.button !== 0) return;
 			const now = performance.now();
@@ -290,22 +297,22 @@ document.addEventListener('DOMContentLoaded', () => {
 				html.classList.add('is-dragging-street');
 			}
 			const now = performance.now();
-			// dragging to the right brings the street on the left in; dragging up shows the foundation
-			const dx = ((event.clientX - grab.lastX) / window.innerWidth) * across();
-			const dy = (-(event.clientY - grab.lastY) / window.innerHeight) * downwards();
+			// dragging to the right turns the building to the right; dragging up turns its foundation to the front
+			const dyaw = (-(event.clientX - grab.lastX) / window.innerWidth) * TURN_PER_WIDTH;
+			const dpitch = ((event.clientY - grab.lastY) / window.innerHeight) * TILT_PER_HEIGHT;
 			const dt = Math.max((now - grab.time) / 1000, 0.001);
-			grab.vx = grab.vx * 0.6 + (dx / dt) * 0.4;
-			grab.vy = grab.vy * 0.6 + (dy / dt) * 0.4;
+			grab.vx = grab.vx * 0.6 + (dyaw / dt) * 0.4;
+			grab.vy = grab.vy * 0.6 + (dpitch / dt) * 0.4;
 			grab.lastX = event.clientX;
 			grab.lastY = event.clientY;
 			grab.time = now;
-			moveStreet(dx, dy, 0.45);
+			moveStreet(0, dyaw, dpitch, 0.45);
 		});
 		const release = (event) => {
 			if (!grab || event.pointerId !== grab.id) return;
 			if (grab.moved) {
 				skipClick = true;   // the end of a drag is no click on a window
-				if (performance.now() - grab.time < 120) moveStreet(grab.vx * 0.25, grab.vy * 0.25, 1.2);
+				if (performance.now() - grab.time < 120) moveStreet(0, grab.vx * 0.25, grab.vy * 0.25, 1.2);
 				html.classList.remove('is-dragging-street');
 			}
 			grab = null;
@@ -322,12 +329,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	window.addEventListener('keydown', (event) => {
 		if (!current) {
-			// in the street the arrow keys move along it and down to the foundation
-			const steps = { ArrowLeft: [0.08, 0], ArrowRight: [-0.08, 0], ArrowDown: [0, 0.25], ArrowUp: [0, -0.25] };
+			// in the street the arrow keys turn the building, Page Up and Page Down move along the street
+			const steps = {
+				ArrowLeft: [0, 0.15, 0],
+				ArrowRight: [0, -0.15, 0],
+				ArrowUp: [0, 0, -0.12],
+				ArrowDown: [0, 0, 0.12],
+				PageDown: [0.12, 0, 0],
+				PageUp: [-0.12, 0, 0],
+			};
 			const typing = event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]');
 			if (steps[event.key] && !typing && !event.altKey && !event.metaKey && !event.ctrlKey) {
 				event.preventDefault();
-				moveStreet(steps[event.key][0], steps[event.key][1], 0.6);
+				moveStreet(...steps[event.key], 0.6);
 			}
 			return;
 		}

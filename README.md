@@ -62,18 +62,18 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Boje: sve što je bilo crno je vrlo tamna smeđa, ne previše topla (`#130e0b`: pozadina, disk, nosač, tamno staklo), a linije
   fasade i tanke crte su blijedo žute (`#f1e2a0`). Svijetli logo ostaje bijel.
 
-**Kretanje uz ulicu**
+**Okretanje zgrade**
 
-- Scroll (kotačić ili touchpad) vodi kameru lijevo niz ulicu prema dalekim lukovima i natrag. Kut gledanja
-  ostaje isti, pa se svaki luk može dovesti na sredinu ekrana.
-- Zgrada se može uhvatiti mišem ili prstom i pomicati: povlačenje udesno donosi ulicu s lijeve strane,
-  povlačenje prema gore spušta pogled do temelja. Brzi potez se još malo nastavi sam.
-- Strelice lijevo i desno rade isto što i scroll, strelica dolje spušta pogled do temelja, gore ga vraća.
+- Zgrada se hvata mišem ili prstom i okreće: lijevo i desno (do skoro bočnog pogleda), gore i dolje.
+  Okrenuta prema gore pokaže temelj s footerom. Brzi potez se još malo okreće sam.
+- Scroll (kotačić ili touchpad) vodi kameru uz ulicu prema dalekim lukovima i natrag.
+- Tipkovnica: strelice okreću zgradu, Page Up i Page Down idu uz ulicu.
+- Povlačenje nikad ne otvara stranicu, otvara je samo pravi klik.
 
 **Footer u temelju**
 
 - Footer (copyright, adresa, Impressum, Datenschutz) upisan je u temelj zgrade, ispod linije tla, u sredini
-  ispod lukova. Vidi se kad se zgrada povuče prema gore.
+  ispod lukova. Čita se kad se zgrada okrene prema gore.
 - Adresa vodi na Google Maps, Impressum i Datenschutz na svoje stranice: pod mišem zasvijetle i klikaju se.
   Impressum i Datenschutz se pojave sami čim te stranice postoje u WordPressu (`jos_footer_items()`).
 - Obični HTML footer ostaje za tipkovnicu, čitače ekrana i Google: stoji ispod ekrana i izađe kad neki
@@ -144,7 +144,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.7.0: znak na fasadi koja se iscrta pri učitavanju, kamera klizi uz ulicu (scroll, povlačenje), lukovi s
+Status 0.7.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll vodi uz ulicu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
 

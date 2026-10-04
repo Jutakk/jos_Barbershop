@@ -12,13 +12,14 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
  * plate. Only the logo on both faces of the disc glows. The wall is the ground floor of the real facade
  * (images/fasada.jpg), drawn only as thin lines (facade.js, made by fasada/build_facade.py); the lines draw
  * themselves when the page loads.
- * Scrolling or dragging moves the camera along the street, dragging up also lowers it to the foundation,
- * where the footer lines are cut in under the ground line.
+ * Dragging turns the building (left and right, up and down: turned up, the foundation with the footer lines
+ * comes to the front), scrolling moves along the street.
  * The arches are the menu: in the band of every arch the name of its page runs around (fast at first, then
  * slowly), the whole window or door is the button: pointing at it fills it with a transparent pale yellow,
  * a click takes the camera through it into the page. Behind the door is the shop.
  * motion.js (GSAP) owns the values and sends them as events, three.js only draws:
- *   'jos:street'   { x, y }: x 0 = first view, 1 = down the street to the last arch; y 0 = eye level, 1 = foundation
+ *   'jos:street'   { x, yaw, pitch }: x 0 = first view, 1 = down the street to the last arch; yaw and pitch in
+ *                  radians: the building turned left and right, up and down (scene.js writes the limits on the root)
  *   'jos:view'     { arch, t }: arch index in FACADE_ARCHES (-1 = street), t 0 = street view, 1 = inside
  *   'jos:look'     { yaw, pitch } in radians: the view inside the shop, turned by dragging
  * The scene itself only reports clicks: 'jos:open' with the arch index, 'jos:link' with the address of a
@@ -50,10 +51,12 @@ const HERO_PULL = 2.7;           // times the distance that fits the sign alone
 const HERO_PULL_MOBILE = 1.12;
 const HERO_LIFT = 0.03;          // looks slightly up, times the distance
 
-// along the street: x 1 brings the last arch on the left to where the sign is in the first view,
-// y 1 lowers the camera to just above the ground, in front of the foundation
+// along the street: x 1 brings the last arch on the left to where the sign is in the first view
 const STREET_LENGTH = -FACADE_ARCHES[0].z;
-const FOUNDATION_DROP = 2.8;
+// turning the building: the camera goes around the point of the wall in the middle of the view.
+// Left and right up to this angle from straight in front of the wall, up and down up to TILT.
+const TURN_LIMIT = 1.4;
+const TILT = [-0.75, 0.75];
 
 // in front of an arch the whole window or door is in view, from the ground to above the keystone
 const FRAME = {
@@ -455,7 +458,7 @@ if (root) {
 		composer.addPass(new OutputPass());
 
 		// ---- state: the angle and the running texts come from time, everything else from motion.js
-		const state = { angle: reduced ? -0.42 : -0.25, street: { x: 0, y: 0 }, view: { arch: -1, t: 0 }, yaw: 0, pitch: 0 };
+		const state = { angle: reduced ? -0.42 : -0.25, street: { x: 0, yaw: 0, pitch: 0 }, view: { arch: -1, t: 0 }, yaw: 0, pitch: 0 };
 		const ribbonSpeed = { value: RIBBON_SPEED };
 
 		// ---- camera poses: the hero view and, for every arch, in front of it and inside it
@@ -470,8 +473,11 @@ if (root) {
 			pose.target.set(wallX + lookDepth, EYE_HEIGHT, z).applyMatrix4(sign.matrixWorld);
 		};
 		const toSign = new THREE.Matrix4();
-		const downStreet = new THREE.Vector3();
 		const up = new THREE.Vector3(0, 1, 0);
+		// the first view in the wall's own space: the point of the wall it looks at, and camera and target from there
+		const pivot0 = new THREE.Vector3();
+		const cameraFromPivot = new THREE.Vector3();
+		const targetFromPivot = new THREE.Vector3();
 
 		const fit = () => {
 			const w = root.clientWidth;
@@ -491,9 +497,21 @@ if (root) {
 			sign.position.x = camera.aspect > 1.25 ? 0.55 : -0.2;
 			sign.updateMatrixWorld(true);
 			toSign.copy(sign.matrixWorld).invert();
-			downStreet.set(0, 0, -1).transformDirection(sign.matrixWorld);   // along the wall, to the left
 			hero.position.set(0, EYE_HEIGHT, heroDistance);
 			hero.target.set(0, EYE_HEIGHT + heroDistance * HERO_LIFT, 0);
+
+			// the building turns around the point of the wall in the middle of the first view
+			const heroLocal = hero.position.clone().applyMatrix4(toSign);
+			const sight = hero.target.clone().applyMatrix4(toSign).sub(heroLocal);
+			pivot0.copy(heroLocal).addScaledVector(sight, (wallX - heroLocal.x) / sight.x);
+			cameraFromPivot.copy(heroLocal).sub(pivot0);
+			targetFromPivot.copy(hero.target).applyMatrix4(toSign).sub(pivot0);
+			// turn limits for motion.js: never further round than TURN_LIMIT from straight in front
+			const base = Math.atan2(cameraFromPivot.z, -cameraFromPivot.x);
+			root.dataset.yawMin = (-TURN_LIMIT - base).toFixed(3);
+			root.dataset.yawMax = (TURN_LIMIT - base).toFixed(3);
+			root.dataset.pitchMin = String(TILT[0]);
+			root.dataset.pitchMax = String(TILT[1]);
 
 			// in front of an arch: the whole window or door with its wedge joints fills the screen
 			const frontDistance = Math.max((FRAME.top - FRAME.bottom) / (2 * tan), FRAME.width / (2 * tan * camera.aspect));
@@ -507,7 +525,7 @@ if (root) {
 			scene.fog.far = framed + FACADE_FADE[1];
 		};
 
-		// ---- camera: in the street the hero view moved along the wall and down; through an arch one smooth
+		// ---- camera: in the street the hero view turned and moved along the wall; through an arch one smooth
 		// curve from there past the framed view in front of the arch straight in through it. The view turns
 		// towards the arch in the first half and then looks straight through it.
 		const smooth = (t) => t * t * (3 - 2 * t);
@@ -518,11 +536,19 @@ if (root) {
 		const local = new THREE.Vector3();
 		const position = new THREE.Vector3();
 
+		// in the street: the camera goes around a point of the wall (turning the building) and that point
+		// moves along the street
+		const pivot = new THREE.Vector3();
+		const across = new THREE.Vector3();
 		const placeStreet = () => {
-			const shift = state.street.x * STREET_LENGTH;
-			const drop = -state.street.y * FOUNDATION_DROP;
-			street.position.copy(hero.position).addScaledVector(downStreet, shift).addScaledVector(up, drop);
-			street.target.copy(hero.target).addScaledVector(downStreet, shift).addScaledVector(up, drop);
+			const { x, yaw, pitch } = state.street;
+			pivot.copy(pivot0);
+			pivot.z -= x * STREET_LENGTH;
+			street.position.copy(cameraFromPivot).applyAxisAngle(up, yaw);
+			street.target.copy(targetFromPivot).applyAxisAngle(up, yaw);
+			across.crossVectors(street.position, up).normalize();
+			street.position.applyAxisAngle(across, THREE.MathUtils.clamp(pitch, TILT[0], TILT[1])).add(pivot).applyMatrix4(sign.matrixWorld);
+			street.target.applyAxisAngle(across, THREE.MathUtils.clamp(pitch, TILT[0], TILT[1])).add(pivot).applyMatrix4(sign.matrixWorld);
 		};
 
 		const placeCamera = () => {
@@ -646,7 +672,7 @@ if (root) {
 
 		// ---- values from motion.js
 		window.addEventListener('jos:street', (event) => {
-			state.street = { x: event.detail.x, y: event.detail.y };
+			state.street = { x: event.detail.x, yaw: event.detail.yaw, pitch: event.detail.pitch };
 			redraw();
 		});
 		window.addEventListener('jos:view', (event) => {
