@@ -146,7 +146,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.7.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll vodi uz ulicu, lukovi s
+Status 0.7.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll spušta u dubinu do footera, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
 
