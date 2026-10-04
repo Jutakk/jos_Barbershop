@@ -4,7 +4,7 @@ import { EffectComposer } from './vendor/addons/postprocessing/EffectComposer.js
 import { RenderPass } from './vendor/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from './vendor/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from './vendor/addons/postprocessing/OutputPass.js';
-import { FACADE_LINES, FACADE_DRAW, FACADE_ARCHES, FACADE_ARCH } from './facade.js';
+import { FACADE_LINES, FACADE_DRAW, FACADE_ARCHES, FACADE_ARCH } from 'jos-facade';
 
 /*
  * Front page: the round shop sign of Jo's Barbershop on the facade of the shop.

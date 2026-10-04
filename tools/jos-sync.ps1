@@ -70,7 +70,7 @@ while ($true) {
         if ($remote -ne $last) {
             if (Test-Path -LiteralPath $src -PathType Container) {
                 robocopy $src $dst /E /XD node_modules /XF package.json package-lock.json /NFL /NDL /NJH /NJS /NP | Out-Null
-                Write-Host ('{0}  Local azuriran ({1}). Pritisni Ctrl+F5 u Chromeu.' -f (Stamp), $remote.Substring(0, 7))
+                Write-Host ('{0}  Local azuriran ({1}). Otvorena stranica se sama osvjezi.' -f (Stamp), $remote.Substring(0, 7))
             } else {
                 Write-Host ('{0}  Povuceno ({1}). Tema jos ne postoji, Local ostaje kakav je.' -f (Stamp), $remote.Substring(0, 7))
             }

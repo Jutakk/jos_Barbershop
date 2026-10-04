@@ -19,6 +19,12 @@ Isto kao kod Zum kleinen Feinen: Claude pusha na granu `claude/jos-barbershop-lo
 u Local stranicu `C:\Users\User\Local Sites\jos-barbershop` (localhost:10098). Nove datoteke ubačene u
 `reference`, `images` ili `hairs` skripta sama šalje na GitHub.
 
+- Otvorena stranica u Localu sama se osvježi kad sinkronizacija kopira nove datoteke teme
+  (`assets/js/dev-reload.js`, radi samo na lokalnoj kopiji, nikad na pravoj stranici). Sve datoteke imaju
+  vrijeme zadnje promjene u adresi, pa preglednik uvijek uzme nove.
+- Otvorena stranica u Localu sama se osvježi kad sinkronizacija kopira nove datoteke teme
+  (`assets/js/dev-reload.js`, radi samo na lokalnoj kopiji, nikad na pravoj stranici). Sve datoteke imaju
+  vrijeme zadnje promjene u adresi, pa preglednik uvijek uzme nove.
 - Izvor na računalu: `D:\CLAUDE_CODE\jos-barbershop`
 - Pokretanje: `powershell -ExecutionPolicy Bypass -File "D:\CLAUDE_CODE\jos-barbershop\tools\jos-sync.ps1"`
 
@@ -90,6 +96,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.3.2: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+Status 0.3.3: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
 (čeka 360 sliku). Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 

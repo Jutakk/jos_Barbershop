@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.3.2' );
+define( 'JOS_VERSION', '0.3.3' );
 
 /**
  * Theme supports.
@@ -42,7 +42,8 @@ function jos_enqueue_motion(): void {
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_motion' );
 
 /**
- * three.js scene of the hero, loaded as ES module through the Script Modules API (importmap for 'three').
+ * three.js scene of the hero, loaded as ES module through the Script Modules API (importmap for 'three'
+ * and for the facade lines, so a changed facade.js gets a new version in its address too).
  */
 function jos_enqueue_scene(): void {
 	if ( ! is_front_page() ) {
@@ -51,9 +52,65 @@ function jos_enqueue_scene(): void {
 	$dir  = get_template_directory_uri() . '/assets/js';
 	$path = get_template_directory() . '/assets/js';
 	wp_register_script_module( 'three', $dir . '/vendor/three.module.min.js', array(), '0.186.1' );
-	wp_enqueue_script_module( 'jos-scene', $dir . '/scene.js', array( 'three' ), filemtime( $path . '/scene.js' ) );
+	wp_register_script_module( 'jos-facade', $dir . '/facade.js', array(), filemtime( $path . '/facade.js' ) );
+	wp_enqueue_script_module( 'jos-scene', $dir . '/scene.js', array( 'three', 'jos-facade' ), filemtime( $path . '/scene.js' ) );
 }
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_scene' );
+
+/**
+ * True on the local development copy (LocalWP), never on the live site.
+ */
+function jos_is_local(): bool {
+	$host = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+	return in_array( wp_get_environment_type(), array( 'local', 'development' ), true )
+		|| in_array( $host, array( 'localhost', '127.0.0.1' ), true )
+		|| str_ends_with( $host, '.local' );
+}
+
+/**
+ * Newest change of any file of the theme, as a number. The local page asks for it every two seconds.
+ */
+function jos_theme_stamp(): int {
+	$newest = 0;
+	$files  = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( get_template_directory(), FilesystemIterator::SKIP_DOTS ) );
+	foreach ( $files as $file ) {
+		$newest = max( $newest, $file->getMTime() );
+	}
+	return $newest;
+}
+
+/**
+ * Local only: the page reloads by itself when the sync has copied new theme files into Local.
+ */
+function jos_dev_reload(): void {
+	if ( ! jos_is_local() ) {
+		return;
+	}
+	$dir  = get_template_directory_uri() . '/assets/js';
+	$path = get_template_directory() . '/assets/js';
+	wp_enqueue_script( 'jos-dev-reload', $dir . '/dev-reload.js', array(), filemtime( $path . '/dev-reload.js' ), true );
+	wp_localize_script( 'jos-dev-reload', 'josDevReload', array( 'url' => esc_url_raw( rest_url( 'jos/v1/stamp' ) ) ) );
+}
+add_action( 'wp_enqueue_scripts', 'jos_dev_reload' );
+
+/**
+ * Local only: REST address that answers with jos_theme_stamp().
+ */
+function jos_dev_reload_route(): void {
+	if ( ! jos_is_local() ) {
+		return;
+	}
+	register_rest_route(
+		'jos/v1',
+		'/stamp',
+		array(
+			'methods'             => 'GET',
+			'callback'            => static fn() => array( 'stamp' => jos_theme_stamp() ),
+			'permission_callback' => '__return_true',
+		)
+	);
+}
+add_action( 'rest_api_init', 'jos_dev_reload_route' );
 
 /**
  * Customizer: link of the booking button (booking page or tel: link).
@@ -122,7 +179,10 @@ function jos_booking_button(): void {
  * @param string $file File name in assets/images.
  */
 function jos_image( string $file ): string {
-	return get_template_directory_uri() . '/assets/images/' . $file;
+	$path = get_template_directory() . '/assets/images/' . $file;
+	$url  = get_template_directory_uri() . '/assets/images/' . $file;
+	// the time of the last change in the address: a changed image is loaded fresh, not from the cache
+	return file_exists( $path ) ? add_query_arg( 'ver', filemtime( $path ), $url ) : $url;
 }
 
 /**
