@@ -76,9 +76,12 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Kroz vrata kamera ulazi u lokal: 360 fotografija lokala oko kamere (`images/google-maps-28.webp`, 8192 x 4096).
   Fotografija ostaje kakva jest, bez izoštravanja (`tools/panorama.py`): `lokal-360.webp` (8192 px, 1,1 MB) za
   računala, `lokal-360-mobile.webp` (4096 px, 0,6 MB) za mobitele. Učitava se tek kad kamera krene niz ulicu,
-  pa ne ulazi u budžet prvog učitavanja. Pogled prvo ide ravno u lokal, prema stolicama
-  i ogledalima, s ulazom iza leđa, i sa scrollom se okrene jednom u krug. Stranica Über uns dolazi preko lokala
-  na tamnom staklu. Unutra se kut gledanja proširi s 30 na 70 stupnjeva.
+  pa ne ulazi u budžet prvog učitavanja. Pogled prvo ide ravno u lokal, prema stolicama i ogledalima, s ulazom
+  iza leđa. Unutra se kut gledanja proširi s 30 na 70 stupnjeva.
+- U lokalu stranica stoji (scroll ne radi): povlačenjem mišem ili prstom gledaš okolo i gore dolje, strelice na
+  tipkovnici rade isto. Tekst Über uns stoji na tamnom staklu u kutu, uputa "Ziehen, um sich umzusehen" nestane
+  nakon prvog povlačenja. Veliki X gore desno lagano pulsira; X ili Esc izvede van pred vrata, na stranu s koje
+  si došao, i scroll ide dalje. Skok preko izbornika prolazi kroz lokal bez zaustavljanja.
 - Bez animacija (prefers-reduced-motion) kamera stoji na prvom kadru, a stranice slijede jedna za drugom.
 
 ## Tema `theme/jos-barbershop`
@@ -102,6 +105,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.3.8: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+Status 0.4.0: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
 s 360 fotografijom. Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 

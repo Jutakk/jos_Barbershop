@@ -35,6 +35,13 @@ $jos_panorama_mobile = jos_image_if_exists( 'lokal-360-mobile.webp' );
 		<?php endif; ?>
 		<?php jos_room( $jos_room ); ?>
 	<?php endforeach; ?>
+
+	<?php // inside the shop: drag to look around, the X leads back out (motion.js) ?>
+	<div class="shop-drag" data-shop-drag hidden aria-hidden="true"></div>
+	<p class="shop-hint" data-shop-hint hidden><?php esc_html_e( 'Ziehen, um sich umzusehen', 'jos-barbershop' ); ?></p>
+	<button class="shop-exit" type="button" data-shop-exit hidden aria-label="<?php esc_attr_e( 'Lokal verlassen', 'jos-barbershop' ); ?>">
+		<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M15 15 33 33M33 15 15 33"/></svg>
+	</button>
 </main>
 <?php
 get_footer();

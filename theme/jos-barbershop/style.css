@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.3.8
+Version: 0.4.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -235,7 +235,7 @@ canvas {
   height: 200vh;
 }
 .street--shop {
-  height: 120vh;
+  height: 0;
 }
 
 .room {
@@ -360,6 +360,150 @@ canvas {
   outline-offset: 3px;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
+.is-in-shop {
+  overflow: hidden;
+}
+
+.journey > .shop-drag {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  cursor: grab;
+  touch-action: none;
+}
+.journey > .shop-drag.is-dragging {
+  cursor: grabbing;
+}
+
+.journey > .shop-hint {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(32px, 8vh, 64px);
+  z-index: 3;
+  margin: 0;
+  color: var(--jos-ink);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+  transition: opacity 600ms ease;
+}
+.journey > .shop-hint.is-gone {
+  opacity: 0;
+}
+@media (max-width: 767px) {
+  .journey > .shop-hint {
+    top: 96px;
+    bottom: auto;
+    left: 24px;
+    max-width: calc(100vw - 72px - 72px);
+    white-space: normal;
+    transform: none;
+  }
+}
+
+.journey > .shop-exit {
+  position: fixed;
+  top: clamp(64px, 12vh, 96px);
+  right: clamp(24px, 6vw, 96px);
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 1px solid var(--jos-ink);
+  border-radius: 50%;
+  background: rgba(13, 12, 12, 0.55);
+  color: var(--jos-ink);
+  cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease;
+  animation: shop-exit-pulse 2.4s ease-in-out infinite;
+}
+.journey > .shop-exit[hidden] {
+  display: none;
+}
+.journey > .shop-exit svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  transition: transform 150ms ease;
+}
+.journey > .shop-exit::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--jos-ink);
+  border-radius: 50%;
+  animation: shop-exit-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+.journey > .shop-exit:hover {
+  background: var(--jos-ink);
+  color: var(--jos-bg);
+}
+.journey > .shop-exit:focus-visible {
+  outline: 2px solid var(--jos-accent);
+  outline-offset: 4px;
+}
+.journey > .shop-exit:active svg {
+  transform: scale(0.85);
+}
+
+@keyframes shop-exit-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes shop-exit-ring {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+.is-in-shop .room--shop {
+  z-index: 4;
+  pointer-events: none;
+}
+
+.is-in-shop .room--shop .room__inner {
+  position: fixed;
+  left: clamp(24px, 6vw, 96px);
+  bottom: clamp(24px, 8vh, 64px);
+  width: auto;
+  max-width: min(34rem, 100vw - 48px);
+  max-height: 45vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+.is-in-shop .room--shop [data-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.is-leaving-shop .room--shop .room__inner {
+  visibility: hidden;
+}
+
 .page {
   max-width: 70ch;
   margin: 0 auto;
@@ -411,6 +555,10 @@ canvas {
   .site-header__nav a,
   .wp-block-details summary::after {
     transition: none;
+  }
+  .journey > .shop-exit,
+  .journey > .shop-exit::after {
+    animation: none;
   }
   .street {
     display: none;

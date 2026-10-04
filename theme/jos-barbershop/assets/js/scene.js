@@ -17,7 +17,7 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_ARCHES, FACADE_ARCH } from 'jos-facad
  * street view with the sign and over to the next arch. Behind the door is the shop itself.
  * motion.js (GSAP ScrollTrigger) owns the values and sends them as events, three.js only draws:
  *   'jos:path'     0 = hero, 1 to 4 = inside the arches of the route
- *   'jos:pan'      0 to 1 = one turn of the view inside the shop
+ *   'jos:look'     { yaw, pitch } in radians: the view inside the shop, turned by dragging
  * Inside a window arch the screen is dark and covered by its page, so nothing is drawn there.
  */
 
@@ -262,8 +262,8 @@ if (root) {
 		composer.addPass(bloom);
 		composer.addPass(new OutputPass());
 
-		// ---- state: the angle comes from time, path and pan from motion.js
-		const state = { angle: reduced ? -0.42 : -0.25, path: 0, pan: 0 };
+		// ---- state: the angle comes from time, path and the look inside the shop from motion.js
+		const state = { angle: reduced ? -0.42 : -0.25, path: 0, yaw: 0, pitch: 0 };
 
 		// ---- camera poses: the hero view and, for every arch of the route, in front of it and inside it
 		const hero = { position: new THREE.Vector3(), target: new THREE.Vector3() };
@@ -319,6 +319,7 @@ if (root) {
 		};
 		const up = new THREE.Vector3(0, 1, 0);
 		const look = new THREE.Vector3();
+		const side = new THREE.Vector3();
 		const local = new THREE.Vector3();
 
 		const placeCamera = () => {
@@ -338,9 +339,12 @@ if (root) {
 				else if (t < 0.72) blend(hero, to.front, phase(t, 0.44, 0.72));
 				else blend(to.front, to.inside, phase(t, 0.72, 1));
 			}
-			// inside the shop the view turns around once (a full turn ends where it started)
-			const turn = panoramaReady ? state.pan * Math.PI * 2 : 0;
-			look.subVectors(pose.target, pose.position).applyAxisAngle(up, turn);
+			// inside the shop the view is turned by dragging: left and right, up and down (0 everywhere else)
+			look.subVectors(pose.target, pose.position).applyAxisAngle(up, state.yaw);
+			if (state.pitch) {
+				side.crossVectors(look, up).normalize();
+				look.applyAxisAngle(side, state.pitch);
+			}
 			camera.position.copy(pose.position);
 			camera.lookAt(look.add(pose.position));
 
@@ -423,8 +427,9 @@ if (root) {
 				if (state.path > 0.5) loadPanorama();
 				if (!running && ready) draw();
 			});
-			window.addEventListener('jos:pan', (event) => {
-				state.pan = event.detail;
+			window.addEventListener('jos:look', (event) => {
+				state.yaw = event.detail.yaw;
+				state.pitch = event.detail.pitch;
 				if (!running && ready) draw();
 			});
 		}

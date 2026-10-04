@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.3.8
+Version: 0.4.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -297,8 +297,9 @@ canvas {
 		height: 200vh;
 	}
 
+	// the shop behind the door: the page stands still there (motion.js), so no scroll distance is needed
 	&--shop {
-		height: 120vh;
+		height: 0;
 	}
 }
 
@@ -459,6 +460,168 @@ canvas {
 	}
 }
 
+// ---------- inside the shop (motion.js sets .is-in-shop on <html>): the page stands still, dragging turns
+// the view around the shop, the pulsing X (or Esc) leads back out to the street
+
+html {
+	scrollbar-gutter: stable;   // no jump when the page is held still in the shop
+}
+
+.is-in-shop {
+	overflow: hidden;
+}
+
+.journey > .shop-drag {
+	position: fixed;
+	inset: 0;
+	z-index: 2;
+	cursor: grab;
+	touch-action: none;
+
+	&.is-dragging {
+		cursor: grabbing;
+	}
+}
+
+.journey > .shop-hint {
+	position: fixed;
+	left: 50%;
+	bottom: clamp(#{s(6)}, 8vh, #{s(8)});
+	z-index: 3;
+	margin: 0;
+	color: var(--jos-ink);
+	font-size: $size-meta;
+	letter-spacing: 0.24em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	transform: translateX(-50%);
+	pointer-events: none;
+	transition: opacity 600ms ease;
+
+	&.is-gone {
+		opacity: 0;
+	}
+
+	// on phones the text of the page lies at the bottom: the hint goes up, left of the X
+	@media (max-width: $bp-tablet - 1) {
+		top: s(9);
+		bottom: auto;
+		left: s(5);
+		max-width: calc(100vw - 72px - #{3 * s(5)});
+		white-space: normal;
+		transform: none;
+	}
+}
+
+.journey > .shop-exit {
+	position: fixed;
+	top: clamp(#{s(8)}, 12vh, #{s(9)});
+	right: clamp(#{s(5)}, 6vw, #{s(9)});
+	z-index: 12;
+	display: grid;
+	place-items: center;
+	width: 72px;
+	height: 72px;
+	padding: 0;
+	border: 1px solid var(--jos-ink);
+	border-radius: 50%;
+	background: rgba(13, 12, 12, 0.55);
+	color: var(--jos-ink);
+	cursor: pointer;
+	transition: background-color 200ms ease, color 200ms ease;
+	animation: shop-exit-pulse 2.4s ease-in-out infinite;
+
+	&[hidden] {
+		display: none;
+	}
+
+	svg {
+		width: 30px;
+		height: 30px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		transition: transform 150ms ease;
+	}
+
+	// a ring leaves the button slowly, again and again
+	&::after {
+		content: "";
+		position: absolute;
+		inset: -1px;
+		border: 1px solid var(--jos-ink);
+		border-radius: 50%;
+		animation: shop-exit-ring 2.4s ease-out infinite;
+		pointer-events: none;
+	}
+
+	&:hover {
+		background: var(--jos-ink);
+		color: var(--jos-bg);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--jos-accent);
+		outline-offset: 4px;
+	}
+
+	&:active svg {
+		transform: scale(0.85);
+	}
+}
+
+@keyframes shop-exit-pulse {
+	0%,
+	100% {
+		transform: scale(1);
+	}
+
+	50% {
+		transform: scale(1.06);
+	}
+}
+
+@keyframes shop-exit-ring {
+	from {
+		opacity: 0.6;
+		transform: scale(1);
+	}
+
+	to {
+		opacity: 0;
+		transform: scale(1.6);
+	}
+}
+
+// the text of the page behind the door stands on dark glass in the corner while one looks around
+.is-in-shop .room--shop {
+	z-index: 4;
+	pointer-events: none;
+}
+
+.is-in-shop .room--shop .room__inner {
+	position: fixed;
+	left: clamp(#{s(5)}, 6vw, #{s(9)});
+	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
+	width: auto;
+	max-width: min(34rem, calc(100vw - #{2 * s(5)}));
+	max-height: 45vh;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	opacity: 1 !important;
+	pointer-events: auto;
+}
+
+.is-in-shop .room--shop [data-reveal] {
+	opacity: 1 !important;
+	transform: none !important;
+}
+
+.is-leaving-shop .room--shop .room__inner {
+	visibility: hidden;
+}
+
 // ---------- pages and footer
 
 .page {
@@ -520,6 +683,11 @@ canvas {
 	.site-header__nav a,
 	.wp-block-details summary::after {
 		transition: none;
+	}
+
+	.journey > .shop-exit,
+	.journey > .shop-exit::after {
+		animation: none;
 	}
 
 	.street {
