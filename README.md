@@ -92,8 +92,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Na gornjoj crti vijenca (prednji rub, najgornja crta gledano s ulice) u jednom zbijenom redu stoji izbornik:
   LEISTUNGEN · ÜBER UNS · GALERIE · KONTAKT · DE · EN · AR. Red završava lijevo od znaka, pa u prvom kadru
   stoji cijeli na ekranu; okreće se sa zgradom i ne blijedi u daljinu.
-- Pod mišem riječ potamni; klik na stranicu vodi kameru kroz njezin luk, klik na jezik otvara tu verziju.
-  Trenutni jezik je tamniji.
+- Svaki link je gumb: svijetla slova u smeđem bloku. Pod mišem blok potamni; klik na stranicu vodi kameru kroz njezin luk, klik na jezik otvara tu verziju.
+  Blok trenutnog jezika je tamniji.
 - Na računalu je obični izbornik u zaglavlju skriven (ostaje za tipkovnicu i čitače ekrana i pojavi se kad
   dobije fokus). Na mobitelu ostaje u zaglavlju, a DE EN AR stoje gore desno.
 

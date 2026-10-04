@@ -111,7 +111,12 @@ const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap
 // 0.78 in front of the wall). The row ends at END along the wall, left of the sign, so in the first view it
 // lies whole on screen; it is never faded by the fog.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
-const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, end: -8.6, fog: false };
+// Every link of the menu is a button: light letters in a brown block.
+const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, end: -8.6, fog: false, blocks: true };
+const BLOCK_COLOR = '#5b3517';     // brown, same as FACADE_COLOR
+const BLOCK_TEXT = '#ece8df';      // light paper colour
+const BLOCK_PAD = 22;              // px of the canvas left and right of the letters
+const BLOCK_PRESSED = 0.72;        // a pointed button (and the current language) gets this much darker
 
 const root = document.querySelector('[data-scene]');
 
@@ -304,8 +309,9 @@ if (root) {
 		facadeGeometry.setAttribute('archGroup', new THREE.InstancedBufferAttribute(new Float32Array(FACADE_GROUP), 1));
 		sign.add(new LineSegments2(facadeGeometry, lineMaterial));
 
-		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material
-		const textCanvas = (label) => {
+		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material; or a button:
+		// light letters in a brown block, in their own colours
+		const textCanvas = (label, block = false) => {
 			const context = document.createElement('canvas').getContext('2d');
 			// Arabic letters are joined: no spacing between them
 			const spacing = /[\u0600-\u06ff]/.test(label) ? '0px' : '6px';
@@ -314,21 +320,26 @@ if (root) {
 				if ('letterSpacing' in context) context.letterSpacing = spacing;
 			};
 			setFont();
-			const width = Math.max(1, Math.ceil(context.measureText(label).width));
+			const pad = block ? BLOCK_PAD : 0;
+			const width = Math.max(1, Math.ceil(context.measureText(label).width)) + pad * 2;
 			context.canvas.width = width;
 			context.canvas.height = TEXT_CANVAS_HEIGHT;
 			setFont();
-			context.fillStyle = '#ffffff';
+			if (block) {
+				context.fillStyle = BLOCK_COLOR;
+				context.fillRect(0, 0, width, TEXT_CANVAS_HEIGHT);
+			}
+			context.fillStyle = block ? BLOCK_TEXT : '#ffffff';
 			context.textBaseline = 'middle';
-			context.fillText(label, 0, TEXT_CANVAS_HEIGHT / 2 + 2);
+			context.fillText(label, pad, TEXT_CANVAS_HEIGHT / 2 + 2);
 			const texture = new THREE.CanvasTexture(context.canvas);
 			texture.colorSpace = THREE.SRGBColorSpace;
 			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 			return { texture, width };
 		};
-		const textMaterial = (texture, fog = true) => new THREE.MeshBasicMaterial({
+		const textMaterial = (texture, fog = true, block = false) => new THREE.MeshBasicMaterial({
 			map: texture,
-			color: FACADE_COLOR,
+			color: block ? 0xffffff : FACADE_COLOR,
 			transparent: true,
 			opacity: 0,
 			depthWrite: false,
@@ -434,8 +445,9 @@ if (root) {
 				pieces.push({ ...item, text: String(item.text || '').toLocaleUpperCase('de') });
 			});
 			const words = pieces.filter((piece) => piece.text.trim()).map((piece) => {
-				const { texture, width } = textCanvas(piece.text);
-				return { ...piece, row, texture, length: (row.height * width) / TEXT_CANVAS_HEIGHT, glow: { value: piece.current ? 1 : 0 } };
+				const block = Boolean(row.blocks) && (piece.arch !== undefined || piece.url !== undefined);
+				const { texture, width } = textCanvas(piece.text, block);
+				return { ...piece, row, block, texture, length: (row.height * width) / TEXT_CANVAS_HEIGHT, glow: { value: piece.current ? 1 : 0 } };
 			});
 			if (rtl) words.reverse();
 			const length = words.reduce((sum, piece) => sum + piece.length, 0) + row.gap * Math.max(words.length - 1, 0);
@@ -443,7 +455,7 @@ if (root) {
 				? row.end - length
 				: (FACADE_ARCHES[0].z + FACADE_ARCHES[FACADE_ARCHES.length - 1].z) / 2 - length / 2;
 			words.forEach((piece) => {
-				const mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false));
+				const mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false, piece.block));
 				mesh.rotation.y = -Math.PI / 2;   // in the wall, reading along it to the right
 				mesh.position.set(wallX + row.depth - 0.012, row.top - row.height / 2, along + piece.length / 2);
 				mesh.visible = false;
@@ -679,6 +691,7 @@ if (root) {
 			});
 			words.forEach((piece) => {
 				setOpacity(piece.mesh, (piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value) * shown * gone);
+				if (piece.block) piece.mesh.material.color.setScalar(1 - (1 - BLOCK_PRESSED) * piece.glow.value);
 			});
 		};
 
