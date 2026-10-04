@@ -89,7 +89,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 **Izbornik na vijencu**
 
-- Na gornjoj liniji vijenca na vrhu prizemlja u jednom zbijenom redu stoji izbornik:
+- Na gornjoj crti vijenca (prednji rub, najgornja crta gledano s ulice) u jednom zbijenom redu stoji izbornik:
   LEISTUNGEN · ÜBER UNS · GALERIE · KONTAKT · DE · EN · AR. Red završava lijevo od znaka, pa u prvom kadru
   stoji cijeli na ekranu; okreće se sa zgradom i ne blijedi u daljinu.
 - Pod mišem riječ potamni; klik na stranicu vodi kameru kroz njezin luk, klik na jezik otvara tu verziju.

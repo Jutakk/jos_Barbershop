@@ -106,12 +106,12 @@ const OPENING_OPACITY = 0.45;
 
 // the footer lines, cut into the foundation under the ground line, centred under the arches
 const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap: 0.8, opacity: 0.75 };
-// the menu (the pages and the languages) in one close row standing on the top line of the cornice, at the
-// top of the ground floor (fasada/build_facade.py, CORNICE: top at 4.027, in the plane of the wall). The row
-// ends at END along the wall, left of the sign, so in the first view it lies whole on the visible stretch of
-// the cornice; it is never faded by the fog.
-const CORNICE_TOP = 4.027;
-const MENU_ROW = { height: 0.4, top: CORNICE_TOP + 0.06 + 0.4, depth: -0.01, gap: 0.14, opacity: 1, end: -8.6, fog: false };
+// the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
+// edge of its crown, which is the highest line from the street (fasada/build_facade.py, CORNICE: 284.5 px,
+// 0.78 in front of the wall). The row ends at END along the wall, left of the sign, so in the first view it
+// lies whole on screen; it is never faded by the fog.
+const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
+const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.03 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, end: -8.6, fog: false };
 
 const root = document.querySelector('[data-scene]');
 
