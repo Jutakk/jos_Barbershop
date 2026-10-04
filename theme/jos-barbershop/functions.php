@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.2.0' );
+define( 'JOS_VERSION', '0.3.0' );
 
 /**
  * Theme supports.
@@ -117,10 +117,190 @@ function jos_booking_button(): void {
 }
 
 /**
- * Logo files of the theme.
+ * Image files of the theme.
  *
  * @param string $file File name in assets/images.
  */
 function jos_image( string $file ): string {
 	return get_template_directory_uri() . '/assets/images/' . $file;
+}
+
+/**
+ * Image file of the theme, or an empty string while the file is not there yet.
+ *
+ * @param string $file File name in assets/images.
+ */
+function jos_image_if_exists( string $file ): string {
+	return file_exists( get_template_directory() . '/assets/images/' . $file ) ? jos_image( $file ) : '';
+}
+
+/**
+ * Pages behind the arches of the facade, in the order the camera visits them: from right to left.
+ * The second arch from the right is the door into the shop.
+ *
+ * @return array<int, array{slug: string, title: string, nav: string, door: bool}>
+ */
+function jos_rooms(): array {
+	return array(
+		array(
+			'slug'  => 'leistungen',
+			'title' => __( 'Leistungen & Preise', 'jos-barbershop' ),
+			'nav'   => __( 'Leistungen', 'jos-barbershop' ),
+			'door'  => false,
+		),
+		array(
+			'slug'  => 'ueber-uns',
+			'title' => __( 'Über uns', 'jos-barbershop' ),
+			'nav'   => __( 'Über uns', 'jos-barbershop' ),
+			'door'  => true,
+		),
+		array(
+			'slug'  => 'galerie',
+			'title' => __( 'Galerie', 'jos-barbershop' ),
+			'nav'   => __( 'Galerie', 'jos-barbershop' ),
+			'door'  => false,
+		),
+		array(
+			'slug'  => 'kontakt',
+			'title' => __( 'Kontakt', 'jos-barbershop' ),
+			'nav'   => __( 'Kontakt', 'jos-barbershop' ),
+			'door'  => false,
+		),
+	);
+}
+
+/**
+ * Creates the pages of the arches once, if they do not exist yet. Their content is then edited in WordPress.
+ */
+function jos_create_rooms(): void {
+	if ( get_option( 'jos_rooms_created' ) || ! current_user_can( 'publish_pages' ) ) {
+		return;
+	}
+	foreach ( jos_rooms() as $room ) {
+		if ( get_page_by_path( $room['slug'] ) ) {
+			continue;
+		}
+		wp_insert_post(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_title'   => $room['title'],
+				'post_name'    => $room['slug'],
+				'post_content' => "<!-- wp:paragraph -->\n<p>Inhalt folgt.</p>\n<!-- /wp:paragraph -->",
+			)
+		);
+	}
+	update_option( 'jos_rooms_created', JOS_VERSION, false );
+}
+add_action( 'init', 'jos_create_rooms', 20 );
+
+/**
+ * Menu of the header: the pages of the arches as jump marks on the front page.
+ */
+function jos_nav(): void {
+	$base = is_front_page() ? '' : home_url( '/' );
+	echo '<nav class="site-header__nav" aria-label="' . esc_attr__( 'Hauptmenü', 'jos-barbershop' ) . '"><ul>';
+	foreach ( jos_rooms() as $room ) {
+		printf( '<li><a href="%1$s">%2$s</a></li>', esc_url( $base . '#' . $room['slug'] ), esc_html( $room['nav'] ) );
+	}
+	echo '</ul></nav>';
+}
+
+/**
+ * One page behind an arch, as a section of the front page.
+ *
+ * @param array{slug: string, title: string, nav: string, door: bool} $room Room from jos_rooms().
+ */
+function jos_room( array $room ): void {
+	$page  = get_page_by_path( $room['slug'] );
+	$title = $page ? get_the_title( $page ) : $room['title'];
+	$id    = $room['slug'];
+	?>
+	<section id="<?php echo esc_attr( $id ); ?>" class="room<?php echo $room['door'] ? ' room--shop' : ''; ?>" data-room aria-labelledby="<?php echo esc_attr( $id ); ?>-title">
+		<div class="room__inner">
+			<h2 id="<?php echo esc_attr( $id ); ?>-title" class="room__title" data-reveal><?php echo esc_html( $title ); ?></h2>
+			<div class="room__content" data-reveal>
+				<?php
+				if ( $page ) {
+					echo apply_filters( 'the_content', $page->post_content ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- content of the page, filtered by WordPress.
+				}
+				?>
+			</div>
+			<?php if ( 'kontakt' === $room['slug'] ) : ?>
+				<div class="room__action"><?php jos_booking_button(); ?></div>
+			<?php endif; ?>
+			<?php if ( current_user_can( 'edit_pages' ) ) : ?>
+				<p class="room__edit">
+					<?php if ( $page ) : ?>
+						<a href="<?php echo esc_url( (string) get_edit_post_link( $page ) ); ?>"><?php esc_html_e( 'Seite bearbeiten', 'jos-barbershop' ); ?></a>
+					<?php else : ?>
+						<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=page' ) ); ?>"><?php echo esc_html( sprintf( /* translators: %s: slug of the missing page */ __( 'Seite mit der Adresse "%s" anlegen', 'jos-barbershop' ), $room['slug'] ) ); ?></a>
+					<?php endif; ?>
+				</p>
+			<?php endif; ?>
+		</div>
+		<?php
+		if ( $page ) {
+			jos_faq_schema( $page );
+		}
+		?>
+	</section>
+	<?php
+}
+
+/**
+ * Collects the Details blocks (question as summary, answer as content) of a list of blocks, also nested ones.
+ *
+ * @param array $blocks Parsed blocks.
+ * @return array<int, array> Details blocks.
+ */
+function jos_details_blocks( array $blocks ): array {
+	$found = array();
+	foreach ( $blocks as $block ) {
+		if ( 'core/details' === $block['blockName'] ) {
+			$found[] = $block;
+		} elseif ( ! empty( $block['innerBlocks'] ) ) {
+			$found = array_merge( $found, jos_details_blocks( $block['innerBlocks'] ) );
+		}
+	}
+	return $found;
+}
+
+/**
+ * FAQPage schema from the Details blocks of a page: every Details block is one question with its answer.
+ *
+ * @param WP_Post $page Page.
+ */
+function jos_faq_schema( WP_Post $page ): void {
+	$items = array();
+	foreach ( jos_details_blocks( parse_blocks( $page->post_content ) ) as $block ) {
+		if ( ! preg_match( '#<summary[^>]*>(.*?)</summary>#s', $block['innerHTML'], $match ) ) {
+			continue;
+		}
+		$answer = '';
+		foreach ( $block['innerBlocks'] as $inner ) {
+			$answer .= render_block( $inner );
+		}
+		$question = trim( wp_strip_all_tags( $match[1] ) );
+		$answer   = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $answer ) ) );
+		if ( $question && $answer ) {
+			$items[] = array(
+				'@type'          => 'Question',
+				'name'           => $question,
+				'acceptedAnswer' => array(
+					'@type' => 'Answer',
+					'text'  => $answer,
+				),
+			);
+		}
+	}
+	if ( ! $items ) {
+		return;
+	}
+	$schema = array(
+		'@context'   => 'https://schema.org',
+		'@type'      => 'FAQPage',
+		'mainEntity' => $items,
+	);
+	echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ) . '</script>';
 }

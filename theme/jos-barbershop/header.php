@@ -17,4 +17,5 @@
 <a class="skip-link" href="#inhalt"><?php esc_html_e( 'Zum Inhalt', 'jos-barbershop' ); ?></a>
 <header class="site-header">
 	<a class="site-header__brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home">Jo&rsquo;s Barbershop</a>
+	<?php jos_nav(); ?>
 </header>

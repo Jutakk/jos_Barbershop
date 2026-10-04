@@ -40,7 +40,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   vijenac, četiri luka s dubinom špalete, klinasti kamenovi oko lukova i fuge.
 - Znak visi na svom stvarnom mjestu, između trećeg i četvrtog luka. Fasada je zakrenuta tako da odgovara
   položaju znaka: pločica nosača sjedi na zidu, a ulica odlazi ulijevo u dubinu, kao na `images/znak.jpg`.
-- Linije u daljini blijede u tamu i ne svijetle. Pri scrollu se zid udaljava zajedno sa znakom.
+- Linije u daljini blijede u tamu i ne svijetle.
+- Pri učitavanju stranice linije se same iscrtaju: val kreće od znaka i širi se niz zid na obje strane.
 - Mjere su uzete s ispravljene fotografije (`fasada/podaci/H_rect.npy`). Promjena crteža:
   `python3 fasada/build_facade.py` napiše `theme/jos-barbershop/assets/js/facade.js` i `fasada/fasada-prizemlje.svg`,
   a `--check` još i `fasada/provjera.png` s linijama preko fotografije.
@@ -49,17 +50,33 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 - Nosač i zid stoje mirno, disk se okreće oko okomite osi, kao viseća reklama.
 - Svijetli samo logo ("Jo's" i red BARBERSHOP), disk i nosač ne svijetle.
-- Disk se stalno polako okreće. Pri scrollu se okretanje ubrza i znak se odmakne prema sljedećoj sekciji.
+- Disk se uvijek okreće istom sporom brzinom (jedan krug za oko 24 sekunde), i kod scrolla.
 - Pozadina je tamna.
+
+**Scroll: lukovi su stranice**
+
+- Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog. Scroll vodi kameru niz ulicu od luka do luka.
+- Kod svakog luka kamera stane ispred njega, uđe kroz luk i otvori se stranica preko cijelog ekrana.
+- Redom: Leistungen & Preise (izlog desno), Über uns (vrata), Galerie, Kontakt (izlog lijevo).
+- Kroz vrata kamera ulazi u lokal: 360 fotografija lokala oko kamere, pogled se sa scrollom okrene
+  jednom u krug, a stranica Über uns dolazi preko lokala. Slika ide u
+  `theme/jos-barbershop/assets/images/lokal-360.webp`; dok je nema, iza vrata je tamno.
+- Bez animacija (prefers-reduced-motion) kamera stoji na prvom kadru, a stranice slijede jedna za drugom.
 
 ## Tema `theme/jos-barbershop`
 
 Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
 
-- `front-page.php`: hero s 3D znakom, naslov "your confidence starts here" (natpis s izloga trgovine), gumb "Termin buchen"
-- `assets/js/scene.js`: three.js scena znaka, učitana kao ES modul preko WordPress Script Modules API
-- `assets/js/facade.js`: linije prizemlja fasade, generira ih `fasada/build_facade.py`
-- `assets/js/motion.js`: GSAP i ScrollTrigger, prikvačuje hero za jedan ekran scrolla i šalje napredak sceni
+- `front-page.php`: hero s 3D znakom, naslov "your confidence starts here" (natpis s izloga trgovine), gumb "Termin buchen",
+  zatim ulica i četiri stranice iza lukova
+- `assets/js/scene.js`: three.js scena (znak, fasada, kamera niz ulicu, lokal iza vrata), ES modul preko WordPress Script Modules API
+- `assets/js/facade.js`: linije prizemlja fasade s vremenima iscrtavanja i položajem lukova, generira ih `fasada/build_facade.py`
+- `assets/js/motion.js`: GSAP i ScrollTrigger: položaj kamere na putu (`jos:path`), okret u lokalu (`jos:pan`), pojava teksta
+- Stranice iza lukova su obične WordPress stranice s adresama `leistungen`, `ueber-uns`, `galerie` i `kontakt`.
+  Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu; sadržaj se piše u WordPressu.
+  Izbornik u zaglavlju skače na njih.
+- FAQ: u stranici Kontakt svako pitanje je blok "Details" (pitanje u naslovu, odgovor u sadržaju). Iz tih blokova
+  tema sama složi FAQPage schemu.
 - `assets/scss/style.scss`: izvor stilova, prevodi se u `style.css`:
   `npx sass assets/scss/style.scss style.css --style=expanded --no-source-map` (u mapi teme)
 - Gumb "Termin buchen": link se upisuje u Customizeru, sekcija "Jo's Barbershop", polje "Termin-Link"
@@ -67,5 +84,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.2.0: hero s 3D znakom na fasadi nacrtanoj linijama. Slijede ostale sekcije, DE i EN verzija, FAQ, Impressum i Datenschutz.
+Status 0.3.0: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+(čeka 360 sliku). Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 

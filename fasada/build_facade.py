@@ -3,11 +3,13 @@ Ground floor of the facade of Jo's Barbershop as a line drawing for the 3D hero.
 
 All measurements are pixels of the rectified photo images/fasada.jpg (podaci/H_rect.npy turns the photo
 into a straight elevation; one pixel there is one pixel of the photo at the sign). u goes to the right,
-v goes down. The ground floor is regular: four round arches on one spacing, rusticated wall with
-course joints every 47.5 px, wedge joints around the arches and a cornice on top.
+v goes down. The ground floor is regular: four round arches on one spacing (window, window, door,
+window from the left), rusticated wall with course joints every 47.5 px, wedge joints around the arches
+and a cornice on top.
 
 Output:
-  theme/jos-barbershop/assets/js/facade.js   line segments in sign units (disc radius = 1)
+  theme/jos-barbershop/assets/js/facade.js   line segments in sign units (disc radius = 1), the time at
+                                              which each segment is drawn when the page loads, the arches
   fasada/fasada-prizemlje.svg                 the flat elevation, for checking
   python3 fasada/build_facade.py --check     also writes fasada/provjera.png, the lines on the photo
 
@@ -15,6 +17,10 @@ Output:
 [depth, y, z]: depth is how far the point lies behind the wall face (negative = in front of it),
 y is up, z runs along the wall. Looking at the facade from the street, its right side comes
 towards the camera (+z), its left side goes away (-z).
+
+Drawing order: every line is a stroke that starts at its end nearest to the sign. A wave runs from
+the sign outwards along the wall; a stroke starts when the wave reaches it and is drawn at the speed
+of the wave. Long horizontal lines are split at the sign, so they grow from the sign to both sides.
 """
 import math
 import sys
@@ -37,6 +43,7 @@ Y_GROUND = 712.0
 ARCH_FIRST = 198.2              # centre of the first arch
 ARCH_STEP = 237.6               # spacing of the arches
 ARCH_COUNT = 4
+ARCH_DOOR = 2                   # from the left: window, window, door, window
 Y_SPRING = 492.0                # springing line (top of the jambs)
 R_OPENING = 60.0                # edge of the opening in the wall face
 R_BAND = 72.0                   # outer edge of the smooth arch band
@@ -67,6 +74,8 @@ CORNICE = [
 ]
 
 ARC_STEPS = 32                  # segments of a half circle
+DEPTH_DELAY = 40.0              # px: lines in the reveal start a little after the wall face
+HEIGHT_DELAY = 0.35             # the wave also needs a little time to go up and down
 
 
 def arch_centres():
@@ -79,11 +88,17 @@ def on_band(dx):
 
 
 def build():
-    """Returns a list of segments ((u, v, d), (u, v, d)) in facade pixels, d in disc radii."""
-    segs = []
+    """Returns strokes: lists of points (u, v, d) in facade pixels, d in disc radii."""
+    strokes = []
 
     def line(u1, v1, u2, v2, d1=0.0, d2=None):
-        segs.append(((u1, v1, d1), (u2, v2, d1 if d2 is None else d2)))
+        d2 = d1 if d2 is None else d2
+        if v1 == v2 and d1 == d2 and min(u1, u2) < ORIGIN[0] < max(u1, u2):
+            # grows from the sign to both sides
+            strokes.append([(ORIGIN[0], v1, d1), (u1, v1, d1)])
+            strokes.append([(ORIGIN[0], v1, d1), (u2, v2, d2)])
+        else:
+            strokes.append([(u1, v1, d1), (u2, v2, d2)])
 
     def arc(cx, r, a0, a1, d=0.0, steps=ARC_STEPS):
         # angles in degrees, 0 = right, 90 = top
@@ -91,9 +106,8 @@ def build():
         pts = []
         for i in range(n + 1):
             a = math.radians(a0 + (a1 - a0) * i / n)
-            pts.append((cx + r * math.cos(a), Y_SPRING - r * math.sin(a)))
-        for p, q in zip(pts, pts[1:]):
-            line(p[0], p[1], q[0], q[1], d)
+            pts.append((cx + r * math.cos(a), Y_SPRING - r * math.sin(a), d))
+        strokes.append(pts)
 
     centres = arch_centres()
 
@@ -104,7 +118,7 @@ def build():
         for (v1, d1), (v2, d2) in zip(CORNICE, CORNICE[1:]):
             line(u, v1, u, v2, d1, d2)
 
-    # building edges and ground
+    # building edges
     line(X_LEFT, CORNICE[-1][0], X_LEFT, Y_GROUND)
     line(X_RIGHT, CORNICE[-1][0], X_RIGHT, Y_GROUND)
 
@@ -162,7 +176,28 @@ def build():
     line(x, COURSES[5], x, Y_GROUND)
 
     line(X_LEFT, Y_GROUND, X_RIGHT, Y_GROUND)
-    return segs
+    return strokes
+
+
+def reach(p):
+    """Distance in px the wave needs to reach point p."""
+    u, v, d = p
+    return abs(u - ORIGIN[0]) + HEIGHT_DELAY * abs(v - ORIGIN[1]) + (DEPTH_DELAY if d > 0 else 0.0)
+
+
+def timed_segments(strokes):
+    """Splits strokes into segments with their draw times, normalised to 0..1."""
+    segs = []
+    for pts in strokes:
+        if reach(pts[-1]) < reach(pts[0]):
+            pts = pts[::-1]
+        t = reach(pts[0])
+        for p, q in zip(pts, pts[1:]):
+            length = math.dist((p[0], p[1], p[2] * SCALE), (q[0], q[1], q[2] * SCALE))
+            segs.append((p, q, t, t + length))
+            t += length
+    end = max(s[3] for s in segs)
+    return [(p, q, t0 / end, t1 / end) for p, q, t0, t1 in segs]
 
 
 def to_sign_units(p):
@@ -175,19 +210,37 @@ def fmt(x):
     return '0' if s in ('-0', '') else s
 
 
+def js_rows(numbers, per_row):
+    rows = [', '.join(numbers[i:i + per_row]) for i in range(0, len(numbers), per_row)]
+    return ',\n\t'.join(rows)
+
+
 def write_js(segs):
-    numbers = []
-    for p, q in segs:
-        numbers += [fmt(c) for c in to_sign_units(p)]
-        numbers += [fmt(c) for c in to_sign_units(q)]
-    rows = [', '.join(numbers[i:i + 12]) for i in range(0, len(numbers), 12)]
-    body = ',\n\t'.join(rows)
+    lines, times = [], []
+    for p, q, t0, t1 in segs:
+        lines += [fmt(c) for c in to_sign_units(p)] + [fmt(c) for c in to_sign_units(q)]
+        times += [fmt(t0), fmt(t1)]
+    arches = []
+    for i, cx in enumerate(arch_centres()):
+        z = fmt((cx - ORIGIN[0]) / SCALE)
+        arches.append(f'\t{{ z: {z}, door: {"true" if i == ARCH_DOOR else "false"} }},')
     OUT_JS.write_text(
-        '// Ground floor of the facade as line segments, made by fasada/build_facade.py from images/fasada.jpg.\n'
-        '// Do not edit by hand. Six numbers per segment: depth, y, z of both ends, in disc radii.\n'
-        '// depth: behind the wall face (negative = in front of it); y: up; z: along the wall,\n'
-        '// 0 at the wall plate of the sign, positive towards the right side of the facade.\n'
-        f'export const FACADE_LINES = new Float32Array([\n\t{body},\n]);\n',
+        '// Ground floor of the facade, made by fasada/build_facade.py from images/fasada.jpg. Do not edit by hand.\n'
+        '// All lengths in disc radii. depth: behind the wall face (negative = in front of it); y: up from the\n'
+        '// wall plate of the sign; z: along the wall, 0 at the wall plate, positive towards the right of the facade.\n'
+        '\n'
+        '// six numbers per segment: depth, y, z of the start and of the end\n'
+        f'export const FACADE_LINES = new Float32Array([\n\t{js_rows(lines, 12)},\n]);\n'
+        '\n'
+        '// two numbers per segment: when its drawing starts and ends, 0..1 of the drawing on page load\n'
+        f'export const FACADE_DRAW = new Float32Array([\n\t{js_rows(times, 16)},\n]);\n'
+        '\n'
+        '// the four arches from left to right: window, window, door, window\n'
+        'export const FACADE_ARCHES = [\n' + '\n'.join(arches) + '\n];\n'
+        '\n'
+        '// shape of every arch: springing line, radius of the opening, depth of the reveal\n'
+        f'export const FACADE_ARCH = {{ spring: {fmt((ORIGIN[1] - Y_SPRING) / SCALE)}, '
+        f'radius: {fmt(R_OPENING / SCALE)}, reveal: {fmt(REVEAL)} }};\n',
         encoding='utf-8',
     )
 
@@ -195,7 +248,7 @@ def write_js(segs):
 def write_svg(segs):
     x0, y0, x1, y1 = X_LEFT - 20, 260, X_RIGHT + 20, Y_GROUND + 20
     paths = []
-    for p, q in segs:
+    for p, q, _, _ in segs:
         if abs(p[0] - q[0]) < 1e-6 and abs(p[1] - q[1]) < 1e-6:
             continue
         stroke = '#f3f0ea' if p[2] <= 0 and q[2] <= 0 else '#a39d94'
@@ -220,14 +273,14 @@ def write_check(segs):
     z = 2
     big = cv2.resize(rect, None, fx=z, fy=z, interpolation=cv2.INTER_CUBIC)
     big = (big * 0.55).astype('uint8')
-    for p, q in segs:
+    for p, q, _, _ in segs:
         colour = (60, 230, 255) if p[2] <= 0 else (255, 160, 60)
         cv2.line(big, (round(p[0] * z), round(p[1] * z)), (round(q[0] * z), round(q[1] * z)), colour, 1, cv2.LINE_AA)
     cv2.imwrite(str(ROOT / 'fasada/provjera.png'), big)
 
 
 if __name__ == '__main__':
-    segments = build()
+    segments = timed_segments(build())
     write_js(segments)
     write_svg(segments)
     if '--check' in sys.argv:

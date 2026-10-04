@@ -2,8 +2,8 @@
 Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
-Description: Custom theme for Jo's Barbershop, Wien 1060. Hero with the turning shop sign in three.js.
-Version: 0.2.0
+Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
+Version: 0.3.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -162,10 +162,15 @@ canvas {
 	left: 0;
 	right: 0;
 	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: s(6);
 	padding: s(5) clamp(#{s(5)}, 6vw, #{s(9)});
 	pointer-events: none;
 
-	&__brand {
+	&__brand,
+	&__nav a {
 		font-size: $size-meta;
 		letter-spacing: 0.24em;
 		text-transform: uppercase;
@@ -177,60 +182,48 @@ canvas {
 			outline-offset: 4px;
 		}
 	}
-}
 
-// ---------- hero with the 3D sign
-
-.hero {
-	position: relative;
-	height: 100vh;
-	height: 100svh;
-	min-height: 560px;
-	overflow: hidden;
-
-	// keeps the text readable where it overlaps the sign on small screens
-	&::after {
-		content: "";
-		position: absolute;
-		inset: auto 0 0 0;
-		height: 45%;
-		background: linear-gradient(to bottom, rgba(13, 12, 12, 0), var(--jos-bg));
-		pointer-events: none;
+	&__nav {
+		display: none;
 
 		@media (min-width: $bp-tablet) {
-			height: 30%;
+			display: block;
+		}
+
+		ul {
+			display: flex;
+			gap: s(6);
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		a {
+			color: var(--jos-muted);
+			transition: color 200ms ease;
+
+			&:hover {
+				color: var(--jos-ink);
+			}
 		}
 	}
+}
 
-	&__content {
-		position: absolute;
-		left: clamp(#{s(5)}, 6vw, #{s(9)});
-		bottom: clamp(#{s(6)}, 10vh, #{s(9)});
-		z-index: 2;
-		max-width: 34rem;
-		padding-right: s(5);
-	}
+// ---------- front page: the scene stays fixed behind the hero, the street and the pages
 
-	&__title {
-		margin: 0 0 s(4);
-		font-size: clamp(2rem, 4.2vw, 3.75rem);
-		font-weight: 400;
-		line-height: 1.05;
-		letter-spacing: -0.01em;
-	}
+.journey {
+	position: relative;
 
-	&__meta {
-		margin: 0 0 s(6);
-		color: var(--jos-muted);
-		font-size: $size-meta;
-		letter-spacing: 0.24em;
-		text-transform: uppercase;
+	> :not(.scene) {
+		position: relative;
+		z-index: 1;
 	}
 }
 
 .scene {
-	position: absolute;
+	position: fixed;
 	inset: 0;
+	z-index: 0;
 }
 
 .scene__poster,
@@ -251,6 +244,220 @@ canvas {
 	opacity: 1;
 }
 
+// ---------- hero with the 3D sign
+
+.hero {
+	height: 100vh;
+	height: 100svh;
+	min-height: 560px;
+
+	&__content {
+		position: absolute;
+		left: clamp(#{s(5)}, 6vw, #{s(9)});
+		bottom: clamp(#{s(6)}, 10vh, #{s(9)});
+		max-width: 34rem;
+		padding-right: s(5);
+
+		// keeps the text readable where it lies over the lines of the facade
+		&::before {
+			content: "";
+			position: absolute;
+			inset: (0 - s(8)) (0 - s(9)) (0 - s(7)) (0 - s(8));
+			z-index: -1;
+			background: radial-gradient(closest-side, rgba(13, 12, 12, 0.9), rgba(13, 12, 12, 0));
+			pointer-events: none;
+		}
+	}
+
+	&__title {
+		max-width: 8.5em;   // always two lines: "your confidence / starts here"
+		margin: 0 0 s(4);
+		font-size: clamp(2rem, 4.2vw, 3.75rem);
+		font-weight: 400;
+		line-height: 1.05;
+		letter-spacing: -0.01em;
+	}
+
+	&__meta {
+		margin: 0 0 s(6);
+		color: var(--jos-muted);
+		font-size: $size-meta;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+	}
+}
+
+// ---------- the street between the pages: empty scroll distance in which the camera moves
+
+.street {
+	height: 260vh;
+	pointer-events: none;
+
+	.hero + & {
+		height: 200vh;
+	}
+
+	&--shop {
+		height: 120vh;
+	}
+}
+
+// ---------- pages behind the arches
+
+.room {
+	display: flex;
+	align-items: center;
+	min-height: 100vh;
+	min-height: 100svh;
+	padding: s(9) clamp(#{s(5)}, 6vw, #{s(9)});
+	background: var(--jos-bg);
+
+	// behind the door the shop stays visible through the page
+	&--shop {
+		background: rgba(13, 12, 12, 0.72);
+	}
+
+	&__inner {
+		width: 100%;
+		max-width: 68ch;
+	}
+
+	&__title {
+		margin: 0 0 s(7);
+		font-size: clamp(2rem, 4.2vw, 3.75rem);
+		font-weight: 400;
+		line-height: 1.05;
+		letter-spacing: -0.01em;
+	}
+
+	&__content {
+		> :first-child {
+			margin-top: 0;
+		}
+
+		> :last-child {
+			margin-bottom: 0;
+		}
+
+		h3 {
+			margin: s(7) 0 s(3);
+			font-size: 1.25rem;
+			font-weight: 400;
+		}
+
+		p,
+		ul,
+		ol {
+			margin: 0 0 s(4);
+		}
+
+		a {
+			text-underline-offset: 3px;
+
+			&:hover {
+				color: var(--jos-accent);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--jos-accent);
+				outline-offset: 3px;
+			}
+		}
+
+		// price list as a table: service left, price right
+		.wp-block-table {
+			margin: 0 0 s(6);
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+
+			td,
+			th {
+				padding: s(3) 0;
+				border: 0;
+				border-bottom: 1px solid rgba(243, 240, 234, 0.16);
+				text-align: left;
+				vertical-align: top;
+			}
+
+			td:last-child,
+			th:last-child {
+				padding-left: s(5);
+				text-align: right;
+				white-space: nowrap;
+			}
+		}
+
+		.wp-block-gallery {
+			margin: 0 0 s(6);
+			gap: s(3);
+		}
+
+		// FAQ: every Details block is one question
+		.wp-block-details {
+			margin: 0;
+			padding: s(4) 0;
+			border-top: 1px solid rgba(243, 240, 234, 0.16);
+
+			&:last-of-type {
+				border-bottom: 1px solid rgba(243, 240, 234, 0.16);
+			}
+
+			summary {
+				display: flex;
+				justify-content: space-between;
+				gap: s(4);
+				cursor: pointer;
+				list-style: none;
+
+				&::-webkit-details-marker {
+					display: none;
+				}
+
+				&::after {
+					content: "+";
+					color: var(--jos-accent);
+					transition: transform 200ms ease;
+				}
+
+				&:focus-visible {
+					outline: 2px solid var(--jos-accent);
+					outline-offset: 3px;
+				}
+			}
+
+			&[open] summary::after {
+				transform: rotate(45deg);
+			}
+
+			> :not(summary) {
+				margin: s(3) 0 0;
+				color: var(--jos-muted);
+			}
+		}
+	}
+
+	&__action {
+		margin-top: s(7);
+	}
+
+	&__edit {
+		margin: s(6) 0 0;
+		font-size: $size-small;
+
+		a {
+			color: var(--jos-muted);
+
+			&:focus-visible {
+				outline: 2px solid var(--jos-accent);
+				outline-offset: 3px;
+			}
+		}
+	}
+}
+
 // ---------- pages and footer
 
 .page {
@@ -266,6 +473,8 @@ canvas {
 }
 
 .site-footer {
+	position: relative;
+	z-index: 1;
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
@@ -297,9 +506,22 @@ canvas {
 	}
 }
 
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
+// without motion there is no camera route: the pages follow each other directly
 @media (prefers-reduced-motion: reduce) {
 	.scene__canvas,
-	.button {
+	.button,
+	.site-header__nav a,
+	.wp-block-details summary::after {
 		transition: none;
+	}
+
+	.street {
+		display: none;
 	}
 }
