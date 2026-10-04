@@ -10,8 +10,8 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
  * Front page: the round shop sign of Jo's Barbershop on the facade of the shop.
  * An extruded black disc turns slowly on a vertical axis inside a C shaped bracket that is fixed to a wall
  * plate. Only the logo on both faces of the disc glows. The wall is the ground floor of the real facade
- * (images/fasada.jpg), drawn only as thin lines (facade.js, made by fasada/build_facade.py); the lines draw
- * themselves when the page loads.
+ * (images/fasada.jpg), drawn only as thin brown lines on the paper of the site (facade.js, made by
+ * fasada/build_facade.py); the lines draw themselves when the page loads.
  * Dragging turns the building (left and right, up and down: turned up, the foundation with the footer lines
  * comes to the front), scrolling down goes down into the depth, below the street to the foundation with the
  * footer lines; sideways scrolling moves along the street.
@@ -40,10 +40,10 @@ const DISC_DEPTH = 0.26;         // thickness of the disc, disc radius = 1
 const BRACKET_RADIUS = 1.16;     // radius of the C shaped bracket
 const BRACKET_TUBE = 0.04;
 const TURN_SPEED = 0.26;         // rad/s, always the same slow turn (one turn in about 24 s)
-const BACKGROUND = 0x130e0b;     // very dark brown, same as --jos-bg
-const FACADE_COLOR = 0xf1e2a0;   // pale yellow, same as --jos-line
-const FACADE_OPACITY = 0.6;
-const FACADE_OPACITY_MOBILE = 0.45;   // on phones the wall runs behind the text
+const BACKGROUND = 0xcdcdcd;     // the paper (paper.webp, data-paper) while it loads and in the fog, same as --jos-bg
+const FACADE_COLOR = 0x5b3517;   // brown ink, same as --jos-line
+const FACADE_OPACITY = 0.9;
+const FACADE_OPACITY_MOBILE = 0.8;   // on phones the wall runs behind the text
 const FACADE_FADE = [1, 24];     // the lines fade out between these distances behind the framed view
 const DRAW_DURATION = 5;         // s, the facade draws itself when the page loads, in the order of facade.js
 const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left
@@ -84,15 +84,16 @@ const FOV = 30;                  // view on the street
 const RIBBON_SPEED = 0.22;       // disc radii per second along the band
 const RIBBON_SPIN = 16;          // speed when the texts come in
 const RIBBON_SPIN_TIME = 3.5;    // s, from the fast start down to the calm speed
-const RIBBON_OPACITY = 0.7;
+const RIBBON_OPACITY = 0.85;
 const TEXT_FONT = '44px Arial, "Helvetica Neue", Helvetica, sans-serif';
 const TEXT_CANVAS_HEIGHT = 72;
-const HOVER_COLOR = 0.35;        // a pointed arch: its lines go towards warm white ...
-const HOVER_OPACITY = 0.45;      // ... and get this much more opaque
-const OPENING_OPACITY = 0.14;    // ... and the whole window or door fills with transparent pale yellow
+const HOVER_COLOR = 0.45;        // a pointed arch: its lines go towards dark ink ...
+const HOVER_OPACITY = 0.3;       // ... and get this much more opaque
+const OPENING_COLOR = 0xffd23c;  // ... and the whole window or door fills with a transparent yellow
+const OPENING_OPACITY = 0.45;
 
 // the footer lines, cut into the foundation under the ground line, centred under the arches
-const INSCRIPTION = { height: 0.42, below: 0.2, gap: 0.8, opacity: 0.55 };
+const INSCRIPTION = { height: 0.42, below: 0.2, gap: 0.8, opacity: 0.75 };
 
 const root = document.querySelector('[data-scene]');
 
@@ -130,6 +131,25 @@ if (root) {
 
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color(BACKGROUND);
+		// the paper of the whole site behind the scene, cut to fill the screen like background-size: cover
+		let paper = null;
+		const coverPaper = () => {
+			if (!paper || !paper.image) return;
+			const view = root.clientWidth / Math.max(root.clientHeight, 1);
+			const image = paper.image.width / paper.image.height;
+			const wide = view > image;
+			paper.repeat.set(wide ? 1 : view / image, wide ? image / view : 1);
+			paper.offset.set((1 - paper.repeat.x) / 2, (1 - paper.repeat.y) / 2);
+		};
+		if (root.dataset.paper) {
+			new THREE.TextureLoader().load(root.dataset.paper, (texture) => {
+				texture.colorSpace = THREE.SRGBColorSpace;
+				paper = texture;
+				coverPaper();
+				scene.background = texture;
+				if (!running && ready) draw();
+			});
+		}
 		// fog only fades the facade lines and the texts into the dark; the sign and the shop ignore it
 		scene.fog = new THREE.Fog(BACKGROUND, 10, 30);
 
@@ -184,7 +204,7 @@ if (root) {
 				.replace('void main() {', 'void main() {\n\tfloat drawn = clamp((drawProgress - vDrawSpan.x) / max(vDrawSpan.y - vDrawSpan.x, 1e-5), 0.0, 1.0);\n\tif (drawn < 1.0 && vDrawEnd >= drawn) discard;')
 				.replace(
 					'vec4 diffuseColor = vec4( diffuse, opacity );',
-					`vec4 diffuseColor = vec4( mix( diffuse, vec3( 1.0, 0.97, 0.85 ), vHighlight * ${HOVER_COLOR.toFixed(2)} ), min( opacity + vHighlight * ${HOVER_OPACITY.toFixed(2)}, 1.0 ) );`
+					`vec4 diffuseColor = vec4( mix( diffuse, vec3( 0.06, 0.03, 0.015 ), vHighlight * ${HOVER_COLOR.toFixed(2)} ), min( opacity + vHighlight * ${HOVER_OPACITY.toFixed(2)}, 1.0 ) );`
 				);
 		};
 
@@ -371,7 +391,7 @@ if (root) {
 				sign.add(mesh);
 
 				const fill = new THREE.Mesh(openingGeometry, new THREE.MeshBasicMaterial({
-					color: FACADE_COLOR,
+					color: OPENING_COLOR,
 					transparent: true,
 					opacity: 0,
 					depthWrite: false,
@@ -488,6 +508,7 @@ if (root) {
 			if (!w || !h) return;
 			renderer.setSize(w, h, false);
 			composer.setSize(w, h);
+			coverPaper();
 			bloom.resolution.set(w * (isMobile ? 0.5 : 1), h * (isMobile ? 0.5 : 1));
 			camera.aspect = w / h;
 			camera.updateProjectionMatrix();

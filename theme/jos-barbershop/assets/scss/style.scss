@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.7.0
+Version: 0.8.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -37,11 +37,13 @@ $size-meta: 12px;
 $bp-tablet: 768px;
 
 :root {
-	--jos-bg: #130e0b;     // very dark brown
-	--jos-ink: #f3f0ea;
-	--jos-line: #f1e2a0;   // pale yellow: the lines of the facade and the thin rules
-	--jos-muted: #a39d94;
-	--jos-accent: #c9a66b;
+	--jos-bg: #cdcdcd;     // the paper (assets/images/paper.webp) while it loads
+	--jos-ink: #2b1d14;    // dark brown ink
+	--jos-line: #5b3517;   // brown: the lines of the facade and the thin rules
+	--jos-muted: #5e5148;
+	--jos-accent: #8b5a2b;
+	--jos-rule: rgba(91, 53, 23, 0.3);
+	--jos-glass: rgba(214, 212, 208, 0.88);   // paper glass over the photo of the shop
 }
 
 // ---------- base
@@ -56,9 +58,22 @@ html {
 	-webkit-text-size-adjust: 100%;
 }
 
+html {
+	background: var(--jos-bg);
+}
+
+// the paper lies behind every page, fixed to the screen
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background: var(--jos-bg) url("assets/images/paper.webp") center / cover no-repeat;
+	pointer-events: none;
+}
+
 body {
 	margin: 0;
-	background: var(--jos-bg);
 	color: var(--jos-ink);
 	font-family: $font-stack;
 	font-size: $size-body;
@@ -176,7 +191,9 @@ canvas {
 		position: absolute;
 		inset: 0 0 (0 - s(6)) 0;
 		z-index: -1;
-		background: linear-gradient(to bottom, var(--jos-bg) 35%, rgba(19, 14, 11, 0));
+		background: var(--jos-bg) url("assets/images/paper.webp") center / cover no-repeat fixed;
+		-webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
+		mask-image: linear-gradient(to bottom, #000 35%, transparent);
 	}
 
 	&__brand,
@@ -325,7 +342,7 @@ canvas {
 			position: absolute;
 			inset: (0 - s(8)) (0 - s(9)) (0 - s(7)) (0 - s(8));
 			z-index: -1;
-			background: radial-gradient(closest-side, rgba(19, 14, 11, 0.9), rgba(19, 14, 11, 0));
+			background: radial-gradient(closest-side, rgba(205, 205, 205, 0.92), rgba(205, 205, 205, 0));
 			pointer-events: none;
 		}
 	}
@@ -367,7 +384,7 @@ canvas {
 	// behind the door the shop stays visible: the text lies on a dark glass panel
 	&--shop &__inner {
 		padding: s(7);
-		background: rgba(19, 14, 11, 0.74);
+		background: var(--jos-glass);
 	}
 
 	&__title {
@@ -425,7 +442,7 @@ canvas {
 			th {
 				padding: s(3) 0;
 				border: 0;
-				border-bottom: 1px solid rgba(241, 226, 160, 0.2);
+				border-bottom: 1px solid var(--jos-rule);
 				text-align: left;
 				vertical-align: top;
 			}
@@ -478,10 +495,10 @@ canvas {
 		.wp-block-details {
 			margin: 0;
 			padding: s(4) 0;
-			border-top: 1px solid rgba(241, 226, 160, 0.2);
+			border-top: 1px solid var(--jos-rule);
 
 			&:last-of-type {
-				border-bottom: 1px solid rgba(241, 226, 160, 0.2);
+				border-bottom: 1px solid var(--jos-rule);
 			}
 
 			summary {
@@ -577,10 +594,6 @@ canvas {
 // ---------- a page is open (motion.js sets .is-room-open on <html>): the front page stands still,
 // the pulsing X (or Esc, or the back button) leads back out to the street
 
-html {
-	scrollbar-gutter: stable;   // no jump when the page is held still
-}
-
 .is-room-open {
 	overflow: hidden;
 }
@@ -605,6 +618,8 @@ html {
 	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
 	z-index: 3;
 	margin: 0;
+	padding: s(2) s(3);
+	background: var(--jos-glass);
 	color: var(--jos-ink);
 	font-size: $size-meta;
 	letter-spacing: 0.24em;
@@ -640,7 +655,7 @@ html {
 	padding: 0;
 	border: 1px solid var(--jos-ink);
 	border-radius: 50%;
-	background: rgba(19, 14, 11, 0.55);
+	background: var(--jos-glass);
 	color: var(--jos-ink);
 	cursor: pointer;
 	transition: background-color 200ms ease, color 200ms ease;

@@ -3,18 +3,20 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.7.0
+Version: 0.8.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
 Text Domain: jos-barbershop
 */
 :root {
-  --jos-bg: #130e0b;
-  --jos-ink: #f3f0ea;
-  --jos-line: #f1e2a0;
-  --jos-muted: #a39d94;
-  --jos-accent: #c9a66b;
+  --jos-bg: #cdcdcd;
+  --jos-ink: #2b1d14;
+  --jos-line: #5b3517;
+  --jos-muted: #5e5148;
+  --jos-accent: #8b5a2b;
+  --jos-rule: rgba(91, 53, 23, 0.3);
+  --jos-glass: rgba(214, 212, 208, 0.88);
 }
 
 *,
@@ -27,9 +29,21 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+html {
+  background: var(--jos-bg);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--jos-bg) url("assets/images/paper.webp") center/cover no-repeat;
+  pointer-events: none;
+}
+
 body {
   margin: 0;
-  background: var(--jos-bg);
   color: var(--jos-ink);
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   font-size: 17px;
@@ -131,7 +145,9 @@ canvas {
   position: absolute;
   inset: 0 0 -32px 0;
   z-index: -1;
-  background: linear-gradient(to bottom, var(--jos-bg) 35%, rgba(19, 14, 11, 0));
+  background: var(--jos-bg) url("assets/images/paper.webp") center/cover no-repeat fixed;
+  -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
+  mask-image: linear-gradient(to bottom, #000 35%, transparent);
 }
 .site-header__brand, .site-header__nav a {
   font-size: 12px;
@@ -263,7 +279,7 @@ canvas {
   position: absolute;
   inset: -64px -96px -48px -64px;
   z-index: -1;
-  background: radial-gradient(closest-side, rgba(19, 14, 11, 0.9), rgba(19, 14, 11, 0));
+  background: radial-gradient(closest-side, rgba(205, 205, 205, 0.92), rgba(205, 205, 205, 0));
   pointer-events: none;
 }
 .hero__title {
@@ -295,7 +311,7 @@ canvas {
 }
 .room--shop .room__inner {
   padding: 48px;
-  background: rgba(19, 14, 11, 0.74);
+  background: var(--jos-glass);
 }
 .room__title {
   margin: 0 0 48px;
@@ -341,7 +357,7 @@ canvas {
 .room__content .wp-block-table th {
   padding: 12px 0;
   border: 0;
-  border-bottom: 1px solid rgba(241, 226, 160, 0.2);
+  border-bottom: 1px solid var(--jos-rule);
   text-align: left;
   vertical-align: top;
 }
@@ -381,10 +397,10 @@ canvas {
 .room__content .wp-block-details {
   margin: 0;
   padding: 16px 0;
-  border-top: 1px solid rgba(241, 226, 160, 0.2);
+  border-top: 1px solid var(--jos-rule);
 }
 .room__content .wp-block-details:last-of-type {
-  border-bottom: 1px solid rgba(241, 226, 160, 0.2);
+  border-bottom: 1px solid var(--jos-rule);
 }
 .room__content .wp-block-details summary {
   display: flex;
@@ -458,10 +474,6 @@ canvas {
   }
 }
 
-html {
-  scrollbar-gutter: stable;
-}
-
 .is-room-open {
   overflow: hidden;
 }
@@ -483,6 +495,8 @@ html {
   bottom: clamp(24px, 8vh, 64px);
   z-index: 3;
   margin: 0;
+  padding: 8px 12px;
+  background: var(--jos-glass);
   color: var(--jos-ink);
   font-size: 12px;
   letter-spacing: 0.24em;
@@ -517,7 +531,7 @@ html {
   padding: 0;
   border: 1px solid var(--jos-ink);
   border-radius: 50%;
-  background: rgba(19, 14, 11, 0.55);
+  background: var(--jos-glass);
   color: var(--jos-ink);
   cursor: pointer;
   transition: background-color 200ms ease, color 200ms ease;
