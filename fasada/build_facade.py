@@ -27,7 +27,7 @@ Drawing order when the page loads, like an architect draws:
      distance, then the left edge of the building is drawn from top to bottom;
   2. arches, one after the other, starting with the two next to the sign: each outline is drawn from
      the ground up both jambs at once and meets at the crown;
-  3. joints, arch by arch in the same order, from the top down; the courses at the ends run on.
+  3. joints, arch by arch in the same order, from the top down; the courses at the right end run on.
 """
 import math
 import sys
@@ -258,10 +258,11 @@ def schedule(strokes):
         for p, q in zip(pts, pts[1:]):
             # lines beyond the building: every piece takes the same time, so the far pieces rush away
             part = 1 / (len(pts) - 1) if kind == 'beyond' else length3(p, q) / total
-            timed.append((p, q, start + t * duration, start + (t + part) * duration))
+            group = s['arch'] if kind in ('arch', 'detail') else -1
+            timed.append((p, q, start + t * duration, start + (t + part) * duration, group))
             t += part
     end = max(seg[3] for seg in timed)
-    return [(p, q, t0 / end, t1 / end) for p, q, t0, t1 in timed]
+    return [(p, q, t0 / end, t1 / end, group) for p, q, t0, t1, group in timed]
 
 
 def to_sign_units(p):
@@ -280,8 +281,9 @@ def js_rows(numbers, per_row):
 
 
 def write_js(segs):
-    lines, times = [], []
-    for p, q, t0, t1 in segs:
+    lines, times, groups = [], [], []
+    for p, q, t0, t1, group in segs:
+        groups.append(str(group))
         lines += [fmt(c) for c in to_sign_units(p)] + [fmt(c) for c in to_sign_units(q)]
         times += [fmt(t0), fmt(t1)]
     arches = []
@@ -300,6 +302,9 @@ def write_js(segs):
         '// two numbers per segment: when its drawing starts and ends, 0..1 of the drawing on page load\n'
         f'export const FACADE_DRAW = new Float32Array([\n\t{js_rows(times, 16)},\n]);\n'
         '\n'
+        '// one number per segment: the arch it outlines (index in FACADE_ARCHES), -1 for all other lines\n'
+        f'export const FACADE_GROUP = new Float32Array([\n\t{js_rows(groups, 32)},\n]);\n'
+        '\n'
         '// the four arches from left to right: window, window, door, window\n'
         'export const FACADE_ARCHES = [\n' + '\n'.join(arches) + '\n];\n'
         '\n'
@@ -314,7 +319,7 @@ def write_js(segs):
 def write_svg(segs):
     x0, y0, x1, y1 = X_LEFT - 20, 260, X_RIGHT + 20, Y_GROUND + 20
     paths = []
-    for p, q, _, _ in segs:
+    for p, q, _, _, _ in segs:
         if abs(p[0] - q[0]) < 1e-6 and abs(p[1] - q[1]) < 1e-6:
             continue
         stroke = '#f3f0ea' if p[2] <= 0 and q[2] <= 0 else '#a39d94'
@@ -339,7 +344,7 @@ def write_check(segs):
     z = 2
     big = cv2.resize(rect, None, fx=z, fy=z, interpolation=cv2.INTER_CUBIC)
     big = (big * 0.55).astype('uint8')
-    for p, q, _, _ in segs:
+    for p, q, _, _, _ in segs:
         colour = (60, 230, 255) if p[2] <= 0 else (255, 160, 60)
         cv2.line(big, (round(p[0] * z), round(p[1] * z)), (round(q[0] * z), round(q[1] * z)), colour, 1, cv2.LINE_AA)
     cv2.imwrite(str(ROOT / 'fasada/provjera.png'), big)

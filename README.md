@@ -22,9 +22,6 @@ u Local stranicu `C:\Users\User\Local Sites\jos-barbershop` (localhost:10098). N
 - Otvorena stranica u Localu sama se osvježi kad sinkronizacija kopira nove datoteke teme
   (`assets/js/dev-reload.js`, radi samo na lokalnoj kopiji, nikad na pravoj stranici). Sve datoteke imaju
   vrijeme zadnje promjene u adresi, pa preglednik uvijek uzme nove.
-- Otvorena stranica u Localu sama se osvježi kad sinkronizacija kopira nove datoteke teme
-  (`assets/js/dev-reload.js`, radi samo na lokalnoj kopiji, nikad na pravoj stranici). Sve datoteke imaju
-  vrijeme zadnje promjene u adresi, pa preglednik uvijek uzme nove.
 - Izvor na računalu: `D:\CLAUDE_CODE\JoS_BARBER\jos-barbershop` (skripta sama nađe mapu u kojoj leži, pa se mapa smije premjestiti)
 - Pokretanje: `powershell -ExecutionPolicy Bypass -File "D:\CLAUDE_CODE\JoS_BARBER\jos-barbershop\tools\jos-sync.ps1"`
 
@@ -61,42 +58,52 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 - Nosač i zid stoje mirno, disk se okreće oko okomite osi, kao viseća reklama.
 - Svijetli samo logo ("Jo's" i red BARBERSHOP), disk i nosač ne svijetle.
-- Disk se uvijek okreće istom sporom brzinom (jedan krug za oko 24 sekunde), i kod scrolla.
+- Disk se uvijek okreće istom sporom brzinom (jedan krug za oko 24 sekunde).
 - Boje: sve što je bilo crno je vrlo tamna smeđa, ne previše topla (`#130e0b`: pozadina, disk, nosač, tamno staklo), a linije
   fasade i tanke crte su blijedo žute (`#f1e2a0`). Svijetli logo ostaje bijel.
 
-**Scroll: lukovi su stranice**
+**Lukovi su izbornik**
 
-- Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog. Scroll vodi kameru niz ulicu od luka do luka.
-- Kod svakog luka kamera stane ispred njega tako da se vidi cijeli prozor ili vrata, od tla do zaglavnog kamena,
-  zatim uđe kroz luk u visini očiju i otvori se stranica preko cijelog ekrana.
-- Stranice nemaju vlastitu pozadinu: tekst se pojavi i izblijedi sa scrollom, pa nikad nema ruba preko linija.
-- Nakon stranice kamera izađe iz luka, vrati se na ulicu u prvi kadar sa znakom i odande prijeđe do
-  sljedećeg luka i uđe u njega.
-- Redom: Leistungen & Preise (izlog desno), Über uns (vrata), Galerie, Kontakt (izlog lijevo).
+- Prvi kadar stoji mirno, nema putovanja scrollom. Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog.
+- U rubu svakog luka (između dva luka kamenova) polako teče traka s imenom stranice, npr. `LEISTUNGEN  ·`:
+  gore uz lijevi dovratak, preko luka i dolje uz desni. Traka se pojavi na kraju iscrtavanja fasade.
+- Pokazivač miša na luku: linije tog luka i njegova traka zasvijetle, pokazivač postane ruka.
+- Klik na luk (ili na stavku izbornika u zaglavlju, ili na bilo koji link `#leistungen`, `#ueber-uns`, `#galerie`,
+  `#kontakt`): kamera u oko 1,5 sekundi preleti pred luk i uđe kroz njega, a stranica se otvori preko cijelog
+  ekrana. Tekst heroja se za to vrijeme makne.
+- Natrag na ulicu: veliki X gore desno (lagano pulsira), tipka Esc, tipka Natrag u pregledniku ili ime u
+  zaglavlju. Kamera izađe iz luka natrag u prvi kadar.
+- Izbornik radi i dok je stranica otvorena: kamera izađe iz jednog luka i uđe u drugi. Otvorena stranica je
+  označena u izborniku. Na mobitelu je izbornik u drugom redu zaglavlja.
+- Svaka otvorena stranica ima svoju adresu (`/#kontakt`), pa se može poslati ili otvoriti izravno; tada je
+  stranica odmah otvorena, a Natrag vodi na ulicu.
+- Redom: Leistungen & Preise (izlog desno), Über uns (vrata), Galerie, Kontakt (izlog lijevo). Koji luk vodi
+  na koju stranicu piše u `jos_rooms()` (`arch`, indeks u `FACADE_ARCHES`).
 - Kroz vrata kamera ulazi u lokal: 360 fotografija lokala oko kamere (`images/google-maps-28.webp`, 8192 x 4096).
   Fotografija ostaje kakva jest, bez izoštravanja (`tools/panorama.py`): `lokal-360.webp` (8192 px, 1,1 MB) za
-  računala, `lokal-360-mobile.webp` (4096 px, 0,6 MB) za mobitele. Učitava se tek kad kamera krene niz ulicu,
-  pa ne ulazi u budžet prvog učitavanja. Pogled prvo ide ravno u lokal, prema stolicama i ogledalima, s ulazom
-  iza leđa. Unutra se kut gledanja proširi s 30 na 70 stupnjeva.
-- U lokalu stranica stoji (scroll ne radi): povlačenjem mišem ili prstom gledaš okolo i gore dolje, strelice na
-  tipkovnici rade isto. Tekst Über uns stoji na tamnom staklu u kutu, uputa "Ziehen, um sich umzusehen" nestane
-  nakon prvog povlačenja. Veliki X gore desno lagano pulsira; X ili Esc izvede van pred vrata, na stranu s koje
-  si došao, i scroll ide dalje. Skok preko izbornika prolazi kroz lokal bez zaustavljanja.
-- Bez animacija (prefers-reduced-motion) kamera stoji na prvom kadru, a stranice slijede jedna za drugom.
+  računala, `lokal-360-mobile.webp` (4096 px, 0,6 MB) za mobitele. Učitava se tek 1,5 sekundi nakon iscrtavanja
+  fasade (ili čim miš dođe na vrata), pa ne ulazi u budžet prvog učitavanja. Pogled prvo ide ravno u lokal,
+  prema stolicama i ogledalima, s ulazom iza leđa. Unutra se kut gledanja proširi s 30 na 70 stupnjeva.
+- U lokalu povlačenjem mišem ili prstom gledaš okolo i gore dolje, strelice na tipkovnici rade isto. Tekst
+  Über uns stoji na tamnom staklu u kutu, uputa "Ziehen, um sich umzusehen" nestane nakon prvog povlačenja.
+- Bez animacija (prefers-reduced-motion) sve se otvara i zatvara odmah, bez leta kamere i bez pulsiranja.
+- Bez JavaScripta stranice jednostavno slijede jedna za drugom ispod heroja.
 
 ## Tema `theme/jos-barbershop`
 
 Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
 
 - `front-page.php`: hero s 3D znakom, naslov "your confidence starts here" (natpis s izloga trgovine), gumb "Termin buchen",
-  zatim ulica i četiri stranice iza lukova
-- `assets/js/scene.js`: three.js scena (znak, fasada, kamera niz ulicu, lokal iza vrata), ES modul preko WordPress Script Modules API
-- `assets/js/facade.js`: linije prizemlja fasade s vremenima iscrtavanja i položajem lukova, generira ih `fasada/build_facade.py`
-- `assets/js/motion.js`: GSAP i ScrollTrigger: položaj kamere na putu (`jos:path`), okret u lokalu (`jos:pan`), pojava teksta
+  četiri stranice iza lukova i X za povratak na ulicu
+- `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, kamera kroz luk, lokal iza vrata), ES modul preko
+  WordPress Script Modules API. Samo crta; klik na luk javlja kao `jos:open`.
+- `assets/js/facade.js`: linije prizemlja fasade s vremenima iscrtavanja, lukom kojem pripadaju i položajem lukova,
+  generira ih `fasada/build_facade.py`
+- `assets/js/motion.js`: GSAP drži sve vrijednosti: put kamere kroz luk (`jos:view`), pogled u lokalu (`jos:look`),
+  otvaranje i zatvaranje stranica, adrese i tipka Natrag
 - Stranice iza lukova su obične WordPress stranice s adresama `leistungen`, `ueber-uns`, `galerie` i `kontakt`.
   Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu; sadržaj se piše u WordPressu.
-  Izbornik u zaglavlju skače na njih.
+  Izbornik u zaglavlju ih otvara kao i klik na luk.
 - FAQ: u stranici Kontakt svako pitanje je blok "Details" (pitanje u naslovu, odgovor u sadržaju). Iz tih blokova
   tema sama složi FAQPage schemu.
 - Prvi sadržaj stranica (04.10.2026, iz cjenika i opisa salona s booking stranice): tema ga jednom upiše u stranicu,
@@ -115,8 +122,8 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 - Gumb "Termin buchen": link se upisuje u Customizeru, sekcija "Jo's Barbershop", polje "Termin-Link"
   (stranica za rezervaciju ili `tel:+43...`). Dok link nije upisan, gumb vidi samo prijavljeni urednik.
 
-Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
+Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.5.0: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
-s 360 fotografijom. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
+Status 0.6.0: znak na fasadi koja se iscrta pri učitavanju, lukovi s tekućim trakama kao izbornik, klik vodi kameru
+kroz luk do četiri stranice, lokal iza vrata s 360 fotografijom. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, DE i EN verzija, Impressum i Datenschutz.
 

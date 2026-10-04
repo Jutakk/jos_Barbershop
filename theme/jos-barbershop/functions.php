@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.5.0' );
+define( 'JOS_VERSION', '0.6.0' );
 
 /**
  * Theme supports.
@@ -30,14 +30,13 @@ function jos_enqueue_styles(): void {
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_styles' );
 
 /**
- * GSAP, ScrollTrigger and the motion layer, all local, in the footer.
+ * GSAP and the motion layer (the way through the arches into the pages), all local, in the footer.
  */
 function jos_enqueue_motion(): void {
 	$dir  = get_template_directory_uri() . '/assets/js';
 	$path = get_template_directory() . '/assets/js';
 	wp_enqueue_script( 'gsap', $dir . '/vendor/gsap.min.js', array(), '3.15.0', true );
-	wp_enqueue_script( 'gsap-scrolltrigger', $dir . '/vendor/ScrollTrigger.min.js', array( 'gsap' ), '3.15.0', true );
-	wp_enqueue_script( 'jos-motion', $dir . '/motion.js', array( 'gsap', 'gsap-scrolltrigger' ), filemtime( $path . '/motion.js' ), true );
+	wp_enqueue_script( 'jos-motion', $dir . '/motion.js', array( 'gsap' ), filemtime( $path . '/motion.js' ), true );
 }
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_motion' );
 
@@ -263,10 +262,11 @@ function jos_shop_schema(): void {
 add_action( 'wp_head', 'jos_shop_schema' );
 
 /**
- * Pages behind the arches of the facade, in the order the camera visits them: from right to left.
- * The second arch from the right is the door into the shop.
+ * Pages behind the arches of the facade, from right to left. arch is the index of the arch in
+ * FACADE_ARCHES (assets/js/facade.js, from the left: window, window, door, window); the second arch from
+ * the right is the door into the shop.
  *
- * @return array<int, array{slug: string, title: string, nav: string, door: bool}>
+ * @return array<int, array{slug: string, title: string, nav: string, door: bool, arch: int}>
  */
 function jos_rooms(): array {
 	return array(
@@ -275,24 +275,28 @@ function jos_rooms(): array {
 			'title' => __( 'Leistungen & Preise', 'jos-barbershop' ),
 			'nav'   => __( 'Leistungen', 'jos-barbershop' ),
 			'door'  => false,
+			'arch'  => 3,
 		),
 		array(
 			'slug'  => 'ueber-uns',
 			'title' => __( 'Über uns', 'jos-barbershop' ),
 			'nav'   => __( 'Über uns', 'jos-barbershop' ),
 			'door'  => true,
+			'arch'  => 2,
 		),
 		array(
 			'slug'  => 'galerie',
 			'title' => __( 'Galerie', 'jos-barbershop' ),
 			'nav'   => __( 'Galerie', 'jos-barbershop' ),
 			'door'  => false,
+			'arch'  => 1,
 		),
 		array(
 			'slug'  => 'kontakt',
 			'title' => __( 'Kontakt', 'jos-barbershop' ),
 			'nav'   => __( 'Kontakt', 'jos-barbershop' ),
 			'door'  => false,
+			'arch'  => 0,
 		),
 	);
 }
@@ -502,22 +506,22 @@ function jos_nav(): void {
 	$base = is_front_page() ? '' : home_url( '/' );
 	echo '<nav class="site-header__nav" aria-label="' . esc_attr__( 'Hauptmenü', 'jos-barbershop' ) . '"><ul>';
 	foreach ( jos_rooms() as $room ) {
-		printf( '<li><a href="%1$s">%2$s</a></li>', esc_url( $base . '#' . $room['slug'] ), esc_html( $room['nav'] ) );
+		printf( '<li><a href="%1$s" data-open="%2$s">%3$s</a></li>', esc_url( $base . '#' . $room['slug'] ), esc_attr( $room['slug'] ), esc_html( $room['nav'] ) );
 	}
 	echo '</ul></nav>';
 }
 
 /**
- * One page behind an arch, as a section of the front page.
+ * One page behind an arch, as a section of the front page (an overlay once motion.js runs).
  *
- * @param array{slug: string, title: string, nav: string, door: bool} $room Room from jos_rooms().
+ * @param array{slug: string, title: string, nav: string, door: bool, arch: int} $room Room from jos_rooms().
  */
 function jos_room( array $room ): void {
 	$page  = get_page_by_path( $room['slug'] );
 	$title = $page ? get_the_title( $page ) : $room['title'];
 	$id    = $room['slug'];
 	?>
-	<section id="<?php echo esc_attr( $id ); ?>" class="room<?php echo $room['door'] ? ' room--shop' : ''; ?>" data-room aria-labelledby="<?php echo esc_attr( $id ); ?>-title">
+	<section id="<?php echo esc_attr( $id ); ?>" class="room<?php echo $room['door'] ? ' room--shop' : ''; ?>" data-room="<?php echo esc_attr( $id ); ?>" data-arch="<?php echo esc_attr( (string) $room['arch'] ); ?>"<?php echo $room['door'] ? ' data-door' : ''; ?> aria-labelledby="<?php echo esc_attr( $id ); ?>-title">
 		<div class="room__inner">
 			<h2 id="<?php echo esc_attr( $id ); ?>-title" class="room__title" data-reveal><?php echo esc_html( $title ); ?></h2>
 			<div class="room__content" data-reveal>

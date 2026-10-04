@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.5.0
+Version: 0.6.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -193,33 +193,56 @@ canvas {
 		}
 	}
 
-	&__nav {
-		display: none;
+	// on phones the arches are small: the menu stays, in a second row under the name
+	@media (max-width: $bp-tablet - 1) {
+		flex-wrap: wrap;
+		gap: s(2);
+		padding: s(4) s(5);
+	}
 
-		@media (min-width: $bp-tablet) {
-			display: block;
+	&__nav {
+		@media (max-width: $bp-tablet - 1) {
+			width: 100%;
 		}
 
 		ul {
 			display: flex;
-			gap: s(6);
+			flex-wrap: wrap;
+			gap: s(2) s(6);
 			margin: 0;
 			padding: 0;
 			list-style: none;
+
+			@media (max-width: $bp-tablet - 1) {
+				justify-content: space-between;
+				gap: s(2);
+			}
 		}
 
 		a {
+			display: inline-block;
+			padding: s(1) 0;
 			color: var(--jos-muted);
 			transition: color 200ms ease;
 
-			&:hover {
+			@media (max-width: $bp-tablet - 1) {
+				font-size: 11px;
+				letter-spacing: 0.12em;
+			}
+
+			&:hover,
+			&[aria-current="true"] {
 				color: var(--jos-ink);
+			}
+
+			&:active {
+				color: var(--jos-accent);
 			}
 		}
 	}
 }
 
-// ---------- front page: the scene stays fixed behind the hero, the street and the pages
+// ---------- front page: the scene stays fixed behind the hero and the pages
 
 .journey {
 	position: relative;
@@ -254,14 +277,22 @@ canvas {
 	opacity: 1;
 }
 
-// ---------- hero with the 3D sign
+// a pointed arch is a link (scene.js)
+.is-pointing-arch {
+	cursor: pointer;
+}
+
+// ---------- hero with the 3D sign. Clicks go through it to the arches of the scene, except on the text.
 
 .hero {
 	height: 100vh;
 	height: 100svh;
 	min-height: 560px;
+	overflow: hidden;   // the dark glow behind the text never widens the page on phones
+	pointer-events: none;
 
 	&__content {
+		pointer-events: auto;
 		position: absolute;
 		left: clamp(#{s(5)}, 6vw, #{s(9)});
 		bottom: clamp(#{s(6)}, 10vh, #{s(9)});
@@ -297,24 +328,9 @@ canvas {
 	}
 }
 
-// ---------- the street between the pages: empty scroll distance in which the camera moves
-
-.street {
-	height: 320vh;
-	pointer-events: none;
-
-	.hero + & {
-		height: 200vh;
-	}
-
-	// the shop behind the door: the page stands still there (motion.js), so no scroll distance is needed
-	&--shop {
-		height: 0;
-	}
-}
-
 // ---------- pages behind the arches: no background of their own, the camera is inside the dark arch.
-// The text fades in and out with the scroll (motion.js), so there is never an edge over the lines.
+// Without JavaScript they simply follow the hero; with motion.js (.has-arches) each one lies over the
+// whole screen and opens once the camera has gone through its arch.
 
 .room {
 	display: flex;
@@ -413,6 +429,24 @@ canvas {
 			td:nth-child(3):last-child {
 				width: 5rem;
 			}
+
+			// on phones the duration may wrap, so the table never gets wider than the screen
+			@media (max-width: $bp-tablet - 1) {
+				td:nth-child(2):not(:last-child) {
+					width: 6rem;
+					padding-left: s(3);
+					white-space: normal;
+				}
+
+				td:last-child,
+				th:last-child {
+					padding-left: s(3);
+				}
+
+				td:nth-child(3):last-child {
+					width: 3.75rem;
+				}
+			}
 		}
 
 		.wp-block-gallery {
@@ -483,16 +517,55 @@ canvas {
 	}
 }
 
-// ---------- inside the shop (motion.js sets .is-in-shop on <html>): the page stands still, dragging turns
-// the view around the shop, the pulsing X (or Esc) leads back out to the street
+.has-arches .journey > .room {
+	position: fixed;
+	inset: 0;
+	z-index: 5;
+	align-items: flex-start;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	visibility: hidden;
+	opacity: 0;
+	scrollbar-color: var(--jos-line) transparent;
+	scrollbar-width: thin;
+
+	// centred while it fits, from the top when it is longer than the screen
+	.room__inner {
+		margin-block: auto;
+	}
+
+	&.is-open {
+		visibility: visible;
+	}
+
+	// the open page fills the screen: when it takes the focus (as a scroll box, or from its address) no ring is needed
+	&:focus {
+		outline: none;
+	}
+
+	// on phones the header has two rows and the X sits next to the title
+	@media (max-width: $bp-tablet - 1) {
+		padding-top: 112px;
+
+		.room__title {
+			padding-right: 64px;
+		}
+	}
+}
+
+// ---------- a page is open (motion.js sets .is-room-open on <html>): the front page stands still,
+// the pulsing X (or Esc, or the back button) leads back out to the street
 
 html {
-	scrollbar-gutter: stable;   // no jump when the page is held still in the shop
+	scrollbar-gutter: stable;   // no jump when the page is held still
 }
 
-.is-in-shop {
+.is-room-open {
 	overflow: hidden;
 }
+
+// inside the shop (.is-in-shop): dragging turns the view around the shop
 
 .journey > .shop-drag {
 	position: fixed;
@@ -526,16 +599,16 @@ html {
 
 	// on phones the text of the page lies at the bottom: the hint goes up, left of the X
 	@media (max-width: $bp-tablet - 1) {
-		top: s(9);
+		top: 112px;
 		right: auto;
 		bottom: auto;
 		left: s(5);
-		max-width: calc(100vw - 72px - #{3 * s(5)});
+		max-width: calc(100vw - 56px - #{3 * s(5)});
 		white-space: normal;
 	}
 }
 
-.journey > .shop-exit {
+.journey > .view-exit {
 	position: fixed;
 	top: clamp(#{s(8)}, 12vh, #{s(9)});
 	right: clamp(#{s(5)}, 6vw, #{s(9)});
@@ -551,7 +624,7 @@ html {
 	color: var(--jos-ink);
 	cursor: pointer;
 	transition: background-color 200ms ease, color 200ms ease;
-	animation: shop-exit-pulse 2.4s ease-in-out infinite;
+	animation: view-exit-pulse 2.4s ease-in-out infinite;
 
 	&[hidden] {
 		display: none;
@@ -574,7 +647,7 @@ html {
 		inset: -1px;
 		border: 1px solid var(--jos-ink);
 		border-radius: 50%;
-		animation: shop-exit-ring 2.4s ease-out infinite;
+		animation: view-exit-ring 2.4s ease-out infinite;
 		pointer-events: none;
 	}
 
@@ -591,9 +664,27 @@ html {
 	&:active svg {
 		transform: scale(0.85);
 	}
+
+	&:disabled {
+		opacity: 0.4;
+		pointer-events: none;
+	}
+
+	// on phones under the two rows of the header
+	@media (max-width: $bp-tablet - 1) {
+		top: 104px;
+		right: s(5);
+		width: 56px;
+		height: 56px;
+
+		svg {
+			width: 24px;
+			height: 24px;
+		}
+	}
 }
 
-@keyframes shop-exit-pulse {
+@keyframes view-exit-pulse {
 	0%,
 	100% {
 		transform: scale(1);
@@ -604,7 +695,7 @@ html {
 	}
 }
 
-@keyframes shop-exit-ring {
+@keyframes view-exit-ring {
 	from {
 		opacity: 0.6;
 		transform: scale(1);
@@ -617,8 +708,7 @@ html {
 }
 
 // the text of the page behind the door stands on dark glass in the corner while one looks around
-.is-in-shop .room--shop {
-	z-index: 4;
+.is-in-shop .journey > .room--shop {
 	pointer-events: none;
 }
 
@@ -631,9 +721,9 @@ html {
 	max-height: calc(100vh - #{s(9) + s(9) + s(6)});   // free of the header and the X; longer text scrolls inside
 	overflow-y: auto;
 	overscroll-behavior: contain;
+	margin: 0;
 	scrollbar-color: var(--jos-line) transparent;
 	scrollbar-width: thin;
-	opacity: 1 !important;
 	pointer-events: auto;
 
 	@media (max-width: $bp-tablet - 1) {
@@ -643,16 +733,8 @@ html {
 
 .is-in-shop .room--shop .room__title {
 	margin-bottom: s(5);
+	padding-right: 0;
 	font-size: clamp(1.5rem, 2.4vw, 2.25rem);
-}
-
-.is-in-shop .room--shop [data-reveal] {
-	opacity: 1 !important;
-	transform: none !important;
-}
-
-.is-leaving-shop .room--shop .room__inner {
-	visibility: hidden;
 }
 
 // ---------- pages and footer
@@ -722,7 +804,7 @@ html {
 	}
 }
 
-// without motion there is no camera route: the pages follow each other directly
+// without motion the pages open at once, without the way of the camera, and nothing pulses
 @media (prefers-reduced-motion: reduce) {
 	.scene__canvas,
 	.button,
@@ -731,12 +813,8 @@ html {
 		transition: none;
 	}
 
-	.journey > .shop-exit,
-	.journey > .shop-exit::after {
+	.journey > .view-exit,
+	.journey > .view-exit::after {
 		animation: none;
-	}
-
-	.street {
-		display: none;
 	}
 }

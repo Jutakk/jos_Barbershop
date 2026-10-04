@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.5.0
+Version: 0.6.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -144,27 +144,49 @@ canvas {
   outline: 2px solid var(--jos-accent);
   outline-offset: 4px;
 }
-.site-header__nav {
-  display: none;
+@media (max-width: 767px) {
+  .site-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 24px;
+  }
 }
-@media (min-width: 768px) {
+@media (max-width: 767px) {
   .site-header__nav {
-    display: block;
+    width: 100%;
   }
 }
 .site-header__nav ul {
   display: flex;
-  gap: 32px;
+  flex-wrap: wrap;
+  gap: 8px 32px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+@media (max-width: 767px) {
+  .site-header__nav ul {
+    justify-content: space-between;
+    gap: 8px;
+  }
+}
 .site-header__nav a {
+  display: inline-block;
+  padding: 4px 0;
   color: var(--jos-muted);
   transition: color 200ms ease;
 }
-.site-header__nav a:hover {
+@media (max-width: 767px) {
+  .site-header__nav a {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+}
+.site-header__nav a:hover, .site-header__nav a[aria-current=true] {
   color: var(--jos-ink);
+}
+.site-header__nav a:active {
+  color: var(--jos-accent);
 }
 
 .journey {
@@ -199,12 +221,19 @@ canvas {
   opacity: 1;
 }
 
+.is-pointing-arch {
+  cursor: pointer;
+}
+
 .hero {
   height: 100vh;
   height: 100svh;
   min-height: 560px;
+  overflow: hidden;
+  pointer-events: none;
 }
 .hero__content {
+  pointer-events: auto;
   position: absolute;
   left: clamp(24px, 6vw, 96px);
   bottom: clamp(32px, 10vh, 96px);
@@ -233,17 +262,6 @@ canvas {
   font-size: 12px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-}
-
-.street {
-  height: 320vh;
-  pointer-events: none;
-}
-.hero + .street {
-  height: 200vh;
-}
-.street--shop {
-  height: 0;
 }
 
 .room {
@@ -324,6 +342,20 @@ canvas {
 .room__content .wp-block-table td:nth-child(3):last-child {
   width: 5rem;
 }
+@media (max-width: 767px) {
+  .room__content .wp-block-table td:nth-child(2):not(:last-child) {
+    width: 6rem;
+    padding-left: 12px;
+    white-space: normal;
+  }
+  .room__content .wp-block-table td:last-child,
+  .room__content .wp-block-table th:last-child {
+    padding-left: 12px;
+  }
+  .room__content .wp-block-table td:nth-child(3):last-child {
+    width: 3.75rem;
+  }
+}
 .room__content .wp-block-gallery {
   margin: 0 0 32px;
   gap: 12px;
@@ -377,11 +409,42 @@ canvas {
   outline-offset: 3px;
 }
 
+.has-arches .journey > .room {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  align-items: flex-start;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  visibility: hidden;
+  opacity: 0;
+  scrollbar-color: var(--jos-line) transparent;
+  scrollbar-width: thin;
+}
+.has-arches .journey > .room .room__inner {
+  margin-block: auto;
+}
+.has-arches .journey > .room.is-open {
+  visibility: visible;
+}
+.has-arches .journey > .room:focus {
+  outline: none;
+}
+@media (max-width: 767px) {
+  .has-arches .journey > .room {
+    padding-top: 112px;
+  }
+  .has-arches .journey > .room .room__title {
+    padding-right: 64px;
+  }
+}
+
 html {
   scrollbar-gutter: stable;
 }
 
-.is-in-shop {
+.is-room-open {
   overflow: hidden;
 }
 
@@ -415,16 +478,16 @@ html {
 }
 @media (max-width: 767px) {
   .journey > .shop-hint {
-    top: 96px;
+    top: 112px;
     right: auto;
     bottom: auto;
     left: 24px;
-    max-width: calc(100vw - 72px - 72px);
+    max-width: calc(100vw - 56px - 72px);
     white-space: normal;
   }
 }
 
-.journey > .shop-exit {
+.journey > .view-exit {
   position: fixed;
   top: clamp(64px, 12vh, 96px);
   right: clamp(24px, 6vw, 96px);
@@ -440,12 +503,12 @@ html {
   color: var(--jos-ink);
   cursor: pointer;
   transition: background-color 200ms ease, color 200ms ease;
-  animation: shop-exit-pulse 2.4s ease-in-out infinite;
+  animation: view-exit-pulse 2.4s ease-in-out infinite;
 }
-.journey > .shop-exit[hidden] {
+.journey > .view-exit[hidden] {
   display: none;
 }
-.journey > .shop-exit svg {
+.journey > .view-exit svg {
   width: 30px;
   height: 30px;
   fill: none;
@@ -454,28 +517,44 @@ html {
   stroke-linecap: round;
   transition: transform 150ms ease;
 }
-.journey > .shop-exit::after {
+.journey > .view-exit::after {
   content: "";
   position: absolute;
   inset: -1px;
   border: 1px solid var(--jos-ink);
   border-radius: 50%;
-  animation: shop-exit-ring 2.4s ease-out infinite;
+  animation: view-exit-ring 2.4s ease-out infinite;
   pointer-events: none;
 }
-.journey > .shop-exit:hover {
+.journey > .view-exit:hover {
   background: var(--jos-ink);
   color: var(--jos-bg);
 }
-.journey > .shop-exit:focus-visible {
+.journey > .view-exit:focus-visible {
   outline: 2px solid var(--jos-accent);
   outline-offset: 4px;
 }
-.journey > .shop-exit:active svg {
+.journey > .view-exit:active svg {
   transform: scale(0.85);
 }
+.journey > .view-exit:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  .journey > .view-exit {
+    top: 104px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+  }
+  .journey > .view-exit svg {
+    width: 24px;
+    height: 24px;
+  }
+}
 
-@keyframes shop-exit-pulse {
+@keyframes view-exit-pulse {
   0%, 100% {
     transform: scale(1);
   }
@@ -483,7 +562,7 @@ html {
     transform: scale(1.06);
   }
 }
-@keyframes shop-exit-ring {
+@keyframes view-exit-ring {
   from {
     opacity: 0.6;
     transform: scale(1);
@@ -493,8 +572,7 @@ html {
     transform: scale(1.6);
   }
 }
-.is-in-shop .room--shop {
-  z-index: 4;
+.is-in-shop .journey > .room--shop {
   pointer-events: none;
 }
 
@@ -507,9 +585,9 @@ html {
   max-height: calc(100vh - 224px);
   overflow-y: auto;
   overscroll-behavior: contain;
+  margin: 0;
   scrollbar-color: var(--jos-line) transparent;
   scrollbar-width: thin;
-  opacity: 1 !important;
   pointer-events: auto;
 }
 @media (max-width: 767px) {
@@ -520,16 +598,8 @@ html {
 
 .is-in-shop .room--shop .room__title {
   margin-bottom: 24px;
+  padding-right: 0;
   font-size: clamp(1.5rem, 2.4vw, 2.25rem);
-}
-
-.is-in-shop .room--shop [data-reveal] {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.is-leaving-shop .room--shop .room__inner {
-  visibility: hidden;
 }
 
 .page {
@@ -594,11 +664,8 @@ html {
   .wp-block-details summary::after {
     transition: none;
   }
-  .journey > .shop-exit,
-  .journey > .shop-exit::after {
+  .journey > .view-exit,
+  .journey > .view-exit::after {
     animation: none;
-  }
-  .street {
-    display: none;
   }
 }
