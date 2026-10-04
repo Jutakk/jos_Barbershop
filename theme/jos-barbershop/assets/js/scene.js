@@ -4,6 +4,9 @@ import { EffectComposer } from './vendor/addons/postprocessing/EffectComposer.js
 import { RenderPass } from './vendor/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from './vendor/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from './vendor/addons/postprocessing/OutputPass.js';
+import { LineSegments2 } from './vendor/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from './vendor/addons/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from './vendor/addons/lines/LineMaterial.js';
 import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } from 'jos-facade';
 
 /*
@@ -42,8 +45,13 @@ const BRACKET_TUBE = 0.04;
 const TURN_SPEED = 0.26;         // rad/s, always the same slow turn (one turn in about 24 s)
 const BACKGROUND = 0xcecece;     // the paper (paper.webp, data-paper) while it loads and in the fog, same as --jos-bg
 const FACADE_COLOR = 0x5b3517;   // brown ink, same as --jos-line
-const FACADE_OPACITY = 0.9;
-const FACADE_OPACITY_MOBILE = 0.8;   // on phones the wall runs behind the text
+const FACADE_OPACITY = 1;
+const FACADE_OPACITY_MOBILE = 0.9;   // on phones the wall runs behind the text
+const LINE_WIDTH = 2.2;          // px on the screen, the facade lines drawn bold
+const LINE_WIDTH_MOBILE = 1.8;
+// the paper is a big sphere around the whole scene: turning the building turns the paper with it
+const PAPER_RADIUS = 150;
+const PAPER_REPEAT = [8, 6];     // the paper this many times around and from top to bottom: grain about as on the page
 const FACADE_FADE = [1, 24];     // the lines fade out between these distances behind the framed view
 const DRAW_DURATION = 5;         // s, the facade draws itself when the page loads, in the order of facade.js
 const VIEW_YAW = 0.5;            // rad: sign and wall are seen at an angle, the street goes away to the left
@@ -134,22 +142,25 @@ if (root) {
 
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color(BACKGROUND);
-		// the paper of the whole site behind the scene, cut to fill the screen like background-size: cover
-		let paper = null;
-		const coverPaper = () => {
-			if (!paper || !paper.image) return;
-			const view = root.clientWidth / Math.max(root.clientHeight, 1);
-			const image = paper.image.width / paper.image.height;
-			const wide = view > image;
-			paper.repeat.set(wide ? 1 : view / image, wide ? image / view : 1);
-			paper.offset.set((1 - paper.repeat.x) / 2, (1 - paper.repeat.y) / 2);
-		};
+		// the paper of the whole site all around the scene, on the inside of a big sphere: when the building
+		// is turned, the paper turns with it. Mirrored at its edges, so the copies meet without a seam.
+		const paperSphere = new THREE.Mesh(
+			new THREE.SphereGeometry(PAPER_RADIUS, 48, 24),
+			new THREE.MeshBasicMaterial({ side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false, toneMapped: false })
+		);
+		paperSphere.renderOrder = -10;   // first, behind everything
+		paperSphere.visible = false;
+		scene.add(paperSphere);
 		if (root.dataset.paper) {
 			new THREE.TextureLoader().load(root.dataset.paper, (texture) => {
 				texture.colorSpace = THREE.SRGBColorSpace;
-				paper = texture;
-				coverPaper();
-				scene.background = texture;
+				texture.wrapS = THREE.MirroredRepeatWrapping;
+				texture.wrapT = THREE.MirroredRepeatWrapping;
+				texture.repeat.set(PAPER_REPEAT[0], PAPER_REPEAT[1]);
+				texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+				paperSphere.material.map = texture;
+				paperSphere.material.needsUpdate = true;
+				paperSphere.visible = true;
 				if (!running && ready) draw();
 			});
 		}
@@ -166,7 +177,7 @@ if (root) {
 		scene.add(key);
 		scene.add(new THREE.AmbientLight(0xffffff, 0.15));
 
-		const camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 100);
+		const camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, PAPER_RADIUS * 2.5);
 
 		// ---- materials
 		// the sign in very dark brown like the page: bracket and rim as metal, the face matt
@@ -183,31 +194,34 @@ if (root) {
 			polygonOffsetFactor: -2,
 		});
 
-		// facade lines: dim, so they never bloom. Each segment is drawn from its start to its end
-		// while 'drawing' runs from its start time to its end time (FACADE_DRAW). The lines of the
-		// arch under the pointer light up (FACADE_GROUP).
+		// facade lines: bold brown lines (LineMaterial, LINE_WIDTH px on the screen), dim enough never to
+		// bloom. Each segment is drawn from its start to its end while 'drawing' runs from its start time
+		// to its end time (FACADE_DRAW). The lines of the arch under the pointer get darker (FACADE_GROUP).
 		const drawing = { value: reduced ? 1 : 0 };
 		const highlightArch = { value: -1 };
 		const highlightAmount = { value: 0 };
-		const lineMaterial = new THREE.LineBasicMaterial({
-			color: FACADE_COLOR,
+		const lineMaterial = new LineMaterial({
+			color: new THREE.Color(FACADE_COLOR),
+			linewidth: isMobile ? LINE_WIDTH_MOBILE : LINE_WIDTH,
 			transparent: true,
 			opacity: isMobile ? FACADE_OPACITY_MOBILE : FACADE_OPACITY,
 			depthWrite: false,
+			fog: true,
 		});
 		lineMaterial.onBeforeCompile = (shader) => {
 			shader.uniforms.drawProgress = drawing;
 			shader.uniforms.highlightArch = highlightArch;
 			shader.uniforms.highlightAmount = highlightAmount;
+			// along the segment: 0 at its start, 1 at its end (the quad of a segment has its start at y < 0.5)
 			shader.vertexShader = shader.vertexShader
-				.replace('#include <common>', '#include <common>\nattribute float drawEnd;\nattribute vec2 drawSpan;\nattribute float archGroup;\nuniform float highlightArch;\nuniform float highlightAmount;\nvarying float vDrawEnd;\nvarying vec2 vDrawSpan;\nvarying float vHighlight;')
-				.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvDrawEnd = drawEnd;\n\tvDrawSpan = drawSpan;\n\tvHighlight = abs(archGroup - highlightArch) < 0.5 ? highlightAmount : 0.0;');
+				.replace('attribute vec3 instanceEnd;', 'attribute vec3 instanceEnd;\nattribute vec2 drawSpan;\nattribute float archGroup;\nuniform float highlightArch;\nuniform float highlightAmount;\nvarying float vDrawT;\nvarying vec2 vDrawSpan;\nvarying float vHighlight;')
+				.replace('void main() {', 'void main() {\n\tvDrawT = position.y < 0.5 ? 0.0 : 1.0;\n\tvDrawSpan = drawSpan;\n\tvHighlight = abs(archGroup - highlightArch) < 0.5 ? highlightAmount : 0.0;');
 			shader.fragmentShader = shader.fragmentShader
-				.replace('#include <common>', '#include <common>\nuniform float drawProgress;\nvarying float vDrawEnd;\nvarying vec2 vDrawSpan;\nvarying float vHighlight;')
-				.replace('void main() {', 'void main() {\n\tfloat drawn = clamp((drawProgress - vDrawSpan.x) / max(vDrawSpan.y - vDrawSpan.x, 1e-5), 0.0, 1.0);\n\tif (drawn < 1.0 && vDrawEnd >= drawn) discard;')
+				.replace('#include <common>', '#include <common>\nuniform float drawProgress;\nvarying float vDrawT;\nvarying vec2 vDrawSpan;\nvarying float vHighlight;')
+				.replace('float alpha = opacity;', `float drawn = clamp((drawProgress - vDrawSpan.x) / max(vDrawSpan.y - vDrawSpan.x, 1e-5), 0.0, 1.0);\n\t\t\tif (drawn < 1.0 && vDrawT >= drawn) discard;\n\t\t\tfloat alpha = min( opacity + vHighlight * ${HOVER_OPACITY.toFixed(2)}, 1.0 );`)
 				.replace(
-					'vec4 diffuseColor = vec4( diffuse, opacity );',
-					`vec4 diffuseColor = vec4( mix( diffuse, vec3( 0.06, 0.03, 0.015 ), vHighlight * ${HOVER_COLOR.toFixed(2)} ), min( opacity + vHighlight * ${HOVER_OPACITY.toFixed(2)}, 1.0 ) );`
+					'vec4 diffuseColor = vec4( diffuse, alpha );',
+					`vec4 diffuseColor = vec4( mix( diffuse, vec3( 0.06, 0.03, 0.015 ), vHighlight * ${HOVER_COLOR.toFixed(2)} ), alpha );`
 				);
 		};
 
@@ -268,27 +282,18 @@ if (root) {
 
 		// ---- the wall: ground floor of the facade as lines, in the plane of the plate.
 		// facade.js gives depth behind the wall face, height and position along the wall, in disc radii.
-		const vertexCount = FACADE_LINES.length / 3;
 		const facadePositions = new Float32Array(FACADE_LINES.length);
-		const drawEnds = new Float32Array(vertexCount);
-		const drawSpans = new Float32Array(vertexCount * 2);
-		const archGroups = new Float32Array(vertexCount);
-		for (let v = 0; v < vertexCount; v++) {
+		for (let v = 0; v < FACADE_LINES.length / 3; v++) {
 			facadePositions[v * 3] = wallX + FACADE_LINES[v * 3];
 			facadePositions[v * 3 + 1] = FACADE_LINES[v * 3 + 1];
 			facadePositions[v * 3 + 2] = FACADE_LINES[v * 3 + 2];
-			const s = v >> 1;   // two vertices per segment: start, end
-			drawEnds[v] = v & 1;
-			drawSpans[v * 2] = FACADE_DRAW[s * 2];
-			drawSpans[v * 2 + 1] = FACADE_DRAW[s * 2 + 1];
-			archGroups[v] = FACADE_GROUP[s];
 		}
-		const facadeGeometry = new THREE.BufferGeometry();
-		facadeGeometry.setAttribute('position', new THREE.BufferAttribute(facadePositions, 3));
-		facadeGeometry.setAttribute('drawEnd', new THREE.BufferAttribute(drawEnds, 1));
-		facadeGeometry.setAttribute('drawSpan', new THREE.BufferAttribute(drawSpans, 2));
-		facadeGeometry.setAttribute('archGroup', new THREE.BufferAttribute(archGroups, 1));
-		sign.add(new THREE.LineSegments(facadeGeometry, lineMaterial));
+		const facadeGeometry = new LineSegmentsGeometry();
+		facadeGeometry.setPositions(facadePositions);
+		// one value per segment: when it is drawn, and which arch it outlines
+		facadeGeometry.setAttribute('drawSpan', new THREE.InstancedBufferAttribute(new Float32Array(FACADE_DRAW), 2));
+		facadeGeometry.setAttribute('archGroup', new THREE.InstancedBufferAttribute(new Float32Array(FACADE_GROUP), 1));
+		sign.add(new LineSegments2(facadeGeometry, lineMaterial));
 
 		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material
 		const textCanvas = (label) => {
@@ -513,7 +518,7 @@ if (root) {
 			if (!w || !h) return;
 			renderer.setSize(w, h, false);
 			composer.setSize(w, h);
-			coverPaper();
+			lineMaterial.resolution.set(w, h);   // line width in screen px
 			bloom.resolution.set(w * (isMobile ? 0.5 : 1), h * (isMobile ? 0.5 : 1));
 			camera.aspect = w / h;
 			camera.updateProjectionMatrix();
