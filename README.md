@@ -145,7 +145,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
 
-- `front-page.php`: hero s 3D znakom; dolje lijevo, riječ ispod riječi: JO'S / your / confidence / starts / here
+- `front-page.php`: hero s 3D znakom; dolje lijevo, riječ ispod riječi: JO'S / your / confidense / starts / here
   (natpis s izloga trgovine), ispod BARBERSHOP in 1060 VIENNA, poravnato lijevo s natpisom u zaglavlju i jednako
   daleko od dna. Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i

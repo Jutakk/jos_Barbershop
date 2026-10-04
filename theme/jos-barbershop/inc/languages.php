@@ -113,7 +113,7 @@ function jos_strings(): array {
 			'Inhalt folgt.'               => 'Content follows.',
 		),
 		'ar' => array(
-			'your confidence starts here' => 'ثقتك تبدأ هنا',
+			'your confidense starts here' => 'ثقتك تبدأ هنا',
 			'Zum Inhalt'                  => 'انتقل إلى المحتوى',
 			'Hauptmenü'                   => 'القائمة الرئيسية',
 			'Sprache'                     => 'اللغة',
