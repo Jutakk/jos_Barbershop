@@ -25,8 +25,8 @@ u Local stranicu `C:\Users\User\Local Sites\jos-barbershop` (localhost:10098). N
 - Otvorena stranica u Localu sama se osvježi kad sinkronizacija kopira nove datoteke teme
   (`assets/js/dev-reload.js`, radi samo na lokalnoj kopiji, nikad na pravoj stranici). Sve datoteke imaju
   vrijeme zadnje promjene u adresi, pa preglednik uvijek uzme nove.
-- Izvor na računalu: `D:\CLAUDE_CODE\jos-barbershop`
-- Pokretanje: `powershell -ExecutionPolicy Bypass -File "D:\CLAUDE_CODE\jos-barbershop\tools\jos-sync.ps1"`
+- Izvor na računalu: `D:\CLAUDE_CODE\JoS_BARBER\jos-barbershop` (skripta sama nađe mapu u kojoj leži, pa se mapa smije premjestiti)
+- Pokretanje: `powershell -ExecutionPolicy Bypass -File "D:\CLAUDE_CODE\JoS_BARBER\jos-barbershop\tools\jos-sync.ps1"`
 
 ## Hero sekcija (3D)
 

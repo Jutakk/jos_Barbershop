@@ -1,13 +1,14 @@
 # Jo's Barbershop: keeps this computer, GitHub and LocalWP in step with the Claude cloud session
 # (Kresho, 03.10.2026), same as tools\zkf-sync.ps1 in Zum kleinen Feinen. Every 5 seconds:
-# 1. New files dropped into reference\, images\ or hairs\ in D:\CLAUDE_CODE\jos-barbershop are committed once
+# 1. New files dropped into reference\, images\ or hairs\ of this folder are committed once
 #    they have stopped changing for one round (a copy still running waits) and pushed to GitHub, where Claude
 #    picks them up.
 # 2. New commits from Claude are pulled (rebase: own upload commits stay on top) and the theme is copied
 #    into LocalWP (copy only, nothing there is deleted).
-# Start: powershell -ExecutionPolicy Bypass -File "D:\CLAUDE_CODE\jos-barbershop\tools\jos-sync.ps1"
+# Start: powershell -ExecutionPolicy Bypass -File "D:\CLAUDE_CODE\JoS_BARBER\jos-barbershop\tools\jos-sync.ps1"
+# The folder of the project is the one this script lies in (its tools\ folder), so it can be moved anywhere.
 # Leave the window open while we work; Ctrl+C or closing the window stops it.
-$repo    = 'D:\CLAUDE_CODE\jos-barbershop'
+$repo    = Split-Path -Parent $PSScriptRoot
 $branch  = 'claude/jos-barbershop-logo-xgtbba'
 $src     = Join-Path $repo 'theme\jos-barbershop'
 $site    = 'C:\Users\User\Local Sites\jos-barbershop'
