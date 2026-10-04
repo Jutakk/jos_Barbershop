@@ -12,8 +12,9 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_ARCHES, FACADE_ARCH } from 'jos-facad
  * plate. Only the logo on both faces of the disc glows. The wall is the ground floor of the real facade
  * (images/fasada.jpg), drawn only as thin lines (facade.js, made by fasada/build_facade.py); the lines draw
  * themselves when the page loads.
- * The canvas stays fixed behind the whole front page. While scrolling, the camera goes down the street from
- * arch to arch, from right to left, and through each arch into its page. Behind the door is the shop itself.
+ * The canvas stays fixed behind the whole front page. While scrolling, the camera goes through the arches
+ * from right to left into their pages: in front of an arch, through it, and after the page back out to the
+ * street view with the sign and over to the next arch. Behind the door is the shop itself.
  * motion.js (GSAP ScrollTrigger) owns the values and sends them as events, three.js only draws:
  *   'jos:path'     0 = hero, 1 to 4 = inside the arches of the route
  *   'jos:pan'      0 to 1 = one turn of the view inside the shop
@@ -323,11 +324,12 @@ if (root) {
 				if (t < 0.62) blend(hero, to.front, phase(t, 0, 0.62));
 				else blend(to.front, to.inside, phase(t, 0.62, 1));
 			} else {
-				// out of the last arch, along the wall to the next one, then in
+				// out of the last arch, back to the street view with the sign, over to the next arch, then in
 				const from = stops[leg - 1];
-				if (t < 0.22) blend(from.inside, from.front, phase(t, 0, 0.22));
-				else if (t < 0.68) blend(from.front, to.front, phase(t, 0.22, 0.68));
-				else blend(to.front, to.inside, phase(t, 0.68, 1));
+				if (t < 0.18) blend(from.inside, from.front, phase(t, 0, 0.18));
+				else if (t < 0.44) blend(from.front, hero, phase(t, 0.18, 0.44));
+				else if (t < 0.72) blend(hero, to.front, phase(t, 0.44, 0.72));
+				else blend(to.front, to.inside, phase(t, 0.72, 1));
 			}
 			// inside the shop the view turns around once (a full turn ends where it started)
 			const turn = panoramaReady ? state.pan * Math.PI * 2 : 0;

@@ -69,6 +69,9 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Lukovi zdesna nalijevo: izlog, vrata, izlog, izlog. Scroll vodi kameru niz ulicu od luka do luka.
 - Kod svakog luka kamera stane ispred njega tako da se vidi cijeli prozor ili vrata, od tla do zaglavnog kamena,
   zatim uđe kroz luk u visini očiju i otvori se stranica preko cijelog ekrana.
+- Stranice nemaju vlastitu pozadinu: tekst se pojavi i izblijedi sa scrollom, pa nikad nema ruba preko linija.
+- Nakon stranice kamera izađe iz luka, vrati se na ulicu u prvi kadar sa znakom i odande prijeđe do
+  sljedećeg luka i uđe u njega.
 - Redom: Leistungen & Preise (izlog desno), Über uns (vrata), Galerie, Kontakt (izlog lijevo).
 - Kroz vrata kamera ulazi u lokal: 360 fotografija lokala oko kamere, pogled se sa scrollom okrene
   jednom u krug, a stranica Über uns dolazi preko lokala. Slika ide u
@@ -96,6 +99,6 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero povezan sa scrollom), GUSTOĆA 4.
 
-Status 0.3.3: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
+Status 0.3.4: znak na fasadi koja se iscrta pri učitavanju, scroll kroz lukove do četiri stranice, lokal iza vrata
 (čeka 360 sliku). Slijede sadržaj stranica, DE i EN verzija, Impressum i Datenschutz.
 

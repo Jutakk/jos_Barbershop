@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.3.3
+Version: 0.3.4
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -290,7 +290,7 @@ canvas {
 // ---------- the street between the pages: empty scroll distance in which the camera moves
 
 .street {
-	height: 260vh;
+	height: 320vh;
 	pointer-events: none;
 
 	.hero + & {
@@ -302,7 +302,8 @@ canvas {
 	}
 }
 
-// ---------- pages behind the arches
+// ---------- pages behind the arches: no background of their own, the camera is inside the dark arch.
+// The text fades in and out with the scroll (motion.js), so there is never an edge over the lines.
 
 .room {
 	display: flex;
@@ -310,16 +311,16 @@ canvas {
 	min-height: 100vh;
 	min-height: 100svh;
 	padding: s(9) clamp(#{s(5)}, 6vw, #{s(9)});
-	background: var(--jos-bg);
-
-	// behind the door the shop stays visible through the page
-	&--shop {
-		background: rgba(13, 12, 12, 0.72);
-	}
 
 	&__inner {
 		width: 100%;
 		max-width: 68ch;
+	}
+
+	// behind the door the shop stays visible: the text lies on a dark glass panel
+	&--shop &__inner {
+		padding: s(7);
+		background: rgba(13, 12, 12, 0.74);
 	}
 
 	&__title {

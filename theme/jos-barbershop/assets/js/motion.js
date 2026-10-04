@@ -29,6 +29,22 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 
+		// a page fades in while the camera goes through its arch and fades out while the camera comes back out
+		gsap.utils.toArray('.room').forEach((room) => {
+			const inner = room.querySelector('.room__inner');
+			if (!inner) return;
+			let fadeIn = null;
+			let fadeOut = null;
+			const apply = () => {
+				const shown = fadeIn ? fadeIn.progress : 0;
+				const gone = fadeOut ? fadeOut.progress : 0;
+				gsap.set(inner, { opacity: Math.min(shown, 1 - gone) });
+			};
+			fadeIn = ScrollTrigger.create({ trigger: room, start: 'top 90%', end: 'top 55%', onUpdate: apply });
+			fadeOut = ScrollTrigger.create({ trigger: room, start: 'bottom bottom', end: 'bottom 55%', onUpdate: apply });
+			apply();
+		});
+
 		// the content of a page comes in when it reaches the screen
 		gsap.utils.toArray('.room [data-reveal]').forEach((el) => {
 			gsap.from(el, {
