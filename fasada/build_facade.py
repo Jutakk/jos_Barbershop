@@ -18,9 +18,9 @@ Output:
 y is up, z runs along the wall. Looking at the facade from the street, its right side comes
 towards the camera (+z), its left side goes away (-z).
 
-The street goes on beyond the building: on the right every horizontal line runs on into the distance,
-on the left only some of them. These lines are split into pieces that get longer and longer, so they
-seem to rush away like the perspective.
+The street goes on beyond the building on the right: every horizontal line runs on into the distance.
+These lines are split into pieces that get longer and longer, so they seem to rush away like the
+perspective. On the left the building simply ends: the empty space there is kept for text.
 
 Drawing order when the page loads, like an architect draws:
   1. outline: the cornice lines and the ground line grow from the sign to both ends and on into the
@@ -86,7 +86,6 @@ ARC_STEPS = 32                  # segments of a half circle
 BEYOND = 4000.0                 # px, far enough to fade out in the fog
 BEYOND_FIRST = 60.0             # first piece of such a line; every next piece is longer
 BEYOND_GROWTH = 1.6
-BEYOND_LEFT = [279.0, 284.5, 337.5, 472.0, 567.0, Y_GROUND]   # the lines that run on at the left end
 
 # ---- drawing schedule, in parts of the whole drawing (0 to 1 before normalising)
 OUTLINE_GROW = 0.30             # the longest cornice line grows from the sign to its end in this time
@@ -142,14 +141,12 @@ def build():
             step *= BEYOND_GROWTH
         add('beyond', pts, end=u, v=v, after=after, arch=0 if direction < 0 else ARCH_COUNT - 1)
 
-    # 1. outline: cornice and ground grow from the sign to both ends and on, the left edge top to bottom
-    depth_at = dict(CORNICE)
+    # 1. outline: cornice and ground grow from the sign to both ends and on to the right, the left edge
+    # top to bottom
     for v, d in CORNICE + [(Y_GROUND, 0.0)]:
         line('grow', ORIGIN[0], v, X_LEFT, v, d)
         line('grow', ORIGIN[0], v, X_RIGHT, v, d)
         beyond(X_RIGHT, v, d, 1, 'grow')
-    for v in BEYOND_LEFT:
-        beyond(X_LEFT, v, depth_at.get(v, 0.0), -1, 'grow' if v in depth_at or v == Y_GROUND else 'joint')
     for (v1, d1), (v2, d2) in zip(CORNICE, CORNICE[1:]):
         line('edge', X_LEFT, v1, X_LEFT, v2, d1, d2, end=X_LEFT)
     line('edge', X_LEFT, CORNICE[-1][0], X_LEFT, Y_GROUND, end=X_LEFT)
