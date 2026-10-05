@@ -206,7 +206,9 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
   kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
-  `jos:open`, klik na redak u temelju kao `jos:link`.
+  `jos:open`, klik na redak u temelju kao `jos:link`. Oštrina najviše 1.5 piksela po CSS pikselu, sjaj (bloom) na
+  pola razlučivosti; kad grafika ne stigne sličicu u 24 ms (prosjek 90 sličica), scena se crta s četvrtinu manje
+  piksela, do 0.75, pa prati miš bez kašnjenja.
 - `assets/js/facade.js`: linije prizemlja fasade s vremenima iscrtavanja, lukom kojem pripadaju i položajem lukova,
   generira ih `fasada/build_facade.py`
 - `assets/js/motion.js`: GSAP drži sve vrijednosti: položaj na ulici (`jos:street`, scroll, povlačenje, strelice),
@@ -234,7 +236,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.4: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.5: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

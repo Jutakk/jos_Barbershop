@@ -109,6 +109,9 @@ const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with 
 const OPENING_OPACITY = 0.8;
 const HOVER_IN = 0.08;           // s: a window, door or link pointed at lights up at once
 const HOVER_OUT = 0.2;           // s: and goes out a little slower
+const PIXEL_RATIO_MAX = 1.5;      // sharpness of the scene on sharp screens (more costs speed, hardly seen)
+const PIXEL_RATIO_MIN = 0.75;     // lowest sharpness when the graphics are slow
+const FRAME_BUDGET = 24;          // ms per frame on average: slower and the scene gets fewer pixels
 
 // the footer in four columns cut into the foundation under the ground line: the first column starts at the left
 // corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
@@ -238,7 +241,8 @@ if (root) {
 	}
 
 	if (renderer) {
-		renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+		let pixelRatio = Math.min(window.devicePixelRatio, PIXEL_RATIO_MAX);
+		renderer.setPixelRatio(pixelRatio);
 		renderer.outputColorSpace = THREE.SRGBColorSpace;
 		renderer.toneMapping = THREE.NoToneMapping;
 		renderer.toneMappingExposure = 1.0;
@@ -1069,7 +1073,7 @@ if (root) {
 			renderer.setSize(w, h, false);
 			composer.setSize(w, h);
 			lineMaterial.resolution.set(w, h);   // line width in screen px
-			bloom.resolution.set(w * (isMobile ? 0.5 : 1), h * (isMobile ? 0.5 : 1));
+			bloom.resolution.set(w * 0.5, h * 0.5);   // the glow is soft anyway: half the pixels
 			camera.aspect = w / h;
 			camera.updateProjectionMatrix();
 			fitGallery(w, h);
@@ -1434,11 +1438,31 @@ if (root) {
 		let visible = false;
 		let ready = false;
 
+		// ---- slow graphics: when the frames come slower than FRAME_BUDGET ms on average (over 90 frames, once the
+		// facade stands), the scene is drawn with fewer pixels, a quarter step at a time down to PIXEL_RATIO_MIN,
+		// so it follows the mouse without delay
+		const frames = { sum: 0, count: 0 };
+		const adaptResolution = (dt) => {
+			if (drawing.value < 1 || dt <= 0) return;
+			frames.sum += dt;
+			frames.count += 1;
+			if (frames.count < 90) return;
+			const average = (frames.sum / frames.count) * 1000;
+			frames.sum = 0;
+			frames.count = 0;
+			if (average <= FRAME_BUDGET || pixelRatio <= PIXEL_RATIO_MIN) return;
+			pixelRatio = Math.max(PIXEL_RATIO_MIN, pixelRatio - 0.25);
+			renderer.setPixelRatio(pixelRatio);
+			composer.setPixelRatio(pixelRatio);
+			fit();
+		};
+
 		const loop = () => {
 			if (!running) return;
 			const now = performance.now();
 			const dt = lastTime === null ? 0 : Math.min((now - lastTime) / 1000, 0.1);
 			lastTime = now;
+			adaptResolution(dt);
 			state.angle += TURN_SPEED * dt;
 			ribbons.forEach((ribbon) => {
 				ribbon.texture.offset.x = (ribbon.texture.offset.x + (ribbonSpeed.value / ribbon.repeat) * dt) % 1;
