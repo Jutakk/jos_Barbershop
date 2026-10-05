@@ -299,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const slug = url.hash.slice(1);
 		const room = url.pathname === window.location.pathname ? bySlug(slug) : null;
 		if (room) open(room, slug === 'faq');
+		else if (url.origin !== window.location.origin) window.open(url.href, '_blank', 'noopener');   // another site: a new tab
 		else window.location.assign(url.href);
 	});
 

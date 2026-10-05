@@ -80,17 +80,20 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 **Footer u temelju**
 
-- Footer je upisan u temelj zgrade, ispod linije tla, u 4 kolone poravnate lijevo
-  (`jos_footer_columns()` u `functions.php`). Prva kolona počinje na lijevom kutu kuće, svaka je široka
-  koliko njen najduži red, redovi u koloni stoje jedan ispod drugog. Svi redovi svih kolona stoje u istim
-  linijama; malo logo zauzima dva reda:
-  1. malo logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von die aigentur
-     (EN: All rights reserved, Made by die aigentur)
+- Footer je upisan u temelj zgrade, ispod linije tla, u 4 jednake kolone preko cijele širine kuće, od
+  lijevog do desnog ugla (`jos_footer_columns()` u `functions.php`). Tekst je u svakoj koloni poravnat
+  lijevo, redovi u koloni stoje jedan ispod drugog. Svi redovi svih kolona stoje u istim linijama; malo logo
+  zauzima dva reda:
+  1. malo logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von + logo die aigentur
+     (EN: All rights reserved, Made by + logo)
   2. radno vrijeme: Di-Fr 10-19 Uhr, Sa 10-18 Uhr, So&Mo geschlossen (EN: Tue-Fri 10-19, Sat 10-18,
      Sun&Mon closed)
   3. izbornik: Leistungen, Über uns, Galerie, Kontakt, Impressum, Datenschutz, Cookies, Häufige Fragen
      (EN: Services, About us, Gallery, Contact, Imprint, Privacy, Cookies, FAQ)
   4. Gumpendorfer Straße 127, 1060 Wien (oba reda vode na Google Maps), telefon
+- Logo die aigentur (`assets/images/die-aigentur-mark.svg`, zlatni, iz iks.haus teme) stoji iza "Erstellt
+  von", slova su mu visoka kao velika slova reda i stoje na istoj liniji. Vodi na https://dieaigentur.at/ u
+  novoj kartici; pod mišem padne na 75 % kao na iks.haus webu.
 - Čita se kad se zgrada okrene prema gore ili gurne u dubinu; redovi ne blijede u daljinu. Linkovi pod mišem
   zasvijetle: stranice otvaraju svoj luk, Häufige Fragen otvara Kontakt pomaknut do pitanja (adresa `/#faq`).
 - Telefon se upisuje u Customizeru (sekcija "Jo's Barbershop", polje "Telefon"); dok je prazno, kolona 4 ima
@@ -100,8 +103,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   (`impressum-en`, `datenschutz-en`, `cookies-en`), pri prvom otvaranju stranice, bez prijave. Tekst se piše
   u WordPressu.
 - Obični HTML footer s istim kolonama ostaje za tipkovnicu, čitače ekrana i Google: na naslovnoj stoji ispod
-  ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer (4 kolone,
-  na tabletu 2, na mobitelu jedna ispod druge).
+  ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer (4 jednake
+  kolone preko cijele širine, na tabletu 2, na mobitelu jedna ispod druge).
 
 **Izbornik na vijencu**
 
@@ -202,7 +205,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.10.3: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.10.4: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

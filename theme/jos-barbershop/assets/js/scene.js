@@ -107,20 +107,27 @@ const HOVER_OPACITY = 0.3;       // ... and get this much more opaque
 const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with white
 const OPENING_OPACITY = 0.8;
 
-// the footer in four columns cut into the foundation under the ground line: the first column starts at the left
-// corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
-// its lines are flush left. All lines of all columns stand on one grid, FOOTER.line apart. The first column
+// the footer in four columns cut into the foundation under the ground line: the columns share the width of the
+// house equally, from its left corner (BUILDING_LEFT below) to its right corner (BUILDING_RIGHT), and the lines of
+// every column are flush left. All lines of all columns stand on one grid, FOOTER.line apart. The first column
 // starts with the small logo, two lines tall: from the top of the capitals of the first line to the foot of the
 // capitals of the second (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
-const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, column: 1.0, depth: 0, gap: 0, opacity: 1, fog: false };
+const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, depth: 0, gap: 0, opacity: 1, fog: false };
 const FOOTER_CAPS = { top: (FOOTER.height * 19) / TEXT_CANVAS_HEIGHT, bottom: (FOOTER.height * 50) / TEXT_CANVAS_HEIGHT };
 const FOOTER_LOGO = FOOTER.line + FOOTER_CAPS.bottom - FOOTER_CAPS.top;
+// "Erstellt von" and the mark of die aigentur (assets/images/die-aigentur-mark.svg, 547.99 x 100.55, its letters
+// stand on the line at 79.8): the letters of the mark are as tall as the capitals of the line and stand on the
+// same line; pointed at, the mark goes to 75 % like on the site of the agency
+const AGENCY_MARK = { width: 547.99, height: 100.55, line: 79.8, hover: 0.75 };
+const AGENCY_HEIGHT = ((FOOTER_CAPS.bottom - FOOTER_CAPS.top) * AGENCY_MARK.height) / AGENCY_MARK.line;
+const AGENCY_WIDTH = (AGENCY_HEIGHT * AGENCY_MARK.width) / AGENCY_MARK.height;
 // the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
 // edge of its crown, which is the highest line from the street (fasada/build_facade.py, CORNICE: 284.5 px,
 // 0.78 in front of the wall). The row starts flush with the left corner of the building (X_LEFT, 70 px) and
 // runs to the right; it is never faded by the fog. Every link is a button: light letters in a brown block.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
+const BUILDING_RIGHT = (1053 - 790) / 37.5;   // X_RIGHT, the right corner of the building
 const HERO_TEXT_GAP = 26;          // px (7 mm) between the ends of the hero lines and the left edge of the house
 const HERO_FIT_MIN = 0.6;          // a long word (Selbstbewusstsein) makes the title at most this much smaller
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.13 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
@@ -495,6 +502,9 @@ if (root) {
 				if (piece.kind === 'logo') {
 					return { ...piece, row, logo: true, length: row.logo, glow: { value: 0 } };
 				}
+				if (piece.kind === 'mark') {
+					return { ...piece, row, mark: true, length: AGENCY_WIDTH, glow: { value: 0 } };
+				}
 				const block = Boolean(row.blocks) && (piece.arch !== undefined || piece.url !== undefined);
 				const { texture, width } = textCanvas(piece.text, block);
 				const length = (row.height * width) / TEXT_CANVAS_HEIGHT;
@@ -510,11 +520,13 @@ if (root) {
 			words.forEach((piece) => {
 				let mesh;
 				if (piece.logo) mesh = new THREE.Mesh(new THREE.PlaneGeometry(row.logo, row.logo), footerLogoMaterial);
+				else if (piece.mark) mesh = new THREE.Mesh(new THREE.PlaneGeometry(AGENCY_WIDTH, AGENCY_HEIGHT), agencyMaterial);
 				else if (piece.block) mesh = new THREE.Mesh(unitPlane, dockMaterial(piece.texture));
 				else mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false));
 				if (piece.block) mesh.scale.set(piece.length, row.height, 1);
 				mesh.rotation.y = -Math.PI / 2;   // in the wall, reading along it to the right
-				mesh.position.set(wallX + row.depth - 0.012, row.top - row.height / 2, along + piece.length / 2);
+				const y = piece.mark ? row.top - FOOTER_CAPS.top - AGENCY_HEIGHT / 2 : row.top - row.height / 2;
+				mesh.position.set(wallX + row.depth - 0.012, y, along + piece.length / 2);
 				mesh.visible = false;
 				sign.add(mesh);
 				piece.mesh = mesh;
@@ -533,27 +545,54 @@ if (root) {
 			side: THREE.DoubleSide,
 			fog: false,
 		});
-		// the footer columns one after the other from the left corner of the house, in every language; every line
-		// is a row of one item on the common grid, the logo takes two lines
+		// the mark of die aigentur, in its own gold, drawn from the SVG once it is loaded
+		const agencyMaterial = new THREE.MeshBasicMaterial({
+			transparent: true,
+			opacity: 0,
+			depthWrite: false,
+			side: THREE.DoubleSide,
+			fog: false,
+			visible: false,
+		});
+		const loadAgencyMark = (url) => {
+			const image = new Image();
+			image.onload = () => {
+				const canvas = document.createElement('canvas');
+				canvas.width = 1096;
+				canvas.height = Math.round((canvas.width * AGENCY_MARK.height) / AGENCY_MARK.width);
+				canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+				const texture = new THREE.CanvasTexture(canvas);
+				texture.colorSpace = THREE.SRGBColorSpace;
+				texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+				agencyMaterial.map = texture;
+				agencyMaterial.visible = true;
+				agencyMaterial.needsUpdate = true;
+				redraw();
+			};
+			image.src = url;
+		};
+		// the footer columns share the width of the house, in every language; every line is a row on the common
+		// grid, the logo takes two lines; "Erstellt von" is followed by the mark of die aigentur, which is the link
 		const footerColumns = footer.length && !Array.isArray(footer[0]) ? [footer] : footer;
+		const columnWidth = (BUILDING_RIGHT - BUILDING_LEFT) / Math.max(footerColumns.length, 1);
 		const inscription = [];
-		let columnStart = BUILDING_LEFT;
-		footerColumns.forEach((items) => {
+		footerColumns.forEach((items, column) => {
+			const start = BUILDING_LEFT + column * columnWidth;
 			let grid = 0;
-			let columnEnd = columnStart;
 			items.forEach((item) => {
 				const top = FOOTER.first - grid * FOOTER.line;
-				const row = item.kind === 'logo'
-					? { ...FOOTER, height: FOOTER_LOGO, logo: FOOTER_LOGO, top: top - FOOTER_CAPS.top, start: columnStart }
-					: { ...FOOTER, top, start: columnStart };
-				const line = writeRow([{ ...item, text: item.text || '' }], row);
-				line.forEach((piece) => {
-					columnEnd = Math.max(columnEnd, piece.to);
-				});
+				let line;
+				if (item.kind === 'logo') {
+					line = writeRow([item], { ...FOOTER, height: FOOTER_LOGO, logo: FOOTER_LOGO, top: top - FOOTER_CAPS.top, start });
+				} else if (item.kind === 'agency') {
+					loadAgencyMark(item.mark);
+					line = writeRow([{ text: `${item.text} ` }, { kind: 'mark', text: item.label, url: item.url }], { ...FOOTER, top, start });
+				} else {
+					line = writeRow([{ ...item, text: item.text || '' }], { ...FOOTER, top, start });
+				}
 				inscription.push(...line);
 				grid += item.kind === 'logo' ? 2 : 1;
 			});
-			columnStart = columnEnd + FOOTER.column;
 		});
 		const words = [...inscription];
 		const isLink = (piece) => Boolean(piece.url) || piece.arch !== undefined;
@@ -892,7 +931,10 @@ if (root) {
 				setOpacity(ribbon.fill, OPENING_OPACITY * ribbon.glow.value * shown * away);
 			});
 			words.forEach((piece) => {
-				const opacity = (piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value) * shown * gone;
+				const lit = piece.mark
+					? 1 - (1 - AGENCY_MARK.hover) * piece.glow.value
+					: piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value;
+				const opacity = lit * shown * gone;
 				if (piece.block) {
 					piece.mesh.material.uniforms.uOpacity.value = opacity;
 					piece.mesh.visible = opacity > 0.002;

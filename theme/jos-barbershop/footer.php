@@ -20,6 +20,8 @@ $jos_columns = jos_footer_columns();
 		<?php foreach ( $jos_column as $jos_item ) : ?>
 			<?php if ( 'logo' === ( $jos_item['kind'] ?? '' ) ) : ?>
 				<img class="site-footer__logo" src="<?php echo esc_url( jos_image( 'logo-small.webp' ) ); ?>" alt="<?php echo esc_attr( $jos_item['text'] ); ?>" width="32" height="32" loading="lazy">
+			<?php elseif ( 'agency' === ( $jos_item['kind'] ?? '' ) ) : ?>
+				<span><?php echo esc_html( $jos_item['text'] ); ?> <a class="site-footer__agency" href="<?php echo esc_url( $jos_item['url'] ); ?>" target="_blank" rel="noopener"><img src="<?php echo esc_url( $jos_item['mark'] ); ?>" alt="<?php echo esc_attr( $jos_item['label'] ); ?>" width="66" height="12" loading="lazy"></a></span>
 			<?php elseif ( ! empty( $jos_item['url'] ) ) : ?>
 				<a href="<?php echo esc_url( $jos_item['url'], array( 'https', 'http', 'tel' ) ); ?>"<?php echo isset( $jos_item['slug'] ) ? ' data-open="' . esc_attr( $jos_item['slug'] ) . '"' : ''; ?>><?php echo esc_html( $jos_item['text'] ); ?></a>
 			<?php else : ?>

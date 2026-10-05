@@ -109,7 +109,7 @@ function jos_strings(): array {
 			'Kontakt'                                  => 'Contact',
 			'Inhalt folgt.'                            => 'Content follows.',
 			'Alle Rechte vorbehalten'                  => 'All rights reserved',
-			'Erstellt von die aigentur'                => 'Made by die aigentur',
+			'Erstellt von'                             => 'Made by',
 			'Di-Fr 10-19 Uhr'                          => 'Tue-Fri 10-19',
 			'Sa 10-18 Uhr'                             => 'Sat 10-18',
 			'So&Mo geschlossen'                        => 'Sun&Mon closed',

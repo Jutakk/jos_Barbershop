@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.10.3' );
+define( 'JOS_VERSION', '0.10.4' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -266,7 +266,8 @@ function jos_maps_link(): string {
 /**
  * The footer in four columns, flush left. footer.php shows them as the footer; on the front page scene.js
  * also cuts them into the foundation of the facade, under the ground line, one line under the other.
- *   1. the small logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von die aigentur
+ *   1. the small logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von and the mark of
+ *      die aigentur (a link to dieaigentur.at)
  *   2. the opening hours: Di-Fr 10-19 Uhr, Sa 10-18 Uhr, So&Mo geschlossen
  *   3. the menu: the pages, Impressum, Datenschutz, Cookies, FAQ
  *   4. Gumpendorfer Straße 127, 1060 Wien (both to Google Maps), phone (once it is in the Customizer)
@@ -334,7 +335,13 @@ function jos_footer_columns(): array {
 			),
 			array( 'text' => '© ' . wp_date( 'Y' ) . ' ' . $shop['name'] ),
 			array( 'text' => jos_t( 'Alle Rechte vorbehalten' ) ),
-			array( 'text' => jos_t( 'Erstellt von die aigentur' ) ),
+			array(
+				'kind'  => 'agency',
+				'text'  => jos_t( 'Erstellt von' ),
+				'label' => 'die aigentur',
+				'url'   => 'https://dieaigentur.at/',
+				'mark'  => jos_image( 'die-aigentur-mark.svg' ),
+			),
 		),
 		array(
 			array( 'text' => jos_t( 'Di-Fr 10-19 Uhr' ) ),
