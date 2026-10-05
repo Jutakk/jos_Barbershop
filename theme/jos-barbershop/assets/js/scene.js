@@ -107,17 +107,17 @@ const HOVER_OPACITY = 0.3;       // ... and get this much more opaque
 const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with white
 const OPENING_OPACITY = 0.8;
 
-// the footer in four columns cut into the foundation under the ground line: the columns share the width of the
-// house equally, from its left corner (BUILDING_LEFT below) to its right corner (BUILDING_RIGHT), and the lines of
-// every column are flush left. All lines of all columns stand on one grid, FOOTER.line apart. The first column
+// the footer in four columns cut into the foundation under the ground line: the first column starts at the left
+// corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
+// its lines are flush left. All lines of all columns stand on one grid, FOOTER.line apart. The first column
 // starts with the small logo, two lines tall: from the top of the capitals of the first line to the foot of the
 // capitals of the second (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
-const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, depth: 0, gap: 0, opacity: 1, fog: false };
+const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, column: 1.0, depth: 0, gap: 0, opacity: 1, fog: false };
 const FOOTER_CAPS = { top: (FOOTER.height * 19) / TEXT_CANVAS_HEIGHT, bottom: (FOOTER.height * 50) / TEXT_CANVAS_HEIGHT };
 const FOOTER_LOGO = FOOTER.line + FOOTER_CAPS.bottom - FOOTER_CAPS.top;
 // "Erstellt von" and the mark of die aigentur (assets/images/die-aigentur-mark.svg, 547.99 x 100.55, its letters
-// stand on the line at 79.8): the letters of the mark are as tall as the capitals of the line and stand on the
-// same line; pointed at, the mark goes to 75 % like on the site of the agency
+// stand on the line at 79.8): the letters of the mark are as tall as the capitals of the line, stand on the same
+// line and have the colour of the text; pointed at, the mark goes to 75 % like on the site of the agency
 const AGENCY_MARK = { width: 547.99, height: 100.55, line: 79.8, hover: 0.75 };
 const AGENCY_HEIGHT = ((FOOTER_CAPS.bottom - FOOTER_CAPS.top) * AGENCY_MARK.height) / AGENCY_MARK.line;
 const AGENCY_WIDTH = (AGENCY_HEIGHT * AGENCY_MARK.width) / AGENCY_MARK.height;
@@ -127,7 +127,6 @@ const AGENCY_WIDTH = (AGENCY_HEIGHT * AGENCY_MARK.width) / AGENCY_MARK.height;
 // runs to the right; it is never faded by the fog. Every link is a button: light letters in a brown block.
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
-const BUILDING_RIGHT = (1053 - 790) / 37.5;   // X_RIGHT, the right corner of the building
 const HERO_TEXT_GAP = 26;          // px (7 mm) between the ends of the hero lines and the left edge of the house
 const HERO_FIT_MIN = 0.6;          // a long word (Selbstbewusstsein) makes the title at most this much smaller
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.13 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
@@ -545,8 +544,10 @@ if (root) {
 			side: THREE.DoubleSide,
 			fog: false,
 		});
-		// the mark of die aigentur, in its own gold, drawn from the SVG once it is loaded
+		// the mark of die aigentur in the colour of the text: its shape from the SVG, once it is loaded, filled white
+		// and coloured like the letters (textMaterial)
 		const agencyMaterial = new THREE.MeshBasicMaterial({
+			color: FACADE_COLOR,
 			transparent: true,
 			opacity: 0,
 			depthWrite: false,
@@ -560,7 +561,11 @@ if (root) {
 				const canvas = document.createElement('canvas');
 				canvas.width = 1096;
 				canvas.height = Math.round((canvas.width * AGENCY_MARK.height) / AGENCY_MARK.width);
-				canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+				const context = canvas.getContext('2d');
+				context.drawImage(image, 0, 0, canvas.width, canvas.height);
+				context.globalCompositeOperation = 'source-in';
+				context.fillStyle = '#ffffff';
+				context.fillRect(0, 0, canvas.width, canvas.height);
 				const texture = new THREE.CanvasTexture(canvas);
 				texture.colorSpace = THREE.SRGBColorSpace;
 				texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -571,14 +576,15 @@ if (root) {
 			};
 			image.src = url;
 		};
-		// the footer columns share the width of the house, in every language; every line is a row on the common
-		// grid, the logo takes two lines; "Erstellt von" is followed by the mark of die aigentur, which is the link
+		// the footer columns one after the other from the left corner of the house, in every language; every line
+		// is a row on the common grid, the logo takes two lines; "Erstellt von" is followed by the mark of
+		// die aigentur, which is the link
 		const footerColumns = footer.length && !Array.isArray(footer[0]) ? [footer] : footer;
-		const columnWidth = (BUILDING_RIGHT - BUILDING_LEFT) / Math.max(footerColumns.length, 1);
 		const inscription = [];
-		footerColumns.forEach((items, column) => {
-			const start = BUILDING_LEFT + column * columnWidth;
+		let start = BUILDING_LEFT;
+		footerColumns.forEach((items) => {
 			let grid = 0;
+			let end = start;
 			items.forEach((item) => {
 				const top = FOOTER.first - grid * FOOTER.line;
 				let line;
@@ -590,9 +596,13 @@ if (root) {
 				} else {
 					line = writeRow([{ ...item, text: item.text || '' }], { ...FOOTER, top, start });
 				}
+				line.forEach((piece) => {
+					end = Math.max(end, piece.to);
+				});
 				inscription.push(...line);
 				grid += item.kind === 'logo' ? 2 : 1;
 			});
+			start = end + FOOTER.column;
 		});
 		const words = [...inscription];
 		const isLink = (piece) => Boolean(piece.url) || piece.arch !== undefined;

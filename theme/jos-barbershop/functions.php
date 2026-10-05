@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.10.4' );
+define( 'JOS_VERSION', '0.10.5' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -351,6 +351,20 @@ function jos_footer_columns(): array {
 		$menu,
 		$contact,
 	);
+}
+
+/**
+ * The mark of die aigentur (assets/images/die-aigentur-mark.svg) for the footer, inline and in the colour of the
+ * text: its own gold fill is taken out, the shapes take currentColor.
+ */
+function jos_agency_mark(): string {
+	$file = get_template_directory() . '/assets/images/die-aigentur-mark.svg';
+	if ( ! file_exists( $file ) ) {
+		return 'die aigentur';
+	}
+	$svg = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- a file of the theme.
+	$svg = (string) preg_replace( array( '/<\?xml.*?\?>/s', '/<!--.*?-->/s', '/<style>.*?<\/style>/s', '/\sid="[^"]*"/' ), '', $svg );
+	return trim( str_replace( '<svg ', '<svg aria-hidden="true" focusable="false" ', $svg ) );
 }
 
 /**
