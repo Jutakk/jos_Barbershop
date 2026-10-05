@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { RoomEnvironment } from './vendor/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from './vendor/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from './vendor/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from './vendor/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from './vendor/addons/postprocessing/OutputPass.js';
 import { LineSegments2 } from './vendor/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from './vendor/addons/lines/LineSegmentsGeometry.js';
@@ -12,10 +11,11 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
 /*
  * Front page: the round shop sign of Jo's Barbershop on the facade of the shop.
  * An extruded black disc turns slowly on a vertical axis inside a C shaped bracket that is fixed to a wall
- * plate. Only the logo on both faces of the disc glows. The wall is the ground floor of the real facade
+ * plate. Only the logo on both faces of the disc glows (its glow is baked into logo-glow.webp, tools/logo_glow.py,
+ * so no bloom pass runs over the whole screen). The wall is the ground floor of the real facade
  * (images/fasada.jpg), drawn only as thin brown lines on the paper of the site (facade.js, made by
  * fasada/build_facade.py); the lines draw themselves when the page loads.
- * On the cornice at the top of the ground floor the menu is written in one row: the pages and DE, EN, AR.
+ * On the cornice at the top of the ground floor the menu is written in one row: the pages and DE, EN.
  * Dragging turns the building (left and right, up and down: turned up, the foundation with the footer lines
  * comes to the front), scrolling down pushes the building away along the Z axis into the depth, up brings it back;
  * sideways scrolling moves along the street.
@@ -88,7 +88,7 @@ const PANORAMA_RADIUS = 8;
 // the door the camera looks straight into the shop, at this part of the photo width (0 = left edge):
 // the chairs and mirrors, with the entrance behind.
 const PANORAMA_VIEW = 0.82;
-const PANORAMA_BRIGHTNESS = 0.8;   // below 1: the shop never blooms and stays calm behind the text
+const PANORAMA_BRIGHTNESS = 0.8;   // below 1: the shop stays calm behind the text
 const PANORAMA_FOV = 70;         // wider view inside the shop: the photo is stretched less
 const FOV = 30;                  // view on the street
 
@@ -293,7 +293,7 @@ if (root) {
 		const rim = new THREE.MeshStandardMaterial({ color: 0x1b1410, metalness: 0.9, roughness: 0.26, envMap: reflections, envMapIntensity: 0.6, fog: false });
 		const face = new THREE.MeshLambertMaterial({ color: 0x19130f, fog: false });   // matt face, no highlight
 		const logoMaterial = new THREE.MeshBasicMaterial({
-			color: new THREE.Color(1.6, 1.6, 1.57),   // above 1: the logo is the only thing that blooms
+			color: new THREE.Color(1.6, 1.6, 1.57),   // above 1: the strokes stay white to their soft edges
 			transparent: true,
 			depthWrite: false,
 			toneMapped: false,
@@ -302,8 +302,7 @@ if (root) {
 			polygonOffsetFactor: -2,
 		});
 
-		// facade lines: bold brown lines (LineMaterial, LINE_WIDTH px on the screen), dim enough never to
-		// bloom. Each segment is drawn from its start to its end while 'drawing' runs from its start time
+		// facade lines: bold brown lines (LineMaterial, LINE_WIDTH px on the screen). Each segment is drawn from its start to its end while 'drawing' runs from its start time
 		// to its end time (FACADE_DRAW). The lines of the arch under the pointer get darker (FACADE_GROUP).
 		const drawing = { value: reduced ? 1 : 0 };
 		const highlightArch = { value: -1 };
@@ -356,6 +355,34 @@ if (root) {
 		back.rotation.y = Math.PI;
 		back.position.set(-offsetX, offsetY, -(DISC_DEPTH / 2 + 0.002));
 		disc.add(front, back);
+		// the glow of the logo (logo-glow.webp, the same canvas), added on top of it; hidden until it is loaded
+		const glowMaterial = new THREE.MeshBasicMaterial({
+			blending: THREE.AdditiveBlending,
+			transparent: true,
+			depthWrite: false,
+			toneMapped: false,
+			fog: false,
+			polygonOffset: true,
+			polygonOffsetFactor: -3,
+		});
+		const glows = [front, back].map((plane) => {
+			const glow = new THREE.Mesh(planeGeometry, glowMaterial);
+			glow.position.copy(plane.position);
+			glow.rotation.copy(plane.rotation);
+			glow.renderOrder = 1;
+			glow.visible = false;
+			disc.add(glow);
+			return glow;
+		});
+		if (root.dataset.logoGlow) {
+			new THREE.TextureLoader().load(root.dataset.logoGlow, (texture) => {
+				texture.colorSpace = THREE.SRGBColorSpace;
+				glowMaterial.map = texture;
+				glowMaterial.needsUpdate = true;
+				glows.forEach((glow) => { glow.visible = true; });
+				redraw();
+			});
+		}
 		sign.add(disc);
 
 		// ---- axis pins above and below the disc
@@ -1033,13 +1060,9 @@ if (root) {
 		sign.rotation.y = VIEW_YAW;
 		scene.add(sign);
 
-		// ---- post processing: bloom only lifts the logo. Multisampled target, so the thin lines stay smooth.
+		// ---- drawn into a multisampled target, so the thin lines stay smooth, then to the screen in sRGB
 		const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
 		composer.addPass(new RenderPass(scene, camera));
-		const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.05, 1.0);
-		// tight glow along the letters: the wide blur levels hardly contribute, so the disc stays black
-		bloom.compositeMaterial.uniforms.bloomFactors.value = [1.0, 0.55, 0.18, 0.05, 0.0];
-		composer.addPass(bloom);
 		composer.addPass(new OutputPass());
 
 		// ---- state: the angle and the running texts come from time, everything else from motion.js
@@ -1073,7 +1096,6 @@ if (root) {
 			renderer.setSize(w, h, false);
 			composer.setSize(w, h);
 			lineMaterial.resolution.set(w, h);   // line width in screen px
-			bloom.resolution.set(w * 0.5, h * 0.5);   // the glow is soft anyway: half the pixels
 			camera.aspect = w / h;
 			camera.updateProjectionMatrix();
 			fitGallery(w, h);

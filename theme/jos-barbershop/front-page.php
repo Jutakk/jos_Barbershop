@@ -27,6 +27,7 @@ foreach ( jos_rooms() as $jos_room ) {
 <main id="inhalt" class="site-main journey">
 	<div class="scene" data-scene
 		data-logo="<?php echo esc_url( jos_image( 'logo-texture.webp' ) ); ?>"
+		data-logo-glow="<?php echo esc_url( jos_image( 'logo-glow.webp' ) ); ?>"
 		data-paper="<?php echo esc_url( jos_image( 'paper.webp' ) ); ?>"
 		data-arches="<?php echo esc_attr( wp_json_encode( $jos_arches, JSON_UNESCAPED_UNICODE ) ); ?>"
 		data-footer="<?php echo esc_attr( wp_json_encode( jos_footer_columns(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
