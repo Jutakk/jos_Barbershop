@@ -213,6 +213,12 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   generira ih `fasada/build_facade.py`
 - `assets/js/motion.js`: GSAP drži sve vrijednosti: položaj na ulici (`jos:street`, scroll, povlačenje, strelice),
   put kamere kroz luk (`jos:view`), pogled u lokalu (`jos:look`), otvaranje i zatvaranje stranica, adrese i tipka Natrag
+- `assets/js/vines.js`: zeleni puzavci vise s gornjeg ruba ekrana na naslovnici, kao zelenilo na zidovima lokala.
+  Tri oblika listova (gumb s Uiverse.io, MuhammadHasann), svaki puzavac je lanac od njih, svaka karika se njiše
+  oko točke na kojoj visi (GSAP), vjetar prolazi slijeva nadesno. Dva gusta zida: lijevo iznad hero teksta, desno
+  do ruba ekrana, najduži uz rub; sredina (izbornik na vijencu, znak) ostaje slobodna. Na mobitelu samo desni zid,
+  desno od izbornika u zaglavlju. Klikovi prolaze kroz lišće, kroz luk u stranicu puzavci nestanu, bez pokreta
+  (reduced motion) vise mirno. Uvijek isti raspored (stalni seed).
 - Stranice iza lukova su obične WordPress stranice s adresama `leistungen`, `ueber-uns`, `galerie` i `kontakt`.
   Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu; sadržaj se piše u WordPressu.
   Izbornik u zaglavlju ih otvara kao i klik na luk.
@@ -236,7 +242,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.5: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.6: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.5' );
+define( 'JOS_VERSION', '0.11.6' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -55,6 +55,9 @@ function jos_enqueue_motion(): void {
 	$path = get_template_directory() . '/assets/js';
 	wp_enqueue_script( 'gsap', $dir . '/vendor/gsap.min.js', array(), '3.15.0', true );
 	wp_enqueue_script( 'jos-motion', $dir . '/motion.js', array( 'gsap' ), filemtime( $path . '/motion.js' ), true );
+	if ( is_front_page() ) {
+		wp_enqueue_script( 'jos-vines', $dir . '/vines.js', array( 'gsap' ), filemtime( $path . '/vines.js' ), true );
+	}
 }
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_motion' );
 
