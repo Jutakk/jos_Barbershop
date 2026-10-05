@@ -31,6 +31,7 @@ foreach ( jos_rooms() as $jos_room ) {
 		data-arches="<?php echo esc_attr( wp_json_encode( $jos_arches, JSON_UNESCAPED_UNICODE ) ); ?>"
 		data-footer="<?php echo esc_attr( wp_json_encode( jos_footer_columns(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
 		data-languages="<?php echo esc_attr( wp_json_encode( jos_language_links(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
+		data-gallery-owner="<?php echo esc_url( jos_image( 'jo.webp' ) ); ?>"
 		<?php echo $jos_panorama ? 'data-panorama="' . esc_url( $jos_panorama ) . '"' : ''; ?>
 		<?php echo $jos_panorama_mobile ? 'data-panorama-mobile="' . esc_url( $jos_panorama_mobile ) . '"' : ''; ?>>
 		<img class="scene__poster" src="<?php echo esc_url( jos_image( 'scene-poster.webp' ) ); ?>" alt="" width="1600" height="1000" fetchpriority="high">

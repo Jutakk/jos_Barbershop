@@ -110,6 +110,19 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer (4 kolone,
   na tabletu 2, na mobitelu jedna ispod druge).
 
+**Galerija**
+
+- Iza luka Galerie je krug od 12 fotografija u formatu 2:3, po uzoru na Codrops demo "Cinematic Scroll
+  Animations", prvu varijantu (`reference/GALERY.zip`). Kod je napisan iznova za three.js i GSAP u `scene.js`.
+- Ulazak: krug se vrti, gledan izvana i odozgo, a kamera se spusti u njegovu sredinu. Zaustavi se tako da
+  je Jo sprijeda (`assets/images/jo.webp`, iz `images/jo.webp`). Dok se vrti, oko njega lete tanke smeđe linije.
+- Unutra: povlačenje mišem ili prstom, kotačić ili strelice lijevo i desno okreću krug. Klik na fotografiju je
+  okrene naprijed i poveća da popuni visinu ekrana. Drugi klik, povlačenje ili Esc vraćaju cijeli krug, a tek
+  sljedeći Esc izlazi sa stranice.
+- Fotografije oko Joa su slike sa stranice Galerie u WordPressu (blok Galerie ili slike). Preporuka je 11
+  fotografija frizura, uspravnih 2:3 (na primjer 1200 x 1800 px). Ako ih je manje, ponavljaju se.
+- Dok na stranici nema fotografija, ili uz isključene animacije, stranica Galerie ostaje obična stranica.
+
 **Izbornik na vijencu**
 
 - Na gornjoj crti vijenca (prednji rub, najgornja crta gledano s ulice) u jednom zbijenom redu stoji izbornik:
@@ -214,7 +227,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.10.8: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.10.8' );
+define( 'JOS_VERSION', '0.11.0' );
 
 require_once get_template_directory() . '/inc/languages.php';
 

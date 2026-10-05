@@ -133,6 +133,32 @@ const FOOTER_BLOCK_PAD = (FOOTER.height * 22) / TEXT_CANVAS_HEIGHT;
 // stand on the line at 79.8): the letters of the mark are as tall as the capitals of the line, stand on the same
 // line and have the colour of the text; it is a link like the others
 const AGENCY_MARK = { width: 547.99, height: 100.55, line: 79.8 };
+// the gallery behind its arch, after Codrops "Cinematic Scroll Animations", demo 1, the cylinder carousel
+// (reference/GALERY.zip, written with OGL and React), rebuilt here with three.js and GSAP: twelve photos in 2:3
+// stand side by side in a ring (radius and height of the demo; 2 pi 2.5 / 12 wide and 2 high is 2:3), Jo in front,
+// the photos of the page around him (fewer photos are repeated). Coming in, the ring spins seen from outside
+// and above while the camera goes down into its middle, thin brown arcs fly round it while it turns. Inside, it
+// is turned by dragging, the wheel or the arrow keys, and a click enlarges a photo (the view narrows to zoomFov
+// from insideFov)
+const GALLERY = {
+	cells: 12,
+	cellRatio: 1.5,
+	radius: 2.5,
+	height: 2,
+	fov: 45,              // coming in, seen from outside
+	insideFov: 64,        // inside: the upper and lower edge of the ring and the paper around it in view
+	insideFovPhone: 84,
+	zoomFov: 41,          // one photo enlarged: it fills the height of the screen
+	introTime: 3.2,
+	introTurns: 1.5,
+	introHeight: 3.2,
+	introDistance: 9,
+	dragTurn: 2.6,
+	lines: 12,
+	lineRadius: 3.3,
+	lineSegments: 20,
+	lineSpan: 0.3,
+};
 const AGENCY_HEIGHT = ((FOOTER_CAPS.bottom - FOOTER_CAPS.top) * AGENCY_MARK.height) / AGENCY_MARK.line;
 const AGENCY_WIDTH = (AGENCY_HEIGHT * AGENCY_MARK.width) / AGENCY_MARK.height;
 // the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
@@ -722,6 +748,275 @@ if (root) {
 			});
 		};
 
+		// ---- the gallery behind its arch (GALLERY above). In the middle the photo of Jo (data-gallery-owner),
+		// around him the photos of the page Galerie in WordPress; without those photos, or without motion, the
+		// page simply shows its content
+		const galleryRoom = document.querySelector('[data-room="galerie"]');
+		const largestSource = (img) => {
+			let best = img.getAttribute('src') || '';
+			let bestWidth = Number(img.getAttribute('width')) || 0;
+			(img.getAttribute('srcset') || '').split(',').forEach((candidate) => {
+				const [url, size] = candidate.trim().split(/\s+/);
+				const width = parseInt(size, 10) || 0;
+				if (url && width > bestWidth) {
+					best = url;
+					bestWidth = width;
+				}
+			});
+			return best;
+		};
+		const galleryOwner = root.dataset.galleryOwner || '';
+		const galleryPhotos = galleryRoom ? [...galleryRoom.querySelectorAll('.room__content img')].map(largestSource).filter(Boolean) : [];
+		const gallery = galleryRoom && galleryOwner && galleryPhotos.length && !reduced && window.gsap ? {
+			arch: Number(galleryRoom.dataset.arch),
+			scene: new THREE.Scene(),
+			camera: new THREE.PerspectiveCamera(GALLERY.fov, 1, 0.05, 60),
+			ring: new THREE.Group(),
+			panels: [],
+			lines: [],
+			intro: { p: 0 },          // 0 outside and above the ring, 1 in its middle, Jo in front
+			yaw: { value: 0 },        // the turn of the ring once inside
+			zoom: { value: 0 },       // 0 the whole ring, 1 one photo enlarged
+			zoomed: -1,
+			lastTurn: 0,
+			requested: false,
+			started: false,
+		} : null;
+		const cellAngle = (Math.PI * 2) / GALLERY.cells;
+		const galleryFov = () => (root.clientWidth < 768 ? GALLERY.insideFovPhone : GALLERY.insideFov);
+		const fitGallery = (w, h) => {
+			if (!gallery) return;
+			gallery.camera.aspect = w / h;
+			gallery.camera.updateProjectionMatrix();
+		};
+		// a photo drawn into its cell like object-fit: cover
+		const coverCanvas = (img, width) => {
+			const height = Math.round(width * GALLERY.cellRatio);
+			const canvas = document.createElement('canvas');
+			canvas.width = width;
+			canvas.height = height;
+			const ratio = img.naturalWidth / img.naturalHeight;
+			let sw = img.naturalWidth;
+			let sh = img.naturalHeight;
+			if (ratio > width / height) sw = sh * (width / height);
+			else sh = sw / (width / height);
+			canvas.getContext('2d', { alpha: false }).drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 0, 0, width, height);
+			const texture = new THREE.CanvasTexture(canvas);
+			texture.colorSpace = THREE.SRGBColorSpace;
+			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+			return texture;
+		};
+		// one photo: a curved part of the ring, read from inside; panel i stands at cellAngle * i from the front
+		const panelGeometry = (i) => {
+			const steps = 8;
+			const positions = [];
+			const uvs = [];
+			const index = [];
+			const from = -Math.PI / 2 + (i - 0.5) * cellAngle;
+			for (let row = 0; row <= 1; row++) {
+				for (let k = 0; k <= steps; k++) {
+					const angle = from + (k / steps) * cellAngle;
+					positions.push(Math.cos(angle) * GALLERY.radius, (row - 0.5) * GALLERY.height, Math.sin(angle) * GALLERY.radius);
+					uvs.push(k / steps, row);
+				}
+			}
+			for (let k = 0; k < steps; k++) index.push(k, k + steps + 1, k + 1, k + 1, k + steps + 1, k + steps + 2);
+			const geometry = new THREE.BufferGeometry();
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+			geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+			geometry.setIndex(index);
+			return geometry;
+		};
+		const buildGallery = (owner, photos) => {
+			const width = isMobile ? 512 : 1024;
+			const textures = photos.map((img) => coverCanvas(img, width));
+			for (let i = 0; i < GALLERY.cells; i++) {
+				const map = i === 0 ? coverCanvas(owner, width) : textures[(i - 1) % textures.length];
+				const panel = new THREE.Mesh(panelGeometry(i), new THREE.MeshBasicMaterial({ map, side: THREE.DoubleSide, transparent: true, opacity: 0, fog: false }));
+				panel.userData.index = i;
+				gallery.ring.add(panel);
+				gallery.panels.push(panel);
+			}
+			gallery.scene.add(gallery.ring);
+
+			// the arcs that fly round the ring while it turns: half of them above it, half below
+			for (let i = 0; i < GALLERY.lines; i++) {
+				const above = i < GALLERY.lines / 2;
+				const y = above ? GALLERY.height * (0.7 + Math.random() * 0.3) : -GALLERY.height * (1 - Math.random() * 0.3);
+				const geometry = new THREE.BufferGeometry();
+				geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array((GALLERY.lineSegments + 1) * 3), 3));
+				const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: FACADE_COLOR, transparent: true, opacity: 0, fog: false }));
+				line.userData = { angle: (i / GALLERY.lines) * Math.PI * 2, y, speed: 0.5 + Math.random() };
+				line.visible = false;
+				gallery.scene.add(line);
+				gallery.lines.push(line);
+			}
+			fitGallery(root.clientWidth, root.clientHeight);
+			if (state.view.arch === gallery.arch && state.view.t >= 0.9) startGallery();
+			redraw();
+		};
+		const loadImage = (url) => new Promise((resolve) => {
+			const img = new Image();
+			img.decoding = 'async';
+			img.onload = () => resolve(img);
+			img.onerror = () => resolve(null);
+			img.src = url;
+		});
+		const loadGallery = () => {
+			if (!gallery || gallery.requested) return;
+			gallery.requested = true;
+			Promise.all([loadImage(galleryOwner), ...galleryPhotos.map(loadImage)]).then(([owner, ...list]) => {
+				const photos = list.filter(Boolean);
+				if (owner && photos.length) buildGallery(owner, photos);
+			});
+		};
+		// coming in: the ring spins seen from outside and above while the camera goes down into its middle;
+		// it comes to rest with Jo in front
+		const startGallery = () => {
+			if (!gallery || !gallery.panels.length || gallery.started) return;
+			gallery.started = true;
+			gallery.intro.p = 0;
+			gallery.yaw.value = 0;
+			gallery.zoom.value = 0;
+			gallery.zoomed = -1;
+			window.gsap.to(gallery.intro, { p: 1, duration: GALLERY.introTime, ease: 'none', onUpdate: redraw });
+		};
+		const stopGallery = () => {
+			if (!gallery) return;
+			gallery.started = false;
+			window.gsap.killTweensOf([gallery.intro, gallery.yaw, gallery.zoom]);
+			gallery.intro.p = 0;
+		};
+		const galleryInside = () => gallery && gallery.started && gallery.intro.p >= 1;
+		// the turn of the ring: the spin of the way in, then the turn the visitor gives it
+		const ringTurn = () => (1 - smooth(gallery.intro.p)) ** 2 * GALLERY.introTurns * Math.PI * 2 + gallery.yaw.value;
+
+		// the gallery is drawn once the camera is inside its arch, faded in over the last part of the way
+		const galleryShown = () => (gallery && gallery.started && state.view.arch === gallery.arch ? phase(state.view.t, 0.9, 1) : 0);
+		const galleryFrom = new THREE.Vector3();
+		const galleryAt = new THREE.Vector3();
+		const drawGallery = (shown) => {
+			const { camera: eye, ring, intro } = gallery;
+			const p = smooth(intro.p);
+			galleryFrom.set(0, GALLERY.introHeight, GALLERY.introDistance).multiplyScalar(1 - p);
+			galleryAt.set(0, 0, -GALLERY.radius * p);
+			eye.position.copy(galleryFrom);
+			eye.lookAt(galleryAt);
+			const fov = THREE.MathUtils.lerp(GALLERY.fov, galleryFov(), p);
+			eye.fov = THREE.MathUtils.lerp(fov, GALLERY.zoomFov, smooth(gallery.zoom.value));
+			eye.updateProjectionMatrix();
+			ring.rotation.y = ringTurn();
+			gallery.panels.forEach((panel) => {
+				panel.material.opacity = shown;
+			});
+			const velocity = ring.rotation.y - gallery.lastTurn;
+			gallery.lastTurn = ring.rotation.y;
+			const turning = Math.abs(velocity) > 0.0005;
+			gallery.lines.forEach((line) => {
+				const target = turning ? Math.min(Math.abs(velocity) * 30, 0.9) : 0;
+				line.material.opacity += (target * shown - line.material.opacity) * 0.15;
+				line.visible = line.material.opacity > 0.002;
+				if (!turning) return;
+				line.userData.angle -= velocity * line.userData.speed * 1.5;
+				const points = line.geometry.attributes.position.array;
+				for (let j = 0; j <= GALLERY.lineSegments; j++) {
+					const angle = line.userData.angle + GALLERY.lineSpan * (j / GALLERY.lineSegments);
+					points[j * 3] = Math.cos(angle) * GALLERY.lineRadius;
+					points[j * 3 + 1] = line.userData.y;
+					points[j * 3 + 2] = Math.sin(angle) * GALLERY.lineRadius;
+				}
+				line.geometry.attributes.position.needsUpdate = true;
+			});
+			renderer.autoClear = false;
+			renderer.clearDepth();
+			renderer.render(gallery.scene, eye);
+			renderer.autoClear = true;
+		};
+
+		// ---- inside the ring: drag (or the wheel, or the arrow keys) turns it, a click on a photo turns it to
+		// the front and enlarges it, a second click (or a drag, or Esc) shows the whole ring again
+		const nearestTurn = (index) => {
+			const target = index * cellAngle;
+			const now = gallery.yaw.value;
+			return target + Math.round((now - target) / (Math.PI * 2)) * Math.PI * 2;
+		};
+		const turnGallery = (value, duration) => {
+			window.gsap.to(gallery.yaw, { value, duration, ease: 'power3.out', overwrite: true, onUpdate: redraw });
+		};
+		const zoomGallery = (index) => {
+			gallery.zoomed = index;
+			if (index >= 0) turnGallery(nearestTurn(index), 0.8);
+			window.gsap.to(gallery.zoom, { value: index >= 0 ? 1 : 0, duration: 0.8, ease: 'power2.inOut', overwrite: true, onUpdate: redraw });
+		};
+		const galleryPointer = new THREE.Vector2();
+		const galleryRay = new THREE.Raycaster();
+		const panelAt = (clientX, clientY) => {
+			const rect = canvas.getBoundingClientRect();
+			galleryPointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+			galleryRay.setFromCamera(galleryPointer, gallery.camera);
+			const hit = galleryRay.intersectObjects(gallery.panels, false)[0];
+			return hit ? hit.object.userData.index : -1;
+		};
+		if (gallery) {
+			galleryRoom.classList.add('room--gallery');
+			let grab = null;
+			root.addEventListener('pointerdown', (event) => {
+				if (!galleryInside() || event.button !== 0) return;
+				grab = { id: event.pointerId, x: event.clientX, y: event.clientY, lastX: event.clientX, time: performance.now(), speed: 0, moved: false };
+				root.setPointerCapture(event.pointerId);
+			});
+			root.addEventListener('pointermove', (event) => {
+				if (!grab || event.pointerId !== grab.id) return;
+				if (!grab.moved && Math.hypot(event.clientX - grab.x, event.clientY - grab.y) < 6) return;
+				if (!grab.moved) {
+					grab.moved = true;
+					root.classList.add('is-turning');
+					if (gallery.zoomed >= 0) zoomGallery(-1);
+				}
+				const now = performance.now();
+				const turn = (-(event.clientX - grab.lastX) / root.clientWidth) * GALLERY.dragTurn;   // the photos follow the pointer
+				grab.speed = grab.speed * 0.6 + (turn / Math.max((now - grab.time) / 1000, 0.001)) * 0.4;
+				grab.lastX = event.clientX;
+				grab.time = now;
+				window.gsap.killTweensOf(gallery.yaw);
+				gallery.yaw.value += turn;
+				redraw();
+			});
+			const release = (event) => {
+				if (!grab || event.pointerId !== grab.id) return;
+				if (grab.moved) {
+					// a quick throw turns on a little
+					if (performance.now() - grab.time < 120) turnGallery(gallery.yaw.value + grab.speed * 0.35, 1.4);
+				} else {
+					const index = panelAt(event.clientX, event.clientY);
+					zoomGallery(gallery.zoomed === index || index < 0 ? -1 : index);
+				}
+				root.classList.remove('is-turning');
+				grab = null;
+			};
+			root.addEventListener('pointerup', release);
+			root.addEventListener('pointercancel', release);
+			root.addEventListener('wheel', (event) => {
+				if (!galleryInside()) return;
+				event.preventDefault();
+				if (gallery.zoomed >= 0) zoomGallery(-1);
+				turnGallery(gallery.yaw.value + (event.deltaY + event.deltaX) * 0.0025, 0.6);
+			}, { passive: false });
+			window.addEventListener('keydown', (event) => {
+				if (!galleryInside()) return;
+				if (event.key === 'Escape' && gallery.zoomed >= 0) {
+					event.stopImmediatePropagation();   // Esc first shows the whole ring again, only then leaves the page
+					zoomGallery(-1);
+				} else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+					event.preventDefault();
+					const step = event.key === 'ArrowRight' ? 1 : -1;
+					const current = Math.round(gallery.yaw.value / cellAngle);
+					if (gallery.zoomed >= 0) zoomGallery(-1);
+					turnGallery((current + step) * cellAngle, 0.6);
+				}
+			}, true);
+		}
+
 		sign.rotation.y = VIEW_YAW;
 		scene.add(sign);
 
@@ -768,6 +1063,7 @@ if (root) {
 			bloom.resolution.set(w * (isMobile ? 0.5 : 1), h * (isMobile ? 0.5 : 1));
 			camera.aspect = w / h;
 			camera.updateProjectionMatrix();
+			fitGallery(w, h);
 			const tan = Math.tan(THREE.MathUtils.degToRad(FOV) / 2);
 
 			// hero: the sign (disc, bracket and plate, about 3.4 wide and 2.5 high) and the facade behind it,
@@ -1109,10 +1405,12 @@ if (root) {
 			placeDock();
 			placeTexts();
 			composer.render();
+			const shown = galleryShown();
+			if (shown > 0) drawGallery(shown);
 		};
 
-		// inside a window arch only darkness is to be seen: one frame is enough
-		const darkInside = () => state.view.t >= 0.999 && !(panoramaReady && state.view.arch === doorIndex);
+		// inside a window arch only darkness is to be seen: one frame is enough (not in the gallery)
+		const darkInside = () => state.view.t >= 0.999 && !(panoramaReady && state.view.arch === doorIndex) && !galleryShown();
 		let drawnDark = false;
 
 		fit();
@@ -1171,6 +1469,11 @@ if (root) {
 		window.addEventListener('jos:view', (event) => {
 			state.view = { arch: event.detail.arch, t: event.detail.t };
 			if (state.view.arch === doorIndex && state.view.t > 0) loadPanorama();
+			if (gallery && state.view.arch === gallery.arch && state.view.t > 0) {
+				loadGallery();
+				if (state.view.t >= 0.9) startGallery();
+			}
+			if (gallery && (state.view.arch !== gallery.arch || state.view.t < 0.9)) stopGallery();
 			redraw();
 		});
 		window.addEventListener('jos:look', (event) => {

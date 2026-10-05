@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.10.8
+Version: 0.11.0
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -635,6 +635,36 @@ canvas {
 		.room__title {
 			padding-inline-end: 64px;
 		}
+	}
+}
+
+// the gallery behind its arch (scene.js): the ring of photos is turned and its photos enlarged on the scene
+// itself, so the open page lets the pointer through; its title stays at the top, its photos stay in it for
+// screen readers only
+.has-arches .journey > .room--gallery {
+	pointer-events: none;
+
+	.room__inner {
+		margin-block: 0;
+	}
+
+	.room__content :is(figure, img) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+}
+
+// inside the ring of photos: the pointer grabs it, a finger turns it instead of moving the page
+.has-arches .scene:has(~ .room--gallery.is-open) {
+	cursor: grab;
+	touch-action: none;
+
+	&.is-turning {
+		cursor: grabbing;
 	}
 }
 
