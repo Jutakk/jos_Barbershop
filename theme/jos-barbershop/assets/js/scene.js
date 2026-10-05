@@ -109,12 +109,23 @@ const OPENING_OPACITY = 0.8;
 
 // the footer in four columns cut into the foundation under the ground line: the first column starts at the left
 // corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
-// its lines are flush left. All lines of all columns stand on one grid, FOOTER.line apart, so the first lines
-// of all columns stand on one line: the first line of the first column is the small logo, centred on the
-// capitals of the other first lines (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
-const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, column: 1.0, depth: 0, gap: 0, opacity: 1, fog: false };
-const FOOTER_CAPS = { top: (FOOTER.height * 19) / TEXT_CANVAS_HEIGHT, bottom: (FOOTER.height * 50) / TEXT_CANVAS_HEIGHT };
-const FOOTER_LOGO = FOOTER.line * 0.8;
+// its lines are flush left. The small logo stands above the first column; under it the lines of all columns
+// stand on one grid, FOOTER.line apart, so the first lines of all columns (© 2026 Jo's Barbershop, Di-Fr,
+// Leistungen, Gumpendorfer Straße) stand on one line. From the logo to the first line is as far as from line to
+// line (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
+const FOOTER_TEXT = { height: 0.42, line: 0.62 };
+const FOOTER_CAPS = { top: (FOOTER_TEXT.height * 19) / TEXT_CANVAS_HEIGHT, bottom: (FOOTER_TEXT.height * 50) / TEXT_CANVAS_HEIGHT };
+const FOOTER_LOGO = 0.9;
+const FOOTER_LOGO_TOP = FACADE_ARCH.ground - 0.3;
+const FOOTER = {
+	...FOOTER_TEXT,
+	first: FOOTER_LOGO_TOP - FOOTER_LOGO - (FOOTER_TEXT.line - (FOOTER_CAPS.bottom - FOOTER_CAPS.top)) + FOOTER_CAPS.top,
+	column: 1.0,
+	depth: 0,
+	gap: 0,
+	opacity: 1,
+	fog: false,
+};
 // a link of the footer pointed at: a brown block behind it, the letters in the light paper colour, like the
 // buttons on the cornice; the block is as tall as the line and FOOTER_BLOCK_PAD wider on each side
 const FOOTER_BLOCK_PAD = (FOOTER.height * 22) / TEXT_CANVAS_HEIGHT;
@@ -620,8 +631,7 @@ if (root) {
 				const top = FOOTER.first - grid * FOOTER.line;
 				let line;
 				if (item.kind === 'logo') {
-					const middle = top - (FOOTER_CAPS.top + FOOTER_CAPS.bottom) / 2;
-					line = writeRow([item], { ...FOOTER, height: FOOTER_LOGO, logo: FOOTER_LOGO, top: middle + FOOTER_LOGO / 2, start });
+					line = writeRow([item], { ...FOOTER, height: FOOTER_LOGO, logo: FOOTER_LOGO, top: FOOTER_LOGO_TOP, start });
 				} else if (item.kind === 'agency') {
 					loadAgencyMark(item.mark);
 					line = writeRow([{ text: `${item.text} ` }, { kind: 'mark', text: item.label, url: item.url }], { ...FOOTER, top, start });
@@ -632,7 +642,7 @@ if (root) {
 					end = Math.max(end, piece.to);
 				});
 				inscription.push(...line);
-				grid += 1;
+				if (item.kind !== 'logo') grid += 1;   // the logo stands above the grid
 			});
 			start = end + FOOTER.column;
 		});

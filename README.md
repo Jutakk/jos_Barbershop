@@ -83,8 +83,9 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Footer je upisan u temelj zgrade, ispod linije tla, u 4 kolone poravnate lijevo
   (`jos_footer_columns()` u `functions.php`). Prva kolona počinje na lijevom kutu kuće, svaka je široka
   koliko njen najduži red, redovi u koloni stoje jedan ispod drugog. Svi redovi svih kolona stoje u istim
-  linijama, pa su i prvi redovi u istoj liniji; malo logo je prvi red prve kolone, centriran na slova prvih
-  redova ostalih kolona:
+  linijama. Malo logo stoji iznad prve kolone, pa su prvi redovi svih kolona u istoj liniji (© 2026 Jo's
+  Barbershop, Di-Fr 10-19 Uhr, Leistungen, Gumpendorfer Straße 127); od loga do prvog reda je isti razmak kao
+  između redova:
   1. malo logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von + logo die aigentur
      (EN: All rights reserved, Made by + logo)
   2. radno vrijeme: Di-Fr 10-19 Uhr, Sa 10-18 Uhr, So&Mo geschlossen (EN: Tue-Fri 10-19, Sat 10-18,
@@ -210,7 +211,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.10.6: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.10.7: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 
