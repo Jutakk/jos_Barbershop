@@ -107,6 +107,8 @@ const HOVER_COLOR = 0.45;        // a pointed arch: its lines go towards dark in
 const HOVER_OPACITY = 0.3;       // ... and get this much more opaque
 const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with white
 const OPENING_OPACITY = 0.8;
+const HOVER_IN = 0.08;           // s: a window, door or link pointed at lights up at once
+const HOVER_OUT = 0.2;           // s: and goes out a little slower
 
 // the footer in four columns cut into the foundation under the ground line: the first column starts at the left
 // corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
@@ -1545,9 +1547,13 @@ if (root) {
 				highlightArch.value = ribbon.arch;
 				if (ribbon.arch === doorIndex) loadPanorama();
 			}
-			tweenTo(highlightAmount, ribbon ? 1 : 0, ribbon ? 0.35 : 0.5);
-			ribbons.forEach((item) => tweenTo(item.glow, item === ribbon ? 1 : 0, 0.35));
-			words.forEach((item) => tweenTo(item.glow, item === piece || item.current ? 1 : 0, 0.3));
+			// pointed at: there at once (HOVER_IN), left: it fades out a little slower (HOVER_OUT)
+			tweenTo(highlightAmount, ribbon ? 1 : 0, ribbon ? HOVER_IN : HOVER_OUT);
+			ribbons.forEach((item) => tweenTo(item.glow, item === ribbon ? 1 : 0, item === ribbon ? HOVER_IN : HOVER_OUT));
+			words.forEach((item) => {
+				const on = item === piece || item.current;
+				tweenTo(item.glow, on ? 1 : 0, on ? HOVER_IN : HOVER_OUT);
+			});
 		};
 
 		const html = document.documentElement;
