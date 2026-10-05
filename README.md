@@ -82,17 +82,22 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 - Footer je upisan u temelj zgrade, ispod linije tla, u 4 kolone poravnate lijevo
   (`jos_footer_columns()` u `functions.php`). Prva kolona počinje na lijevom kutu kuće, svaka je široka
-  koliko njen najduži red, redovi u koloni stoje jedan ispod drugog:
-  1. malo logo, © 2026 Jo's Barbershop. Alle Rechte vorbehalten., Made by die aigentur
+  koliko njen najduži red, redovi u koloni stoje jedan ispod drugog. Svi redovi svih kolona stoje u istim
+  linijama; malo logo zauzima dva reda:
+  1. malo logo, © 2026 Jo's Barbershop. Alle Rechte vorbehalten., Erstellt von die aigentur
+     (EN: All rights reserved., Made by die aigentur)
   2. radno vrijeme: Di bis Fr 10:00 bis 19:00, Sa 10:00 bis 18:00, So und Mo geschlossen
-  3. izbornik: Leistungen, Über uns, Galerie, Kontakt, Impressum, Datenschutz, Cookies, FAQ
+  3. izbornik: Leistungen, Über uns, Galerie, Kontakt, Impressum, Datenschutz, Cookies, Häufige Fragen
+     (EN: Services, About us, Gallery, Contact, Imprint, Privacy, Cookies, FAQ)
   4. adresa (vodi na Google Maps), telefon
 - Čita se kad se zgrada okrene prema gore ili gurne u dubinu; redovi ne blijede u daljinu. Linkovi pod mišem
-  zasvijetle: stranice otvaraju svoj luk, FAQ otvara Kontakt pomaknut do pitanja (adresa `/#faq`).
+  zasvijetle: stranice otvaraju svoj luk, Häufige Fragen otvara Kontakt pomaknut do pitanja (adresa `/#faq`).
 - Telefon se upisuje u Customizeru (sekcija "Jo's Barbershop", polje "Telefon"); dok je prazno, kolona 4 ima
   samo adresu. Telefon ide i u HairSalon schemu.
-- Impressum, Datenschutz i Cookies tema sama napravi kao stranice s "Inhalt folgt." (kad prijavljeni
-  administrator otvori stranicu); tekst se piše u WordPressu.
+- Impressum, Datenschutz i Cookies tema sama napravi kao stranice s "Inhalt folgt." (`impressum`,
+  `datenschutz`, `cookies`) i na engleskom kao Imprint, Privacy i Cookies s "Content follows."
+  (`impressum-en`, `datenschutz-en`, `cookies-en`), pri prvom otvaranju stranice, bez prijave. Tekst se piše
+  u WordPressu.
 - Obični HTML footer s istim kolonama ostaje za tipkovnicu, čitače ekrana i Google: na naslovnoj stoji ispod
   ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer (4 kolone,
   na tabletu 2, na mobitelu jedna ispod druge).
@@ -100,7 +105,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 **Izbornik na vijencu**
 
 - Na gornjoj crti vijenca (prednji rub, najgornja crta gledano s ulice) u jednom zbijenom redu stoji izbornik:
-  LEISTUNGEN, ÜBER UNS, GALERIE, KONTAKT, DE, EN, AR, bez točaka između, malo iznad crte. Red počinje točno na lijevom kutu
+  LEISTUNGEN, ÜBER UNS, GALERIE, KONTAKT, DE, EN, bez točaka između, malo iznad crte. Red počinje točno na lijevom kutu
   zgrade i ide udesno; okreće se sa zgradom i ne blijedi u daljinu.
 - Gumbi su puni smeđi sa svijetlim slovima u fontu stranice. Pod mišem se rastežu kao Animated Top Dock iz
   ThreeUI (MIT licenca, `assets/js/vendor/threeui.LICENSE.txt`): gumb pod mišem i njegovi susjedi se šire
@@ -108,19 +113,21 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   bez miša i uz isključene animacije gumbi miruju.
 - Klik na gumb: klik na stranicu vodi kameru kroz njezin luk, klik na jezik otvara tu verziju.
 - Na računalu je obični izbornik u zaglavlju skriven (ostaje za tipkovnicu i čitače ekrana i pojavi se kad
-  dobije fokus). Na mobitelu ostaje u zaglavlju, a DE EN AR stoje gore desno.
+  dobije fokus). Na mobitelu ostaje u zaglavlju, a DE EN stoje gore desno.
 
-**Jezici: DE, EN, AR**
+**Jezici: DE, EN**
 
-- Njemački je osnovni, engleski je `/?lang=en`, arapski `/?lang=ar` (zdesna nalijevo, `dir="rtl"`).
-  Naslovnica u `<head>` navodi sve tri verzije (hreflang) za Google.
-- Stranice iza lukova postoje po jeziku: `leistungen`, `leistungen-en`, `leistungen-ar` i tako za
-  `ueber-uns`, `galerie`, `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns,
-  Kontakt s FAQ), poslije se uređuju u WordPressu. Prijevodi su u `jos_room_words()` u `functions.php`.
-- Kratki tekstovi teme (gumb, izbornik, uputa u lokalu, footer) su u `inc/languages.php`.
-- Slogan s izloga "your confidense starts here" ostaje engleski u njemačkoj i engleskoj verziji, u arapskoj je
-  "ثقتك تبدأ هنا". Arapski tekst heroja stoji lijevo kao u njemačkoj, na praznom papiru pored zgrade.
-- Arapski prijevod je moj: prije objave neka ga pogleda Jwan.
+- Njemački je osnovni, engleski je `/?lang=en`. Naslovnica u `<head>` navodi obje verzije (hreflang) za Google.
+- Sve je prevedeno: njemačka verzija je cijela na njemačkom, engleska cijela na engleskom.
+- Stranice iza lukova postoje po jeziku: `leistungen`, `leistungen-en` i tako za `ueber-uns`, `galerie`,
+  `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns, Kontakt s FAQ), poslije se
+  uređuju u WordPressu. Prijevodi su u `jos_room_words()` u `functions.php`.
+- Cjenik na njemačkom ima njemačke nazive usluga (Studentenschnitt, Heißtuchrasur, Kombi Haarschnitt &
+  Augenbrauen, ...). Na postojećoj stranici Leistungen tema jednom zamijeni stare engleske nazive njemačkima.
+- Kratki tekstovi teme (izbornik, uputa u lokalu, footer, slogan) su u `inc/languages.php`.
+- Slogan: "dein Selbstbewusstsein beginnt hier" na njemačkom, "your confidense starts here" na engleskom.
+  Kad najduža riječ ne stane lijevo od kuće, naslov se smanji (najviše na 60 %) dok ne stane.
+- Arapskog više nema: arapske stranice (`leistungen-ar`, ...) tema jednom premjesti u smeće.
 
 **Lukovi su izbornik**
 
@@ -156,7 +163,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve lokalno, bez CDN-a.
 
 - `front-page.php`: hero s 3D znakom; malo JO'S (kao red ispod slogana) odmah iznad slogana, pa riječ ispod riječi:
-  your / confidense / starts / here (natpis s izloga trgovine), ispod BARBERSHOP in 1060 VIENNA. Tekst je
+  dein / Selbstbewusstsein / beginnt / hier (EN: your / confidense / starts / here), ispod BARBERSHOP in
+  1060 WIEN (EN: VIENNA). Tekst je
   zalijepljen za kuću u prostoru: u prvom kadru stoji uz donji lijevi kut kuće, poravnat desno, svaki red završava
   7 mm (26 px) lijevo od ruba kuće, zadnji red na liniji tla. Kad se zgrada okreće, gura u dubinu ili ide uz ulicu,
   tekst je prati i crta se u perspektivi (`scene.js`, CSS matrix3d, tekst ostaje pravi tekst). Gdje u prvom
@@ -193,7 +201,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.10.1: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.10.2: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
-iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački, engleski i arapski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
+iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.10.1' );
+define( 'JOS_VERSION', '0.10.2' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -207,7 +207,7 @@ function jos_booking_button(): void {
 		printf(
 			'<a class="button button--hint" href="%1$s" data-reveal>%2$s</a>',
 			esc_url( admin_url( 'customize.php?autofocus[control]=jos_booking_link' ) ),
-			esc_html__( 'Termin-Link im Customizer eintragen', 'jos-barbershop' )
+			esc_html( jos_t( 'Termin-Link im Customizer eintragen' ) )
 		);
 	}
 }
@@ -278,7 +278,7 @@ function jos_footer_columns(): array {
 	$shop  = jos_shop();
 	$base  = is_front_page() ? '' : jos_url( home_url( '/' ) );
 	$legal = static function ( string $slug ): string {
-		$page = get_page_by_path( $slug );
+		$page = get_page_by_path( jos_legal_page( $slug ) );
 		return $page ? jos_url( (string) get_permalink( $page ) ) : '';
 	};
 	$menu = array();
@@ -290,10 +290,9 @@ function jos_footer_columns(): array {
 			'slug' => $room['slug'],
 		);
 	}
-	$privacy = get_privacy_policy_url();
 	foreach ( array(
 		'Impressum'   => $legal( 'impressum' ),
-		'Datenschutz' => $privacy ? jos_url( $privacy ) : $legal( 'datenschutz' ),
+		'Datenschutz' => $legal( 'datenschutz' ),
 		'Cookies'     => $legal( 'cookies' ),
 	) as $label => $url ) {
 		if ( $url ) {
@@ -304,7 +303,7 @@ function jos_footer_columns(): array {
 		}
 	}
 	$menu[] = array(
-		'text' => jos_t( 'FAQ' ),
+		'text' => jos_t( 'Häufige Fragen' ),
 		'url'  => $base . '#faq',
 		'slug' => 'faq',
 	);
@@ -330,7 +329,7 @@ function jos_footer_columns(): array {
 				'text' => $shop['name'],
 			),
 			array( 'text' => '© ' . wp_date( 'Y' ) . ' ' . $shop['name'] . '. ' . jos_t( 'Alle Rechte vorbehalten.' ) ),
-			array( 'text' => 'Made by die aigentur' ),
+			array( 'text' => jos_t( 'Erstellt von die aigentur' ) ),
 		),
 		array(
 			array( 'text' => jos_t( 'Di bis Fr 10:00 bis 19:00' ) ),
@@ -343,34 +342,110 @@ function jos_footer_columns(): array {
 }
 
 /**
- * Impressum, Datenschutz and Cookies as pages with "Inhalt folgt.", made once by a logged-in administrator,
- * so the links of the footer lead somewhere; their text is written in WordPress.
+ * Address of a legal page in a language: impressum, impressum-en, ...
+ *
+ * @param string      $slug Address of the German page: impressum, datenschutz or cookies.
+ * @param string|null $lang Language, default the language of this request.
+ */
+function jos_legal_page( string $slug, ?string $lang = null ): string {
+	$lang = $lang ?? jos_lang();
+	return 'de' === $lang ? $slug : $slug . '-' . $lang;
+}
+
+/**
+ * Impressum, Datenschutz and Cookies as pages with "Inhalt folgt." in German and "Content follows." in English,
+ * made once on the first visit of the site (by anyone, no login needed), so the footer always has these links;
+ * their text is written in WordPress.
  */
 function jos_create_legal_pages(): void {
-	if ( JOS_VERSION === get_option( 'jos_legal_created' ) || ! current_user_can( 'publish_pages' ) ) {
+	if ( JOS_VERSION === get_option( 'jos_legal_created' ) ) {
 		return;
 	}
-	foreach ( array(
-		'impressum'   => 'Impressum',
-		'datenschutz' => 'Datenschutz',
-		'cookies'     => 'Cookies',
-	) as $slug => $title ) {
-		if ( get_page_by_path( $slug ) ) {
-			continue;
+	$strings = jos_strings();
+	foreach ( array_keys( jos_languages() ) as $lang ) {
+		$say = static fn( string $de ): string => 'de' === $lang ? $de : ( $strings[ $lang ][ $de ] ?? $de );
+		foreach ( array(
+			'impressum'   => 'Impressum',
+			'datenschutz' => 'Datenschutz',
+			'cookies'     => 'Cookies',
+		) as $slug => $title ) {
+			if ( get_page_by_path( jos_legal_page( $slug, $lang ) ) ) {
+				continue;
+			}
+			wp_insert_post(
+				array(
+					'post_type'    => 'page',
+					'post_status'  => 'publish',
+					'post_title'   => $say( $title ),
+					'post_name'    => jos_legal_page( $slug, $lang ),
+					'post_content' => "<!-- wp:paragraph -->\n<p>" . $say( 'Inhalt folgt.' ) . "</p>\n<!-- /wp:paragraph -->",
+				)
+			);
 		}
-		wp_insert_post(
-			array(
-				'post_type'    => 'page',
-				'post_status'  => 'publish',
-				'post_title'   => $title,
-				'post_name'    => $slug,
-				'post_content' => "<!-- wp:paragraph -->\n<p>Inhalt folgt.</p>\n<!-- /wp:paragraph -->",
-			)
-		);
 	}
 	update_option( 'jos_legal_created', JOS_VERSION, false );
 }
 add_action( 'init', 'jos_create_legal_pages', 20 );
+
+/**
+ * The site has no Arabic any more: the Arabic pages of the arches (leistungen-ar, ...) go to the trash once,
+ * where they can still be restored.
+ */
+function jos_remove_arabic_pages(): void {
+	if ( get_option( 'jos_arabic_removed' ) ) {
+		return;
+	}
+	foreach ( array( 'leistungen-ar', 'ueber-uns-ar', 'galerie-ar', 'kontakt-ar' ) as $slug ) {
+		$page = get_page_by_path( $slug );
+		if ( $page && 'trash' !== $page->post_status ) {
+			wp_trash_post( $page->ID );
+		}
+	}
+	update_option( 'jos_arabic_removed', JOS_VERSION, false );
+}
+add_action( 'init', 'jos_remove_arabic_pages', 20 );
+
+/**
+ * Names of the services on the German page in German. The page Leistungen was first written with the English
+ * names of the booking page; they are replaced once, only where the page still has them.
+ */
+function jos_german_service_names(): void {
+	if ( get_option( 'jos_services_german' ) ) {
+		return;
+	}
+	$page = get_page_by_path( 'leistungen' );
+	if ( $page ) {
+		$names   = jos_service_names_de();
+		$content = str_replace( array_keys( $names ), array_values( $names ), $page->post_content );
+		$content = str_replace( array_map( 'esc_html', array_keys( $names ) ), array_map( 'esc_html', array_values( $names ) ), $content );
+		if ( $content !== $page->post_content ) {
+			wp_update_post(
+				array(
+					'ID'           => $page->ID,
+					'post_content' => $content,
+				)
+			);
+		}
+	}
+	update_option( 'jos_services_german', JOS_VERSION, false );
+}
+add_action( 'init', 'jos_german_service_names', 40 );
+
+/**
+ * The English names of the booking page and their German names, the longest first.
+ *
+ * @return array<string, string>
+ */
+function jos_service_names_de(): array {
+	return array(
+		'Combo Cut & Vikings Hot Towel' => 'Kombi Haarschnitt & Wikinger Heißtuch',
+		'Combo Cut & Hot Towel'         => 'Kombi Haarschnitt & Heißtuch',
+		'Combo Cut & Eyebrows'          => 'Kombi Haarschnitt & Augenbrauen',
+		'Combo Cut & Trim'              => 'Kombi Haarschnitt & Trimmen',
+		'Hot Towel Rasur'               => 'Heißtuchrasur',
+		'Student’s Cut'                 => 'Studentenschnitt',
+	);
+}
 
 /**
  * HairSalon schema on the front page, for search engines and AI search.
@@ -418,7 +493,7 @@ add_action( 'wp_head', 'jos_shop_schema' );
  * Pages behind the arches of the facade, from right to left. arch is the index of the arch in
  * FACADE_ARCHES (assets/js/facade.js, from the left: window, window, door, window); the second arch from
  * the right is the door into the shop. slug is the anchor on the front page (#kontakt) in every language,
- * page the address of the WordPress page in that language (kontakt, kontakt-en, kontakt-ar).
+ * page the address of the WordPress page in that language (kontakt, kontakt-en).
  *
  * @param string|null $lang Language, default the language of this request.
  * @return array<int, array{slug: string, page: string, title: string, nav: string, door: bool, arch: int}>
@@ -513,7 +588,7 @@ add_action( 'init', 'jos_fill_rooms', 30 );
 
 /**
  * First content of the pages behind the arches, in every language, by the address of the page
- * (leistungen, leistungen-en, leistungen-ar, ...). jos_fill_rooms() writes it once into a page that
+ * (leistungen, leistungen-en, ...). jos_fill_rooms() writes it once into a page that
  * still only says "Inhalt folgt."; after that the pages are edited in WordPress.
  *
  * @return array<string, string>
@@ -570,7 +645,7 @@ function jos_room_texts_in( string $lang ): array {
 }
 
 /**
- * The words of the pages in German, English and Arabic (prices and opening hours as on the booking page).
+ * The words of the pages in German and English (prices and opening hours as on the booking page).
  *
  * @return array<string, array<string, mixed>>
  */
@@ -579,19 +654,19 @@ function jos_room_words(): array {
 		'de' => array(
 			'prices'        => array(
 				'Herrenhaarschnitte'          => array(
-					array( 'Student’s Cut', '30 Min.', '25 €' ),
+					array( 'Studentenschnitt', '30 Min.', '25 €' ),
 					array( 'Haarschnitt mit Shampoo', '30 Min.', '32 €' ),
 					array( 'Scherenschnitt', '45 Min.', '37 €' ),
-					array( 'Combo Cut & Eyebrows', '45 Min.', '38 €' ),
-					array( 'Combo Cut & Trim', '1 Std.', '45 €' ),
+					array( 'Kombi Haarschnitt & Augenbrauen', '45 Min.', '38 €' ),
+					array( 'Kombi Haarschnitt & Trimmen', '1 Std.', '45 €' ),
 					array( 'Kompletter Service', '1 Std. 15 Min.', '62 €' ),
 				),
 				'Bartpflege'                  => array(
 					array( 'Bartschnitt', '30 Min.', '19 €' ),
-					array( 'Hot Towel Rasur', '45 Min.', '25 €' ),
+					array( 'Heißtuchrasur', '45 Min.', '25 €' ),
 					array( 'Haarschnitt und Bart trimmen', '1 Std. 15 Min.', '45 €' ),
-					array( 'Combo Cut & Hot Towel', '1 Std. 15 Min.', '52 €' ),
-					array( 'Combo Cut & Vikings Hot Towel', '1 Std. 15 Min.', '52 €' ),
+					array( 'Kombi Haarschnitt & Heißtuch', '1 Std. 15 Min.', '52 €' ),
+					array( 'Kombi Haarschnitt & Wikinger Heißtuch', '1 Std. 15 Min.', '52 €' ),
 				),
 				'Kinderhaarschnitte'          => array(
 					array( 'Kinderhaarschnitt', '30 Min.', '16 €' ),
@@ -694,66 +769,6 @@ function jos_room_words(): array {
 				'Which products do you use?'                => 'We work with products by La Biosthétique.',
 				'Are there drinks and Wi-Fi?'               => 'Yes, both are free.',
 				'Can I bring my pet?'                       => 'Yes, pets are welcome.',
-			),
-		),
-		'ar' => array(
-			'prices'        => array(
-				'قصات الشعر للرجال'       => array(
-					array( 'قصة الطلاب', '30 دقيقة', '25 €' ),
-					array( 'قصة شعر مع شامبو', '30 دقيقة', '32 €' ),
-					array( 'قصة بالمقص', '45 دقيقة', '37 €' ),
-					array( 'قصة شعر مع تشكيل الحواجب', '45 دقيقة', '38 €' ),
-					array( 'قصة شعر مع تهذيب اللحية', 'ساعة', '45 €' ),
-					array( 'الخدمة الكاملة', 'ساعة و15 دقيقة', '62 €' ),
-				),
-				'العناية باللحية'         => array(
-					array( 'قص اللحية', '30 دقيقة', '19 €' ),
-					array( 'حلاقة بالمنشفة الساخنة', '45 دقيقة', '25 €' ),
-					array( 'قصة شعر وتهذيب اللحية', 'ساعة و15 دقيقة', '45 €' ),
-					array( 'قصة شعر مع المنشفة الساخنة', 'ساعة و15 دقيقة', '52 €' ),
-					array( 'قصة شعر مع منشفة الفايكنغ الساخنة', 'ساعة و15 دقيقة', '52 €' ),
-				),
-				'قصات الشعر للأطفال'      => array(
-					array( 'قصة شعر للأطفال', '30 دقيقة', '16 €' ),
-				),
-				'تشكيل الحواجب وتصميمها'  => array(
-					array( 'تحديد الحواجب', '15 دقيقة', '9 €' ),
-				),
-			),
-			'intro'         => 'يقع Jo’s Barbershop في حي ماريا هيلف في فيينا، في الدائرة السادسة. كل شيء هنا يدور حول قصات الشعر الدقيقة واللحى المرتبة ووقت مخصص لك.',
-			'team_title'    => 'الفريق',
-			'team'          => 'يواصل صاحب الصالون جوان التعلم باستمرار ويعرف أحدث الصيحات والتقنيات، لتحصل على مظهر يناسبك. نتحدث في الصالون الألمانية والإنجليزية والعربية والكردية.',
-			'expect_title'  => 'ما الذي ينتظرك',
-			'expect'        => array(
-				array( 'الأجواء:', 'عصرية ومريحة، لتشعر بالراحة' ),
-				array( 'التخصص:', 'قصات الشعر للرجال والعناية باللحية' ),
-				array( 'المنتجات:', 'La Biosthétique' ),
-				array( 'إضافات:', 'مشروبات مجانية، واي فاي مجاني، الحيوانات الأليفة مرحب بها' ),
-			),
-			'address_title' => 'العنوان وطريقة الوصول',
-			'bus'           => 'تقع محطة الحافلات Sonnenuhrgasse على بعد خطوات قليلة من الصالون.',
-			'hours_title'   => 'أوقات العمل',
-			'hours'         => array(
-				array( 'الاثنين', 'مغلق' ),
-				array( 'الثلاثاء', '10:00 حتى 19:00' ),
-				array( 'الأربعاء', '10:00 حتى 19:00' ),
-				array( 'الخميس', '10:00 حتى 19:00' ),
-				array( 'الجمعة', '10:00 حتى 19:00' ),
-				array( 'السبت', '10:00 حتى 18:00' ),
-				array( 'الأحد', 'مغلق' ),
-			),
-			'payment_title' => 'الدفع',
-			'payment'       => 'يمكنك الدفع نقدًا أو ببطاقة الائتمان.',
-			'faq_title'     => 'أسئلة شائعة',
-			'faq'           => array(
-				'أين أجدكم؟'                          => 'في Gumpendorfer Straße 127 في 1060 فيينا، في الدائرة السادسة.',
-				'متى تفتحون؟'                         => 'من الثلاثاء إلى الجمعة من 10:00 حتى 19:00، والسبت من 10:00 حتى 18:00. نغلق يومي الاثنين والأحد.',
-				'هل يمكنني الدفع بالبطاقة؟'           => 'نعم، يمكنك الدفع نقدًا أو ببطاقة الائتمان.',
-				'ما اللغات التي تتحدثونها؟'           => 'الألمانية والإنجليزية والعربية والكردية.',
-				'كيف أصل إليكم بالمواصلات العامة؟'   => 'بالحافلة حتى محطة Sonnenuhrgasse، ومن هناك بضع خطوات فقط.',
-				'ما المنتجات التي تستخدمونها؟'        => 'نعمل بمنتجات La Biosthétique.',
-				'هل تتوفر مشروبات وواي فاي؟'          => 'نعم، كلاهما مجاني لدينا.',
-				'هل يمكنني إحضار حيواني الأليف؟'     => 'نعم، الحيوانات الأليفة مرحب بها لدينا.',
 			),
 		),
 	);
@@ -865,9 +880,9 @@ function jos_room( array $room ): void {
 			<?php if ( current_user_can( 'edit_pages' ) ) : ?>
 				<p class="room__edit">
 					<?php if ( $page ) : ?>
-						<a href="<?php echo esc_url( (string) get_edit_post_link( $page ) ); ?>"><?php esc_html_e( 'Seite bearbeiten', 'jos-barbershop' ); ?></a>
+						<a href="<?php echo esc_url( (string) get_edit_post_link( $page ) ); ?>"><?php echo esc_html( jos_t( 'Seite bearbeiten' ) ); ?></a>
 					<?php else : ?>
-						<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=page' ) ); ?>"><?php echo esc_html( sprintf( /* translators: %s: slug of the missing page */ __( 'Seite mit der Adresse "%s" anlegen', 'jos-barbershop' ), $room['page'] ) ); ?></a>
+						<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=page' ) ); ?>"><?php echo esc_html( sprintf( jos_t( 'Seite mit der Adresse "%s" anlegen' ), $room['page'] ) ); ?></a>
 					<?php endif; ?>
 				</p>
 			<?php endif; ?>

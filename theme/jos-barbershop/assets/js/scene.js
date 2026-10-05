@@ -109,8 +109,12 @@ const OPENING_OPACITY = 0.8;
 
 // the footer in four columns cut into the foundation under the ground line: the first column starts at the left
 // corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
-// its lines are flush left, FOOTER.line apart; the first column starts with the small logo
-const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, column: 1.2, depth: 0, gap: 0, opacity: 1, logo: 0.9, fog: false };
+// its lines are flush left. All lines of all columns stand on one grid, FOOTER.line apart. The first column
+// starts with the small logo, two lines tall: from the top of the capitals of the first line to the foot of the
+// capitals of the second (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
+const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, column: 1.0, depth: 0, gap: 0, opacity: 1, fog: false };
+const FOOTER_CAPS = { top: (FOOTER.height * 19) / TEXT_CANVAS_HEIGHT, bottom: (FOOTER.height * 50) / TEXT_CANVAS_HEIGHT };
+const FOOTER_LOGO = FOOTER.line + FOOTER_CAPS.bottom - FOOTER_CAPS.top;
 // the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
 // edge of its crown, which is the highest line from the street (fasada/build_facade.py, CORNICE: 284.5 px,
 // 0.78 in front of the wall). The row starts flush with the left corner of the building (X_LEFT, 70 px) and
@@ -118,6 +122,7 @@ const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, colu
 const CORNICE_EDGE = { y: (430 - 284.5) / 37.5, depth: -0.78 };
 const BUILDING_LEFT = (70 - 790) / 37.5;
 const HERO_TEXT_GAP = 26;          // px (7 mm) between the ends of the hero lines and the left edge of the house
+const HERO_FIT_MIN = 0.6;          // a long word (Selbstbewusstsein) makes the title at most this much smaller
 const MENU_ROW = { height: 0.4, top: CORNICE_EDGE.y + 0.13 + 0.4, depth: CORNICE_EDGE.depth - 0.01, gap: 0.14, opacity: 1, start: BUILDING_LEFT, fog: false, blocks: true };
 // The buttons stretch like the Animated Top Dock of ThreeUI (MIT, vendor/threeui.LICENSE.txt): a proximity
 // spring widens the button under the pointer and its neighbours while the row keeps its length
@@ -147,7 +152,6 @@ if (root) {
 	const menu = readJson(root.dataset.arches);
 	const footer = readJson(root.dataset.footer);
 	const languages = readJson(root.dataset.languages);
-	const rtl = root.dataset.dir === 'rtl';   // Arabic: rows of words read from right to left
 
 	let renderer = null;
 	try {
@@ -322,12 +326,9 @@ if (root) {
 		// left and right for a button); with colors the canvas is filled and the letters drawn in their own colours
 		const textCanvas = (label, block = false, colors = null) => {
 			const context = document.createElement('canvas').getContext('2d');
-			// Arabic letters are joined: no spacing between them
-			const arabic = /[\u0600-\u06ff]/.test(label);
-			const spacing = arabic ? '0px' : '6px';
 			const setFont = () => {
 				context.font = TEXT_FONT;
-				if ('letterSpacing' in context) context.letterSpacing = spacing;
+				if ('letterSpacing' in context) context.letterSpacing = '6px';
 			};
 			setFont();
 			const pad = block ? BLOCK_PAD : 0;
@@ -487,7 +488,7 @@ if (root) {
 
 		// ---- rows of words written along the facade, centred over the arches or starting at row.start: every
 		// line of the footer columns in the foundation and the menu on the cornice (buttons). A piece with an
-		// address (url) or an arch is a link. In Arabic the row runs from right to left.
+		// address (url) or an arch is a link.
 		const writeRow = (items, row) => {
 			const pieces = items.map((item) => ({ ...item, text: String(item.text || '').toLocaleUpperCase('de') }));
 			const words = pieces.filter((piece) => piece.text.trim()).map((piece) => {
@@ -502,7 +503,6 @@ if (root) {
 					value: 0, velocity: 0, target: 0,
 				};
 			});
-			if (rtl) words.reverse();
 			const length = words.reduce((sum, piece) => sum + piece.length, 0) + row.gap * Math.max(words.length - 1, 0);
 			let along = row.start !== undefined
 				? row.start
@@ -534,21 +534,24 @@ if (root) {
 			fog: false,
 		});
 		// the footer columns one after the other from the left corner of the house, in every language; every line
-		// is a row of one item, the logo line is as tall as the logo
+		// is a row of one item on the common grid, the logo takes two lines
 		const footerColumns = footer.length && !Array.isArray(footer[0]) ? [footer] : footer;
 		const inscription = [];
 		let columnStart = BUILDING_LEFT;
 		footerColumns.forEach((items) => {
-			let top = FOOTER.first;
+			let grid = 0;
 			let columnEnd = columnStart;
 			items.forEach((item) => {
-				const height = item.kind === 'logo' ? FOOTER.logo : FOOTER.height;
-				const line = writeRow([{ ...item, text: item.text || '' }], { ...FOOTER, height, top, start: columnStart });
+				const top = FOOTER.first - grid * FOOTER.line;
+				const row = item.kind === 'logo'
+					? { ...FOOTER, height: FOOTER_LOGO, logo: FOOTER_LOGO, top: top - FOOTER_CAPS.top, start: columnStart }
+					: { ...FOOTER, top, start: columnStart };
+				const line = writeRow([{ ...item, text: item.text || '' }], row);
 				line.forEach((piece) => {
 					columnEnd = Math.max(columnEnd, piece.to);
 				});
 				inscription.push(...line);
-				top -= height + FOOTER.line - FOOTER.height;
+				grid += item.kind === 'logo' ? 2 : 1;
 			});
 			columnStart = columnEnd + FOOTER.column;
 		});
@@ -700,6 +703,7 @@ if (root) {
 		const corner = new THREE.Vector3();
 		const heroContent = document.querySelector('.hero__content');
 		const heroHolder = heroContent ? heroContent.parentElement : null;
+		const heroTitle = heroContent ? heroContent.querySelector('.hero__title') : null;
 		const heroPlate = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];   // top left, top right, bottom right, bottom left
 		const heroPlateSize = { w: 0, h: 0, on: false };
 		const plane = new THREE.Plane();
@@ -720,9 +724,19 @@ if (root) {
 			const screen = corner.clone().project(heroCamera);
 			const x = (screen.x + 1) * 0.5 * w;
 			const y = (1 - screen.y) * 0.5 * h;
+			// the title gets smaller until its longest word fits between the screen edge and the house
+			const room = x - HERO_TEXT_GAP - 16;
+			let scale = 1;
+			if (heroTitle) heroTitle.style.removeProperty('--title');
+			const size = heroTitle ? parseFloat(getComputedStyle(heroTitle).fontSize) : 0;
+			for (let i = 0; i < 3 && heroTitle && room > 0 && heroContent.offsetWidth > room && scale > HERO_FIT_MIN; i++) {
+				scale = Math.max(HERO_FIT_MIN, scale * (room / heroContent.offsetWidth));
+				heroTitle.style.setProperty('--title', `${(size * scale).toFixed(2)}px`);
+			}
 			const textW = heroContent.offsetWidth;
 			const textH = heroContent.offsetHeight;
 			const fits = x - HERO_TEXT_GAP - textW >= 16 && y > textH + 80 && y <= h;
+			if (!fits && heroTitle) heroTitle.style.removeProperty('--title');
 			heroPlateSize.on = fits;
 			document.documentElement.classList.toggle('has-house-corner', fits);
 			if (!fits) {

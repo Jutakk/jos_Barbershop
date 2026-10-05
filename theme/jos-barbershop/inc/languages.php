@@ -1,9 +1,9 @@
 <?php
 /**
- * Languages of the site: German (the default), English and Arabic (right to left).
- * The language is in the address: no parameter = German, ?lang=en, ?lang=ar. The pages behind the arches
- * exist once per language (leistungen, leistungen-en, leistungen-ar, ...), the short texts of the theme
- * are translated in jos_strings().
+ * Languages of the site: German (the default) and English.
+ * The language is in the address: no parameter = German, ?lang=en. The pages behind the arches and the legal
+ * pages exist once per language (leistungen, leistungen-en, impressum, impressum-en, ...), the short texts of
+ * the theme are translated in jos_strings().
  *
  * @package jos-barbershop
  */
@@ -11,7 +11,7 @@
 /**
  * The languages, in the order of the language menu.
  *
- * @return array<string, array{label: string, name: string, locale: string, dir: string}>
+ * @return array<string, array{label: string, name: string, locale: string}>
  */
 function jos_languages(): array {
 	return array(
@@ -19,19 +19,11 @@ function jos_languages(): array {
 			'label'  => 'DE',
 			'name'   => 'Deutsch',
 			'locale' => 'de-AT',
-			'dir'    => 'ltr',
 		),
 		'en' => array(
 			'label'  => 'EN',
 			'name'   => 'English',
 			'locale' => 'en',
-			'dir'    => 'ltr',
-		),
-		'ar' => array(
-			'label'  => 'AR',
-			'name'   => 'العربية',
-			'locale' => 'ar',
-			'dir'    => 'rtl',
 		),
 	);
 }
@@ -76,8 +68,7 @@ function jos_language_links(): array {
 }
 
 /**
- * Short texts of the theme in the language of this request; the German text is the key. The slogan from
- * the shop window stays English in German and English, in Arabic it is translated.
+ * Short texts of the theme in the language of this request; the German text is the key.
  *
  * @param string $de German text.
  */
@@ -88,70 +79,49 @@ function jos_t( string $de ): string {
 }
 
 /**
- * English and Arabic for the short texts of the theme.
+ * English for the short texts of the theme. The slogan keeps the spelling of the shop window: confidense.
  *
  * @return array<string, array<string, string>>
  */
 function jos_strings(): array {
 	return array(
 		'en' => array(
-			'Zum Inhalt'                  => 'Skip to content',
-			'Hauptmenü'                   => 'Main menu',
-			'Sprache'                     => 'Language',
-			'Termin buchen'               => 'Book an appointment',
-			'BARBERSHOP in 1060 VIENNA'   => 'BARBERSHOP in 1060 VIENNA',
-			'Ziehen, um sich umzusehen'   => 'Drag to look around',
-			'Zurück auf die Straße'       => 'Back to the street',
-			'Rechtliches'                 => 'Legal',
-			'Impressum'                   => 'Imprint',
-			'Datenschutz'                 => 'Privacy',
-			'Leistungen & Preise'         => 'Services & Prices',
-			'Leistungen'                  => 'Services',
-			'Über uns'                    => 'About us',
-			'Galerie'                     => 'Gallery',
-			'Kontakt'                     => 'Contact',
-			'Inhalt folgt.'               => 'Content follows.',
-			'Alle Rechte vorbehalten.'    => 'All rights reserved.',
-			'Di bis Fr 10:00 bis 19:00'   => 'Tue to Fri 10:00 to 19:00',
-			'Sa 10:00 bis 18:00'          => 'Sat 10:00 to 18:00',
-			'So und Mo geschlossen'       => 'Sun and Mon closed',
-			'Cookies'                     => 'Cookies',
-			'FAQ'                         => 'FAQ',
-		),
-		'ar' => array(
-			'your confidense starts here' => 'ثقتك تبدأ هنا',
-			'Zum Inhalt'                  => 'انتقل إلى المحتوى',
-			'Hauptmenü'                   => 'القائمة الرئيسية',
-			'Sprache'                     => 'اللغة',
-			'Termin buchen'               => 'احجز موعدًا',
-			'BARBERSHOP in 1060 VIENNA'   => 'صالون حلاقة في فيينا 1060',
-			'Ziehen, um sich umzusehen'   => 'اسحب لتنظر حولك',
-			'Zurück auf die Straße'       => 'العودة إلى الشارع',
-			'Rechtliches'                 => 'معلومات قانونية',
-			'Impressum'                   => 'بيانات الناشر',
-			'Datenschutz'                 => 'الخصوصية',
-			'Leistungen & Preise'         => 'الخدمات والأسعار',
-			'Leistungen'                  => 'الخدمات',
-			'Über uns'                    => 'من نحن',
-			'Galerie'                     => 'المعرض',
-			'Kontakt'                     => 'اتصل بنا',
-			'Inhalt folgt.'               => 'المحتوى قريبًا.',
-			'Alle Rechte vorbehalten.'    => 'جميع الحقوق محفوظة.',
-			'Di bis Fr 10:00 bis 19:00'   => 'الثلاثاء إلى الجمعة 10:00 حتى 19:00',
-			'Sa 10:00 bis 18:00'          => 'السبت 10:00 حتى 18:00',
-			'So und Mo geschlossen'       => 'الأحد والاثنين مغلق',
-			'Cookies'                     => 'ملفات تعريف الارتباط',
-			'FAQ'                         => 'الأسئلة الشائعة',
+			'dein Selbstbewusstsein beginnt hier'      => 'your confidense starts here',
+			'BARBERSHOP in 1060 WIEN'                  => 'BARBERSHOP in 1060 VIENNA',
+			'Zum Inhalt'                               => 'Skip to content',
+			'Hauptmenü'                                => 'Main menu',
+			'Sprache'                                  => 'Language',
+			'Termin buchen'                            => 'Book an appointment',
+			'Termin-Link im Customizer eintragen'      => 'Set the booking link in the Customizer',
+			'Seite bearbeiten'                         => 'Edit page',
+			'Seite mit der Adresse "%s" anlegen'       => 'Create a page with the address "%s"',
+			'Ziehen, um sich umzusehen'                => 'Drag to look around',
+			'Zurück auf die Straße'                    => 'Back to the street',
+			'Rechtliches'                              => 'Legal',
+			'Impressum'                                => 'Imprint',
+			'Datenschutz'                              => 'Privacy',
+			'Cookies'                                  => 'Cookies',
+			'Häufige Fragen'                           => 'FAQ',
+			'Leistungen & Preise'                      => 'Services & Prices',
+			'Leistungen'                               => 'Services',
+			'Über uns'                                 => 'About us',
+			'Galerie'                                  => 'Gallery',
+			'Kontakt'                                  => 'Contact',
+			'Inhalt folgt.'                            => 'Content follows.',
+			'Alle Rechte vorbehalten.'                 => 'All rights reserved.',
+			'Erstellt von die aigentur'                => 'Made by die aigentur',
+			'Di bis Fr 10:00 bis 19:00'                => 'Tue to Fri 10:00 to 19:00',
+			'Sa 10:00 bis 18:00'                       => 'Sat 10:00 to 18:00',
+			'So und Mo geschlossen'                    => 'Sun and Mon closed',
 		),
 	);
 }
 
 /**
- * <html lang="..." dir="..."> in the language of this request.
+ * <html lang="..."> in the language of this request.
  */
 function jos_language_attributes(): string {
-	$language = jos_languages()[ jos_lang() ];
-	return sprintf( 'lang="%s"%s', esc_attr( $language['locale'] ), 'rtl' === $language['dir'] ? ' dir="rtl"' : '' );
+	return sprintf( 'lang="%s"', esc_attr( jos_languages()[ jos_lang() ]['locale'] ) );
 }
 add_filter( 'language_attributes', 'jos_language_attributes' );
 

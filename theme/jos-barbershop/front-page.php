@@ -1,6 +1,6 @@
 <?php
 /**
- * Front page (in German, English or Arabic, inc/languages.php): the turning shop sign on the facade, drawn in lines. Scrolling or dragging moves the camera
+ * Front page (in German or English, inc/languages.php): the turning shop sign on the facade, drawn in lines. Scrolling or dragging moves the camera
  * along the street (and down to the foundation, where the footer lines are cut in). The arches are the
  * menu: a running text in the band of every arch names its page, the whole opening is the button, a click
  * takes the camera through the arch and the page opens; behind the door is the shop. The X, Esc or the
@@ -31,7 +31,6 @@ foreach ( jos_rooms() as $jos_room ) {
 		data-arches="<?php echo esc_attr( wp_json_encode( $jos_arches, JSON_UNESCAPED_UNICODE ) ); ?>"
 		data-footer="<?php echo esc_attr( wp_json_encode( jos_footer_columns(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
 		data-languages="<?php echo esc_attr( wp_json_encode( jos_language_links(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
-		data-dir="<?php echo esc_attr( jos_languages()[ jos_lang() ]['dir'] ); ?>"
 		<?php echo $jos_panorama ? 'data-panorama="' . esc_url( $jos_panorama ) . '"' : ''; ?>
 		<?php echo $jos_panorama_mobile ? 'data-panorama-mobile="' . esc_url( $jos_panorama_mobile ) . '"' : ''; ?>>
 		<img class="scene__poster" src="<?php echo esc_url( jos_image( 'scene-poster.webp' ) ); ?>" alt="" width="1600" height="1000" fetchpriority="high">
@@ -41,16 +40,17 @@ foreach ( jos_rooms() as $jos_room ) {
 	<section class="hero" aria-labelledby="hero-title">
 		<div class="hero__content">
 			<?php
-			// one word per line: JO'S / your / confidense / starts / here, against the bottom left corner of the
-			// house (scene.js); the booking button is on the contact page
+			// one word per line: JO'S / dein / Selbstbewusstsein / beginnt / hier (English: your / confidense /
+			// starts / here), against the bottom left corner of the house (scene.js); the booking button is on the
+			// contact page
 			?>
 			<h1 id="hero-title" class="hero__title" data-reveal>
 				<span class="hero__word hero__brand">Jo&rsquo;s</span><span class="visually-hidden"> Barbershop.</span>
-				<?php foreach ( explode( ' ', jos_t( 'your confidense starts here' ) ) as $jos_word ) : ?>
+				<?php foreach ( explode( ' ', jos_t( 'dein Selbstbewusstsein beginnt hier' ) ) as $jos_word ) : ?>
 					<span class="hero__word"><?php echo esc_html( $jos_word ); ?></span>
 				<?php endforeach; ?>
 			</h1>
-			<p class="hero__meta" data-reveal><?php echo esc_html( jos_t( 'BARBERSHOP in 1060 VIENNA' ) ); ?></p>
+			<p class="hero__meta" data-reveal><?php echo esc_html( jos_t( 'BARBERSHOP in 1060 WIEN' ) ); ?></p>
 		</div>
 	</section>
 
