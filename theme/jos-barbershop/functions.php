@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.0' );
+define( 'JOS_VERSION', '0.11.1' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -30,6 +30,22 @@ function jos_enqueue_styles(): void {
 	wp_enqueue_style( 'jos-style', get_stylesheet_uri(), array(), filemtime( get_template_directory() . '/style.css' ) );
 }
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_styles' );
+
+/**
+ * Favicon: the sign of the shop, the white "Jo's" of the logo (logo/jos-barbershop-logo-transparent.svg, without
+ * BARBERSHOP, its letters slightly thickened so they read at 16 px) on a black disc. favicon.ico (16, 32, 48 px)
+ * for every browser, favicon.svg for the ones that take it, apple-touch-icon.png (180 px, on the paper) for
+ * phones. A site icon set in WordPress (Customizer, Website-Information) takes its place.
+ */
+function jos_favicon(): void {
+	if ( has_site_icon() ) {
+		return;
+	}
+	printf( '<link rel="icon" href="%s" sizes="32x32">' . "\n", esc_url( jos_image( 'favicon.ico' ) ) );
+	printf( '<link rel="icon" href="%s" type="image/svg+xml">' . "\n", esc_url( jos_image( 'favicon.svg' ) ) );
+	printf( '<link rel="apple-touch-icon" href="%s">' . "\n", esc_url( jos_image( 'apple-touch-icon.png' ) ) );
+}
+add_action( 'wp_head', 'jos_favicon', 2 );
 
 /**
  * GSAP and the motion layer (the way through the arches into the pages), all local, in the footer.

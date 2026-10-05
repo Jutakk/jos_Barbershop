@@ -110,6 +110,13 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer (4 kolone,
   na tabletu 2, na mobitelu jedna ispod druge).
 
+**Favicon**
+
+- Znak lokala: bijeli "Jo's" iz loga (`logo/jos-barbershop-logo-transparent.svg`, bez BARBERSHOP, slova malo
+  podebljana da se čitaju na 16 px) na crnom krugu. `assets/images/favicon.ico` (16, 32, 48 px),
+  `favicon.svg` i `apple-touch-icon.png` (180 px, na papiru, za mobitele).
+- Ako se u WordPressu postavi Site Icon (Prilagodi, Website-Information), on ima prednost.
+
 **Galerija**
 
 - Iza luka Galerie je krug od 12 fotografija u formatu 2:3, po uzoru na Codrops demo "Cinematic Scroll
@@ -227,7 +234,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.1: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 
