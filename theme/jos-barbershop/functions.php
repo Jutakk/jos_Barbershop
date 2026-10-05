@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.10.7' );
+define( 'JOS_VERSION', '0.10.8' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -611,6 +611,48 @@ function jos_fill_rooms(): void {
 	}
 }
 add_action( 'init', 'jos_fill_rooms', 30 );
+
+/**
+ * The price list (jos_room_words(), German and English) written into the pages Leistungen and leistungen-en
+ * once, on the first visit of the site after this version (no login needed); a missing page is made. What was
+ * on the page before stays in WordPress as a revision.
+ */
+function jos_write_prices(): void {
+	$version = 'prices-2026-10-05';
+	if ( $version === get_option( 'jos_prices_written' ) ) {
+		return;
+	}
+	foreach ( array_keys( jos_languages() ) as $lang ) {
+		foreach ( jos_rooms( $lang ) as $room ) {
+			if ( 'leistungen' !== $room['slug'] ) {
+				continue;
+			}
+			$content = jos_room_texts_in( $lang )['leistungen'];
+			$page    = get_page_by_path( $room['page'] );
+			if ( $page ) {
+				wp_update_post(
+					array(
+						'ID'           => $page->ID,
+						'post_status'  => 'publish',
+						'post_content' => $content,
+					)
+				);
+			} else {
+				wp_insert_post(
+					array(
+						'post_type'    => 'page',
+						'post_status'  => 'publish',
+						'post_title'   => $room['title'],
+						'post_name'    => $room['page'],
+						'post_content' => $content,
+					)
+				);
+			}
+		}
+	}
+	update_option( 'jos_prices_written', $version, false );
+}
+add_action( 'init', 'jos_write_prices', 40 );
 
 /**
  * First content of the pages behind the arches, in every language, by the address of the page

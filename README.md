@@ -130,6 +130,9 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Stranice iza lukova postoje po jeziku: `leistungen`, `leistungen-en` i tako za `ueber-uns`, `galerie`,
   `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns, Kontakt s FAQ), poslije se
   uređuju u WordPressu. Prijevodi su u `jos_room_words()` u `functions.php`.
+- Cjenik (13 usluga u 4 skupine, iz `jos_room_words()`) tema jednom upiše na stranice `leistungen` i
+  `leistungen-en` (verzija `prices-2026-10-05`), bez prijave; ako stranice nema, napravi je. Što je prije bilo na
+  stranici ostaje u WordPressu kao revizija.
 - Cjenik na njemačkom ima njemačke nazive usluga (Studentenschnitt, Heißtuchrasur, Kombi Haarschnitt &
   Augenbrauen, ...). Na postojećoj stranici Leistungen tema jednom zamijeni stare engleske nazive njemačkima.
 - Kratki tekstovi teme (izbornik, uputa u lokalu, footer, slogan) su u `inc/languages.php`.
@@ -211,7 +214,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.10.7: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.10.8: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 
