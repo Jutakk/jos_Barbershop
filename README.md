@@ -24,6 +24,9 @@ u Local stranicu `C:\Users\User\Local Sites\jos-barbershop` (localhost:10098). N
   vrijeme zadnje promjene u adresi, pa preglednik uvijek uzme nove.
 - Izvor na računalu: `D:\CLAUDE_CODE\JoS_BARBER\jos-barbershop` (skripta sama nađe mapu u kojoj leži, pa se mapa smije premjestiti)
 - Pokretanje: `powershell -ExecutionPolicy Bypass -File "D:\CLAUDE_CODE\JoS_BARBER\jos-barbershop\tools\jos-sync.ps1"`
+- Skripta nikad ne stane bez poruke: klik u prozor je ne pauzira (QuickEdit isključen), naslov prozora pokazuje
+  vrijeme zadnje provjere i verziju u Localu (`Jo's sync 21:40:05 Local: 495413b`), zaključan fajl teme se
+  javi umjesto beskonačnog čekanja, a kad povuče novu verziju same sebe, pokrene je u novom prozoru.
 
 ## Hero sekcija (3D)
 
