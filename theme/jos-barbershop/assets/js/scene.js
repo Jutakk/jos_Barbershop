@@ -102,6 +102,7 @@ const RIBBON_OPACITY = 1;
 const RIBBON_COLORS = { fill: '#5b3517', ink: '#cecece' };
 const TEXT_FONT = '44px Arial, "Helvetica Neue", Helvetica, sans-serif';
 const TEXT_CANVAS_HEIGHT = 72;
+const LETTER_SPACING = 6;         // px between the letters of the canvas texts
 const HOVER_COLOR = 0.45;        // a pointed arch: its lines go towards dark ink ...
 const HOVER_OPACITY = 0.3;       // ... and get this much more opaque
 const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with white
@@ -113,7 +114,7 @@ const OPENING_OPACITY = 0.8;
 // stand on one grid, FOOTER.line apart, so the first lines of all columns (© 2026 Jo's Barbershop, Di-Fr,
 // Leistungen, Gumpendorfer Straße) stand on one line. From the logo to the first line is as far as from line to
 // line (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
-const FOOTER_TEXT = { height: 0.42, line: 0.62 };
+const FOOTER_TEXT = { height: 0.42, line: 0.46 };
 const FOOTER_CAPS = { top: (FOOTER_TEXT.height * 19) / TEXT_CANVAS_HEIGHT, bottom: (FOOTER_TEXT.height * 50) / TEXT_CANVAS_HEIGHT };
 const FOOTER_LOGO = 0.9;
 const FOOTER_LOGO_TOP = FACADE_ARCH.ground - 0.3;
@@ -398,27 +399,33 @@ if (root) {
 
 		// ---- texts on the wall: white letters on a transparent canvas, coloured by the material (block: with room
 		// left and right for a button); with colors the canvas is filled and the letters drawn in their own colours
+		// letters drawn one by one, LETTER_SPACING px apart: the letterSpacing of the canvas is left out, with it
+		// some graphics (Windows) lost parts of letters (the stem of D, L, E and U, the left leg of A)
 		const textCanvas = (label, block = false, colors = null) => {
 			const context = document.createElement('canvas').getContext('2d');
-			const setFont = () => {
-				context.font = TEXT_FONT;
-				if ('letterSpacing' in context) context.letterSpacing = '6px';
-			};
-			setFont();
+			context.font = TEXT_FONT;
+			const letters = [...label];
+			const advances = letters.map((letter) => context.measureText(letter).width);
 			const pad = block ? BLOCK_PAD : 0;
-			const width = Math.max(1, Math.ceil(context.measureText(label).width)) + pad * 2;
+			const textWidth = advances.reduce((sum, advance) => sum + advance + LETTER_SPACING, 0);
+			const width = Math.max(1, Math.ceil(textWidth)) + pad * 2;
 			context.canvas.width = width;
 			context.canvas.height = TEXT_CANVAS_HEIGHT;
-			setFont();
+			context.font = TEXT_FONT;
 			if (colors) {
 				context.fillStyle = colors.fill;
 				context.fillRect(0, 0, width, TEXT_CANVAS_HEIGHT);
 			}
 			context.fillStyle = colors ? colors.ink : '#ffffff';
 			context.textBaseline = 'middle';
-			context.fillText(label, pad, TEXT_CANVAS_HEIGHT / 2 + 2);
+			let x = pad;
+			letters.forEach((letter, i) => {
+				context.fillText(letter, x, TEXT_CANVAS_HEIGHT / 2 + 2);
+				x += advances[i] + LETTER_SPACING;
+			});
 			const texture = new THREE.CanvasTexture(context.canvas);
-			texture.colorSpace = THREE.SRGBColorSpace;
+			// white letters carry no colour to convert; the coloured bands of the arches do
+			texture.colorSpace = colors ? THREE.SRGBColorSpace : THREE.NoColorSpace;
 			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 			return { texture, width };
 		};
@@ -1513,7 +1520,7 @@ if (root) {
 				const along = (wallX + item.row.depth - origin.x) / direction.x;
 				const wz = origin.z + direction.z * along;
 				const wy = origin.y + direction.y * along;
-				return wy <= item.row.top + 0.05 && wy >= item.row.top - item.row.height - 0.05
+				return wy <= item.row.top + 0.02 && wy >= item.row.top - item.row.height - 0.02   // the footer lines are 0.46 apart: no overlap
 					&& wz >= item.from - 0.1 && wz <= item.to + 0.1;
 			});
 			return piece ? { piece } : null;

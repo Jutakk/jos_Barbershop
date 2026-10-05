@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.1
+Version: 0.11.3
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -933,7 +933,7 @@ canvas {
 		align-items: flex-start;
 		min-width: 0;
 		margin: 0;
-		line-height: 28px;
+		line-height: 24px;
 	}
 
 	// the logo stands above the first column, so the first lines of all columns stand on one line; from the logo
@@ -968,11 +968,11 @@ canvas {
 	}
 
 	// a link pointed at or focused: a brown block with light letters, like the buttons on the cornice. A link that
-	// is a line of its own keeps the 28 px of the grid: 20 px block and 4 px above and below; the block reaches
+	// is a line of its own keeps the 24 px of the grid: 16 px block and 4 px above and below; the block reaches
 	// 4 px beyond the letters on both sides (box-shadow), so nothing moves
 	&__column > a {
 		margin: s(1) 0;
-		line-height: 20px;
+		line-height: 16px;
 	}
 
 	a {
