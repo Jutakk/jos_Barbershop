@@ -39,6 +39,7 @@ import { FACADE_LINES, FACADE_DRAW, FACADE_GROUP, FACADE_ARCHES, FACADE_ARCH } f
 const LOGO_CANVAS = 2048;
 const DISC_CENTER = { x: 949.1, y: 1078.7 };
 const DISC_RADIUS = 876.7;
+const LOGO_ART = { x: 394, y: 398, w: 1260, h: 1252 };   // the drawing itself within the logo canvas, from the top left
 
 const DISC_DEPTH = 0.26;         // thickness of the disc, disc radius = 1
 const BRACKET_RADIUS = 1.16;     // radius of the C shaped bracket
@@ -107,7 +108,9 @@ const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with 
 const OPENING_OPACITY = 0.8;
 
 // the footer lines, cut into the foundation under the ground line, centred under the arches
-const INSCRIPTION = { height: 0.42, top: FACADE_ARCH.ground - 0.2, depth: 0, gap: 0.8, opacity: 0.75 };
+// the footer in four rows under the ground line, flush left with the left corner of the house (BUILDING_LEFT
+// below); the first row starts with the small logo
+const FOOTER_ROWS = { height: 0.42, first: FACADE_ARCH.ground - 0.3, step: 0.74, depth: 0, gap: 0.55, opacity: 1, logo: 0.9, fog: false };
 // the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
 // edge of its crown, which is the highest line from the street (fasada/build_facade.py, CORNICE: 284.5 px,
 // 0.78 in front of the wall). The row starts flush with the left corner of the building (X_LEFT, 70 px) and
@@ -488,10 +491,14 @@ if (root) {
 		const writeRow = (items, row) => {
 			const pieces = [];
 			items.forEach((item, i) => {
-				if (i > 0 && !row.blocks) pieces.push({ text: '·' });   // buttons stand apart without dots
+				// a dot between the words of a row; buttons stand apart without dots, and none after the logo
+				if (i > 0 && !row.blocks && items[i - 1].kind !== 'logo') pieces.push({ text: '·' });
 				pieces.push({ ...item, text: String(item.text || '').toLocaleUpperCase('de') });
 			});
 			const words = pieces.filter((piece) => piece.text.trim()).map((piece) => {
+				if (piece.kind === 'logo') {
+					return { ...piece, row, logo: true, length: row.logo, glow: { value: 0 } };
+				}
 				const block = Boolean(row.blocks) && (piece.arch !== undefined || piece.url !== undefined);
 				const { texture, width } = textCanvas(piece.text, block);
 				const length = (row.height * width) / TEXT_CANVAS_HEIGHT;
@@ -506,9 +513,10 @@ if (root) {
 				? row.start
 				: (FACADE_ARCHES[0].z + FACADE_ARCHES[FACADE_ARCHES.length - 1].z) / 2 - length / 2;
 			words.forEach((piece) => {
-				const mesh = piece.block
-					? new THREE.Mesh(unitPlane, dockMaterial(piece.texture))
-					: new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false));
+				let mesh;
+				if (piece.logo) mesh = new THREE.Mesh(new THREE.PlaneGeometry(row.logo, row.logo), footerLogoMaterial);
+				else if (piece.block) mesh = new THREE.Mesh(unitPlane, dockMaterial(piece.texture));
+				else mesh = new THREE.Mesh(new THREE.PlaneGeometry(piece.length, row.height), textMaterial(piece.texture, row.fog !== false));
 				if (piece.block) mesh.scale.set(piece.length, row.height, 1);
 				mesh.rotation.y = -Math.PI / 2;   // in the wall, reading along it to the right
 				mesh.position.set(wallX + row.depth - 0.012, row.top - row.height / 2, along + piece.length / 2);
@@ -521,7 +529,20 @@ if (root) {
 			});
 			return words;
 		};
-		const inscription = writeRow(footer.map((item) => ({ text: item.text, url: item.url || '' })), INSCRIPTION);
+		// the small logo of the footer: the logo texture of the sign, in brown (set when it is loaded)
+		const footerLogoMaterial = new THREE.MeshBasicMaterial({
+			color: FACADE_COLOR,
+			transparent: true,
+			opacity: 0,
+			depthWrite: false,
+			side: THREE.DoubleSide,
+			fog: false,
+		});
+		const footerRows = footer.length && !Array.isArray(footer[0]) ? [footer] : footer;
+		const inscription = footerRows.flatMap((items, i) => writeRow(
+			items.map((item) => ({ ...item, text: item.text || '' })),
+			{ ...FOOTER_ROWS, top: FOOTER_ROWS.first - i * FOOTER_ROWS.step, start: BUILDING_LEFT },
+		));
 		const words = [...inscription];
 		const isLink = (piece) => Boolean(piece.url) || piece.arch !== undefined;
 
@@ -1128,6 +1149,13 @@ if (root) {
 			texture.colorSpace = THREE.SRGBColorSpace;
 			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 			logoMaterial.map = texture;
+			// the footer shows only the drawing of the logo, without the empty canvas around it
+			const footerLogo = texture.clone();
+			footerLogo.repeat.set(LOGO_ART.w / LOGO_CANVAS, LOGO_ART.h / LOGO_CANVAS);
+			footerLogo.offset.set(LOGO_ART.x / LOGO_CANVAS, 1 - (LOGO_ART.y + LOGO_ART.h) / LOGO_CANVAS);
+			footerLogo.needsUpdate = true;
+			footerLogoMaterial.map = footerLogo;
+			footerLogoMaterial.needsUpdate = true;
 			logoMaterial.needsUpdate = true;
 			ready = true;
 			draw();

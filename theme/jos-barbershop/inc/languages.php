@@ -111,6 +111,12 @@ function jos_strings(): array {
 			'Galerie'                     => 'Gallery',
 			'Kontakt'                     => 'Contact',
 			'Inhalt folgt.'               => 'Content follows.',
+			'Alle Rechte vorbehalten.'    => 'All rights reserved.',
+			'Di bis Fr 10:00 bis 19:00'   => 'Tue to Fri 10:00 to 19:00',
+			'Sa 10:00 bis 18:00'          => 'Sat 10:00 to 18:00',
+			'So und Mo geschlossen'       => 'Sun and Mon closed',
+			'Cookies'                     => 'Cookies',
+			'FAQ'                         => 'FAQ',
 		),
 		'ar' => array(
 			'your confidense starts here' => 'ثقتك تبدأ هنا',
@@ -130,6 +136,12 @@ function jos_strings(): array {
 			'Galerie'                     => 'المعرض',
 			'Kontakt'                     => 'اتصل بنا',
 			'Inhalt folgt.'               => 'المحتوى قريبًا.',
+			'Alle Rechte vorbehalten.'    => 'جميع الحقوق محفوظة.',
+			'Di bis Fr 10:00 bis 19:00'   => 'الثلاثاء إلى الجمعة 10:00 حتى 19:00',
+			'Sa 10:00 bis 18:00'          => 'السبت 10:00 حتى 18:00',
+			'So und Mo geschlossen'       => 'الأحد والاثنين مغلق',
+			'Cookies'                     => 'ملفات تعريف الارتباط',
+			'FAQ'                         => 'الأسئلة الشائعة',
 		),
 	);
 }

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.9.0' );
+define( 'JOS_VERSION', '0.10.0' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -142,8 +142,46 @@ function jos_customize_register( WP_Customize_Manager $wp_customize ): void {
 			'type'        => 'text',
 		)
 	);
+	$wp_customize->add_setting(
+		'jos_phone',
+		array(
+			'default'           => '',
+			'sanitize_callback' => 'jos_sanitize_phone',
+		)
+	);
+	$wp_customize->add_control(
+		'jos_phone',
+		array(
+			'label'       => __( 'Telefon', 'jos-barbershop' ),
+			'description' => __( 'Steht im Footer (z. B. +43 1 234 56 78).', 'jos-barbershop' ),
+			'section'     => 'jos_contact',
+			'type'        => 'text',
+		)
+	);
 }
 add_action( 'customize_register', 'jos_customize_register' );
+
+/**
+ * Keeps only what a phone number is made of.
+ *
+ * @param string $value Typed number.
+ */
+function jos_sanitize_phone( string $value ): string {
+	return trim( (string) preg_replace( '/[^0-9+ \/()-]/', '', $value ) );
+}
+
+/**
+ * Phone number of the shop from the Customizer, and the same as a tel: address.
+ *
+ * @return array{text: string, url: string}
+ */
+function jos_phone(): array {
+	$text = (string) get_theme_mod( 'jos_phone', '' );
+	return array(
+		'text' => $text,
+		'url'  => $text ? 'tel:' . preg_replace( '/[^0-9+]/', '', $text ) : '',
+	);
+}
 
 /**
  * Allows https and tel links only.
@@ -226,44 +264,113 @@ function jos_maps_link(): string {
 }
 
 /**
- * Footer lines: copyright, address (to Google Maps), Impressum and Datenschutz once those pages exist.
- * footer.php shows them as the footer; on the front page scene.js also cuts them into the foundation
- * of the facade, under the ground line.
+ * The footer in four rows. footer.php shows them as the footer; on the front page scene.js also cuts them
+ * into the foundation of the facade, under the ground line.
+ *   1. the small logo, copyright, made by die aigentur
+ *   2. the opening hours
+ *   3. the menu: the pages, Impressum, Datenschutz, Cookies, FAQ
+ *   4. address (to Google Maps), phone (once it is in the Customizer)
+ * Every item: text, and url (an address) or arch (a page behind an arch of the front page) for a link.
  *
- * @return array<int, array{kind: string, text: string, url: string}>
+ * @return array<int, array<int, array<string, mixed>>>
  */
-function jos_footer_items(): array {
-	$shop    = jos_shop();
-	$items   = array(
+function jos_footer_rows(): array {
+	$shop  = jos_shop();
+	$base  = is_front_page() ? '' : jos_url( home_url( '/' ) );
+	$legal = static function ( string $slug ): string {
+		$page = get_page_by_path( $slug );
+		return $page ? jos_url( (string) get_permalink( $page ) ) : '';
+	};
+	$menu = array();
+	foreach ( jos_rooms() as $room ) {
+		$menu[] = array(
+			'text' => $room['nav'],
+			'url'  => $base . '#' . $room['slug'],
+			'arch' => $room['arch'],
+			'slug' => $room['slug'],
+		);
+	}
+	$privacy = get_privacy_policy_url();
+	foreach ( array(
+		'Impressum'   => $legal( 'impressum' ),
+		'Datenschutz' => $privacy ? jos_url( $privacy ) : $legal( 'datenschutz' ),
+		'Cookies'     => $legal( 'cookies' ),
+	) as $label => $url ) {
+		if ( $url ) {
+			$menu[] = array(
+				'text' => jos_t( $label ),
+				'url'  => $url,
+			);
+		}
+	}
+	$menu[] = array(
+		'text' => jos_t( 'FAQ' ),
+		'url'  => $base . '#faq',
+		'slug' => 'faq',
+	);
+
+	$contact = array(
 		array(
-			'kind' => 'copy',
-			'text' => '© ' . wp_date( 'Y' ) . ' ' . $shop['name'],
-			'url'  => '',
-		),
-		array(
-			'kind' => 'address',
 			'text' => $shop['street'] . ', ' . $shop['postcode'] . ' ' . $shop['city'],
 			'url'  => jos_maps_link(),
 		),
 	);
-	$imprint = get_page_by_path( 'impressum' );
-	if ( $imprint ) {
-		$items[] = array(
-			'kind' => 'legal',
-			'text' => jos_t( 'Impressum' ),
-			'url'  => (string) get_permalink( $imprint ),
+	$phone   = jos_phone();
+	if ( $phone['text'] ) {
+		$contact[] = array(
+			'text' => $phone['text'],
+			'url'  => $phone['url'],
 		);
 	}
-	$privacy = get_privacy_policy_url();
-	if ( $privacy ) {
-		$items[] = array(
-			'kind' => 'legal',
-			'text' => jos_t( 'Datenschutz' ),
-			'url'  => $privacy,
-		);
-	}
-	return $items;
+
+	return array(
+		array(
+			array(
+				'kind' => 'logo',
+				'text' => $shop['name'],
+			),
+			array( 'text' => '© ' . wp_date( 'Y' ) . ' ' . $shop['name'] . '. ' . jos_t( 'Alle Rechte vorbehalten.' ) ),
+			array( 'text' => 'Made by die aigentur' ),
+		),
+		array(
+			array( 'text' => jos_t( 'Di bis Fr 10:00 bis 19:00' ) ),
+			array( 'text' => jos_t( 'Sa 10:00 bis 18:00' ) ),
+			array( 'text' => jos_t( 'So und Mo geschlossen' ) ),
+		),
+		$menu,
+		$contact,
+	);
 }
+
+/**
+ * Impressum, Datenschutz and Cookies as pages with "Inhalt folgt.", made once by a logged-in administrator,
+ * so the links of the footer lead somewhere; their text is written in WordPress.
+ */
+function jos_create_legal_pages(): void {
+	if ( JOS_VERSION === get_option( 'jos_legal_created' ) || ! current_user_can( 'publish_pages' ) ) {
+		return;
+	}
+	foreach ( array(
+		'impressum'   => 'Impressum',
+		'datenschutz' => 'Datenschutz',
+		'cookies'     => 'Cookies',
+	) as $slug => $title ) {
+		if ( get_page_by_path( $slug ) ) {
+			continue;
+		}
+		wp_insert_post(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_title'   => $title,
+				'post_name'    => $slug,
+				'post_content' => "<!-- wp:paragraph -->\n<p>Inhalt folgt.</p>\n<!-- /wp:paragraph -->",
+			)
+		);
+	}
+	update_option( 'jos_legal_created', JOS_VERSION, false );
+}
+add_action( 'init', 'jos_create_legal_pages', 20 );
 
 /**
  * HairSalon schema on the front page, for search engines and AI search.
@@ -299,6 +406,10 @@ function jos_shop_schema(): void {
 		'knowsLanguage'             => $shop['languages'],
 		'hasMap'                    => jos_maps_link(),
 	);
+	$phone = jos_phone();
+	if ( $phone['text'] ) {
+		$schema['telephone'] = $phone['text'];
+	}
 	echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG ) . "</script>\n";
 }
 add_action( 'wp_head', 'jos_shop_schema' );

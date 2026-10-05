@@ -46,7 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
 	const drag = document.querySelector('[data-shop-drag]');
 	const hint = document.querySelector('[data-shop-hint]');
 	const menuLinks = gsap.utils.toArray('[data-open]');
-	const bySlug = (slug) => rooms.find((room) => room.slug === slug);
+	// #faq is the contact page, scrolled down to its questions
+	const bySlug = (slug) => rooms.find((room) => room.slug === (slug === 'faq' ? 'kontakt' : slug));
+	let wantFaq = false;
+	const scrollToFaq = (room) => {
+		const question = room.el.querySelector('.wp-block-details');
+		if (!question) return;
+		const heading = question.previousElementSibling && /^H[2-4]$/.test(question.previousElementSibling.tagName) ? question.previousElementSibling : question;
+		// offsets, not the box on the screen: the content may still be moving in
+		let top = 0;
+		for (let el = heading; el && el !== room.el; el = el.offsetParent) top += el.offsetTop;
+		room.el.scrollTop = top - 56;
+	};
 	const byArch = (arch) => rooms.find((room) => room.arch === arch);
 
 	// durations in seconds; without motion everything happens at once
@@ -120,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		markMenu(room.slug);
 		room.el.classList.add('is-open');
 		room.el.scrollTop = 0;
+		if (wantFaq) scrollToFaq(room);
 		html.classList.add('is-room-open');
 		html.classList.toggle('is-in-shop', room.door);
 		showShopControls(room.door);
@@ -214,9 +226,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	};
 
 	// ---- history: every open page is one step, the back button leads out to the street
-	const open = (room) => {
-		if (room === current && !leaving) return;
-		const url = `#${room.slug}`;
+	const open = (room, faq = false) => {
+		wantFaq = faq;
+		if (room === current && !leaving) {
+			if (faq) scrollToFaq(room);
+			return;
+		}
+		const url = faq ? '#faq' : `#${room.slug}`;
 		if (current && !leaving) window.history.replaceState({ jos: room.slug }, '', url);
 		else window.history.pushState({ jos: room.slug }, '', url);
 		go(room);
@@ -232,16 +248,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		leave();
 	};
 	window.addEventListener('popstate', () => {
-		const room = bySlug(window.location.hash.slice(1));
+		const slug = window.location.hash.slice(1);
+		const room = bySlug(slug);
+		wantFaq = slug === 'faq';
 		if (room) go(room);
 		else leave();
 	});
 
 	// a page in the address (from another page of the site or a shared link) is open right away
-	const first = bySlug(window.location.hash.slice(1));
+	const firstSlug = window.location.hash.slice(1);
+	const first = bySlug(firstSlug);
 	if (first) {
+		wantFaq = firstSlug === 'faq';
 		window.history.replaceState(null, '', window.location.pathname + window.location.search);
-		window.history.pushState({ jos: first.slug }, '', `#${first.slug}`);
+		window.history.pushState({ jos: first.slug }, '', wantFaq ? '#faq' : `#${first.slug}`);
 		go(first);
 		moving.progress(1, false);
 	}
@@ -258,10 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!link || (link.target && link.target !== '_self')) return;
 		const url = new URL(link.href, window.location.href);
 		if (url.origin !== window.location.origin || url.pathname !== window.location.pathname) return;
-		const room = bySlug(url.hash.slice(1));
+		const slug = url.hash.slice(1);
+		const room = bySlug(slug);
 		if (room) {
 			event.preventDefault();
-			open(room);
+			open(room, slug === 'faq');
 		} else if (!url.hash && current && url.search === window.location.search) {
 			// the name in the header leads back to the street
 			event.preventDefault();
@@ -271,9 +292,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	exit.addEventListener('click', close);
 
-	// a footer line in the foundation (scene.js) is a link like in the footer
+	// a footer line in the foundation (scene.js) is a link like in the footer; #faq opens the contact page
 	window.addEventListener('jos:link', (event) => {
-		if (event.detail) window.location.assign(event.detail);
+		if (!event.detail) return;
+		const url = new URL(event.detail, window.location.href);
+		const slug = url.hash.slice(1);
+		const room = url.pathname === window.location.pathname ? bySlug(slug) : null;
+		if (room) open(room, slug === 'faq');
+		else window.location.assign(url.href);
 	});
 
 	// ---- the wheel: scrolling down pushes the building away along the Z axis into the depth, up brings it back
