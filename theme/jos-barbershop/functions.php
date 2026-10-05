@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.10.2' );
+define( 'JOS_VERSION', '0.10.3' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -266,10 +266,10 @@ function jos_maps_link(): string {
 /**
  * The footer in four columns, flush left. footer.php shows them as the footer; on the front page scene.js
  * also cuts them into the foundation of the facade, under the ground line, one line under the other.
- *   1. the small logo, copyright, made by die aigentur
- *   2. the opening hours
+ *   1. the small logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von die aigentur
+ *   2. the opening hours: Di-Fr 10-19 Uhr, Sa 10-18 Uhr, So&Mo geschlossen
  *   3. the menu: the pages, Impressum, Datenschutz, Cookies, FAQ
- *   4. address (to Google Maps), phone (once it is in the Customizer)
+ *   4. Gumpendorfer Straße 127, 1060 Wien (both to Google Maps), phone (once it is in the Customizer)
  * Every item: text, and url (an address) or arch (a page behind an arch of the front page) for a link.
  *
  * @return array<int, array<int, array<string, mixed>>>
@@ -310,7 +310,11 @@ function jos_footer_columns(): array {
 
 	$contact = array(
 		array(
-			'text' => $shop['street'] . ', ' . $shop['postcode'] . ' ' . $shop['city'],
+			'text' => $shop['street'],
+			'url'  => jos_maps_link(),
+		),
+		array(
+			'text' => $shop['postcode'] . ' ' . $shop['city'],
 			'url'  => jos_maps_link(),
 		),
 	);
@@ -328,13 +332,14 @@ function jos_footer_columns(): array {
 				'kind' => 'logo',
 				'text' => $shop['name'],
 			),
-			array( 'text' => '© ' . wp_date( 'Y' ) . ' ' . $shop['name'] . '. ' . jos_t( 'Alle Rechte vorbehalten.' ) ),
+			array( 'text' => '© ' . wp_date( 'Y' ) . ' ' . $shop['name'] ),
+			array( 'text' => jos_t( 'Alle Rechte vorbehalten' ) ),
 			array( 'text' => jos_t( 'Erstellt von die aigentur' ) ),
 		),
 		array(
-			array( 'text' => jos_t( 'Di bis Fr 10:00 bis 19:00' ) ),
-			array( 'text' => jos_t( 'Sa 10:00 bis 18:00' ) ),
-			array( 'text' => jos_t( 'So und Mo geschlossen' ) ),
+			array( 'text' => jos_t( 'Di-Fr 10-19 Uhr' ) ),
+			array( 'text' => jos_t( 'Sa 10-18 Uhr' ) ),
+			array( 'text' => jos_t( 'So&Mo geschlossen' ) ),
 		),
 		$menu,
 		$contact,

@@ -108,11 +108,11 @@ function jos_strings(): array {
 			'Galerie'                                  => 'Gallery',
 			'Kontakt'                                  => 'Contact',
 			'Inhalt folgt.'                            => 'Content follows.',
-			'Alle Rechte vorbehalten.'                 => 'All rights reserved.',
+			'Alle Rechte vorbehalten'                  => 'All rights reserved',
 			'Erstellt von die aigentur'                => 'Made by die aigentur',
-			'Di bis Fr 10:00 bis 19:00'                => 'Tue to Fri 10:00 to 19:00',
-			'Sa 10:00 bis 18:00'                       => 'Sat 10:00 to 18:00',
-			'So und Mo geschlossen'                    => 'Sun and Mon closed',
+			'Di-Fr 10-19 Uhr'                          => 'Tue-Fri 10-19',
+			'Sa 10-18 Uhr'                             => 'Sat 10-18',
+			'So&Mo geschlossen'                        => 'Sun&Mon closed',
 		),
 	);
 }
