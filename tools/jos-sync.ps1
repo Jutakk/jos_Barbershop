@@ -28,9 +28,21 @@ git -C $repo fetch --quiet origin
 git -C $repo checkout --quiet $branch
 $last = ''
 $pendingBefore = ''
+$fetchWarned = [datetime]::MinValue
+$env:GIT_TERMINAL_PROMPT = '0'   # git never waits for a typed password: it fails, and the failure is reported
 Write-Host ('{0}  Sinkronizacija radi. Ostavi ovaj prozor otvoren.' -f (Stamp))
 while ($true) {
-    git -C $repo fetch --quiet origin $branch 2>$null
+    # a failed fetch is reported (once a minute), so a sync that cannot reach GitHub never looks like a quiet one
+    $fetchOut = git -C $repo fetch --quiet origin $branch 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        if (((Get-Date) - $fetchWarned).TotalSeconds -ge 60) {
+            Write-Host ('{0}  GitHub se ne javlja, nove izmjene ne stizu. Posalji Claudeu ovaj ispis:' -f (Stamp))
+            Write-Host ($fetchOut | Out-String)
+            $fetchWarned = Get-Date
+        }
+        Start-Sleep -Seconds 5
+        continue
+    }
     $current = git -C $repo branch --show-current
     if ($current -ne $branch) {
         Write-Host ('{0}  D:\ nije na grani {1} (nego {2}). Sinkronizacija ceka.' -f (Stamp), $branch, $current)
