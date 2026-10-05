@@ -109,16 +109,19 @@ const OPENING_OPACITY = 0.8;
 
 // the footer in four columns cut into the foundation under the ground line: the first column starts at the left
 // corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
-// its lines are flush left. All lines of all columns stand on one grid, FOOTER.line apart. The first column
-// starts with the small logo, two lines tall: from the top of the capitals of the first line to the foot of the
-// capitals of the second (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
+// its lines are flush left. All lines of all columns stand on one grid, FOOTER.line apart, so the first lines
+// of all columns stand on one line: the first line of the first column is the small logo, centred on the
+// capitals of the other first lines (the capitals fill 19 to 50 px of the TEXT_CANVAS_HEIGHT canvas)
 const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, column: 1.0, depth: 0, gap: 0, opacity: 1, fog: false };
 const FOOTER_CAPS = { top: (FOOTER.height * 19) / TEXT_CANVAS_HEIGHT, bottom: (FOOTER.height * 50) / TEXT_CANVAS_HEIGHT };
-const FOOTER_LOGO = FOOTER.line + FOOTER_CAPS.bottom - FOOTER_CAPS.top;
+const FOOTER_LOGO = FOOTER.line * 0.8;
+// a link of the footer pointed at: a brown block behind it, the letters in the light paper colour, like the
+// buttons on the cornice; the block is as tall as the line and FOOTER_BLOCK_PAD wider on each side
+const FOOTER_BLOCK_PAD = (FOOTER.height * 22) / TEXT_CANVAS_HEIGHT;
 // "Erstellt von" and the mark of die aigentur (assets/images/die-aigentur-mark.svg, 547.99 x 100.55, its letters
 // stand on the line at 79.8): the letters of the mark are as tall as the capitals of the line, stand on the same
-// line and have the colour of the text; pointed at, the mark goes to 75 % like on the site of the agency
-const AGENCY_MARK = { width: 547.99, height: 100.55, line: 79.8, hover: 0.75 };
+// line and have the colour of the text; it is a link like the others
+const AGENCY_MARK = { width: 547.99, height: 100.55, line: 79.8 };
 const AGENCY_HEIGHT = ((FOOTER_CAPS.bottom - FOOTER_CAPS.top) * AGENCY_MARK.height) / AGENCY_MARK.line;
 const AGENCY_WIDTH = (AGENCY_HEIGHT * AGENCY_MARK.width) / AGENCY_MARK.height;
 // the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
@@ -139,6 +142,34 @@ const DOCK_INK = '#ece8df';        // light paper colour
 const BLOCK_PAD = 22;              // px of the canvas left and right of the letters
 
 const root = document.querySelector('[data-scene]');
+
+// ---- the hero lines end exactly at the ink of their last letter: the empty side of the last letter (and the
+// spacing after the small lines) is taken back with a negative margin. JO'S stands above the tallest letter of
+// the first word of the slogan as far as it stands above the small letters of "your" (the letters of "dein"
+// reach up higher than those of "your"; without this JO'S would touch the d)
+const inkMeter = document.createElement('canvas').getContext('2d');
+const measureInk = (element, text) => {
+	const style = getComputedStyle(element);
+	inkMeter.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+	if ('letterSpacing' in inkMeter) inkMeter.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
+	return inkMeter.measureText(style.textTransform === 'uppercase' ? text.toLocaleUpperCase('de') : text);
+};
+const alignHeroInk = () => {
+	document.querySelectorAll('.hero__word, .hero__meta').forEach((line) => {
+		const text = line.textContent.trim();
+		if (!text) return;
+		const ink = measureInk(line, text);
+		line.style.marginRight = `${(ink.actualBoundingBoxRight - ink.width).toFixed(2)}px`;
+	});
+	const brand = document.querySelector('.hero__brand');
+	const first = document.querySelector('.hero__word:not(.hero__brand)');
+	if (brand && first) {
+		const higher = measureInk(first, first.textContent.trim()).actualBoundingBoxAscent - measureInk(first, 'x').actualBoundingBoxAscent;
+		brand.style.marginBottom = `calc(var(--title) * -0.26 + ${Math.max(0, higher).toFixed(2)}px)`;
+	}
+};
+alignHeroInk();
+if (document.fonts) document.fonts.ready.then(alignHeroInk);
 
 const readJson = (value) => {
 	try {
@@ -589,7 +620,8 @@ if (root) {
 				const top = FOOTER.first - grid * FOOTER.line;
 				let line;
 				if (item.kind === 'logo') {
-					line = writeRow([item], { ...FOOTER, height: FOOTER_LOGO, logo: FOOTER_LOGO, top: top - FOOTER_CAPS.top, start });
+					const middle = top - (FOOTER_CAPS.top + FOOTER_CAPS.bottom) / 2;
+					line = writeRow([item], { ...FOOTER, height: FOOTER_LOGO, logo: FOOTER_LOGO, top: middle + FOOTER_LOGO / 2, start });
 				} else if (item.kind === 'agency') {
 					loadAgencyMark(item.mark);
 					line = writeRow([{ text: `${item.text} ` }, { kind: 'mark', text: item.label, url: item.url }], { ...FOOTER, top, start });
@@ -600,12 +632,36 @@ if (root) {
 					end = Math.max(end, piece.to);
 				});
 				inscription.push(...line);
-				grid += item.kind === 'logo' ? 2 : 1;
+				grid += 1;
 			});
 			start = end + FOOTER.column;
 		});
 		const words = [...inscription];
 		const isLink = (piece) => Boolean(piece.url) || piece.arch !== undefined;
+
+		// every link of the footer has a brown block behind it, shown while it is pointed at (placeTexts)
+		const footerInk = new THREE.Color(FACADE_COLOR);
+		const footerLight = new THREE.Color(DOCK_INK);
+		inscription.filter(isLink).forEach((piece) => {
+			const backing = new THREE.Mesh(
+				new THREE.PlaneGeometry(piece.length + FOOTER_BLOCK_PAD * 2, piece.row.height),
+				new THREE.MeshBasicMaterial({
+					color: DOCK_COLOR,
+					transparent: true,
+					opacity: 0,
+					depthWrite: false,
+					side: THREE.DoubleSide,
+					fog: false,
+				}),
+			);
+			backing.rotation.y = -Math.PI / 2;
+			backing.position.set(wallX + piece.row.depth - 0.008, piece.row.top - piece.row.height / 2, piece.from + piece.length / 2);
+			backing.visible = false;
+			backing.renderOrder = 1;
+			piece.mesh.renderOrder = 2;
+			sign.add(backing);
+			piece.backing = backing;
+		});
 
 		// ---- the menu: its buttons are the cells of the dock (placeDock)
 		const menuRow = writeRow([
@@ -777,15 +833,20 @@ if (root) {
 			const room = x - HERO_TEXT_GAP - 16;
 			let scale = 1;
 			if (heroTitle) heroTitle.style.removeProperty('--title');
+			alignHeroInk();
 			const size = heroTitle ? parseFloat(getComputedStyle(heroTitle).fontSize) : 0;
-			for (let i = 0; i < 3 && heroTitle && room > 0 && heroContent.offsetWidth > room && scale > HERO_FIT_MIN; i++) {
+			for (let i = 0; i < 6 && heroTitle && room > 0 && heroContent.offsetWidth > room && scale > HERO_FIT_MIN; i++) {
 				scale = Math.max(HERO_FIT_MIN, scale * (room / heroContent.offsetWidth));
 				heroTitle.style.setProperty('--title', `${(size * scale).toFixed(2)}px`);
+				alignHeroInk();   // the empty sides of the letters get smaller with the letters
 			}
 			const textW = heroContent.offsetWidth;
 			const textH = heroContent.offsetHeight;
 			const fits = x - HERO_TEXT_GAP - textW >= 16 && y > textH + 80 && y <= h;
-			if (!fits && heroTitle) heroTitle.style.removeProperty('--title');
+			if (!fits && heroTitle) {
+				heroTitle.style.removeProperty('--title');
+				alignHeroInk();
+			}
 			heroPlateSize.on = fits;
 			document.documentElement.classList.toggle('has-house-corner', fits);
 			if (!fits) {
@@ -941,10 +1002,12 @@ if (root) {
 				setOpacity(ribbon.fill, OPENING_OPACITY * ribbon.glow.value * shown * away);
 			});
 			words.forEach((piece) => {
-				const lit = piece.mark
-					? 1 - (1 - AGENCY_MARK.hover) * piece.glow.value
-					: piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value;
-				const opacity = lit * shown * gone;
+				const opacity = (piece.row.opacity + (1 - piece.row.opacity) * piece.glow.value) * shown * gone;
+				if (piece.backing) {
+					// a pointed link of the footer: brown block, light letters
+					setOpacity(piece.backing, piece.glow.value * shown * gone);
+					piece.mesh.material.color.copy(footerInk).lerp(footerLight, piece.glow.value);
+				}
 				if (piece.block) {
 					piece.mesh.material.uniforms.uOpacity.value = opacity;
 					piece.mesh.visible = opacity > 0.002;

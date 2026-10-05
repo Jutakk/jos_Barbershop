@@ -83,7 +83,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Footer je upisan u temelj zgrade, ispod linije tla, u 4 kolone poravnate lijevo
   (`jos_footer_columns()` u `functions.php`). Prva kolona počinje na lijevom kutu kuće, svaka je široka
   koliko njen najduži red, redovi u koloni stoje jedan ispod drugog. Svi redovi svih kolona stoje u istim
-  linijama; malo logo zauzima dva reda:
+  linijama, pa su i prvi redovi u istoj liniji; malo logo je prvi red prve kolone, centriran na slova prvih
+  redova ostalih kolona:
   1. malo logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von + logo die aigentur
      (EN: All rights reserved, Made by + logo)
   2. radno vrijeme: Di-Fr 10-19 Uhr, Sa 10-18 Uhr, So&Mo geschlossen (EN: Tue-Fri 10-19, Sat 10-18,
@@ -92,8 +93,10 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
      (EN: Services, About us, Gallery, Contact, Imprint, Privacy, Cookies, FAQ)
   4. Gumpendorfer Straße 127, 1060 Wien (oba reda vode na Google Maps), telefon
 - Logo die aigentur (`assets/images/die-aigentur-mark.svg`, iz iks.haus teme) stoji iza "Erstellt von", u
-  boji teksta footera; slova su mu visoka kao velika slova reda i stoje na istoj liniji. Vodi na https://dieaigentur.at/ u
-  novoj kartici; pod mišem padne na 75 % kao na iks.haus webu.
+  boji teksta footera; slova su mu visoka kao velika slova reda i stoje na istoj liniji. Vodi na
+  https://dieaigentur.at/ u novoj kartici.
+- Hover na svim linkovima footera (i na logu die aigentur): smeđi blok iza linka, slova u svijetloj boji papira,
+  kao gumbi na vijencu. Isto u temelju i u običnom footeru (tamo i fokus tipkovnicom).
 - Čita se kad se zgrada okrene prema gore ili gurne u dubinu; redovi ne blijede u daljinu. Linkovi pod mišem
   zasvijetle: stranice otvaraju svoj luk, Häufige Fragen otvara Kontakt pomaknut do pitanja (adresa `/#faq`).
 - Telefon se upisuje u Customizeru (sekcija "Jo's Barbershop", polje "Telefon"); dok je prazno, kolona 4 ima
@@ -168,7 +171,9 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 - `front-page.php`: hero s 3D znakom; malo JO'S (kao red ispod slogana) odmah iznad slogana, pa riječ ispod riječi:
   dein / Selbstbewusstsein / beginnt / hier (EN: your / confidense / starts / here), ispod BARBERSHOP in
-  1060 WIEN (EN: VIENNA). Tekst je
+  1060 WIEN (EN: VIENNA). Svaki red završava točno na rubu svog zadnjeg slova (prazan prostor sa strane slova se
+  oduzme), pa su desni rubovi poravnati u pikselu. JO'S stoji iznad najvišeg slova prve riječi s istim razmakom
+  kao iznad "your" (u "dein" se "d" diže više, pa se JO'S podigne toliko). Tekst je
   zalijepljen za kuću u prostoru: u prvom kadru stoji uz donji lijevi kut kuće, poravnat desno, svaki red završava
   7 mm (26 px) lijevo od ruba kuće, zadnji red na liniji tla. Kad se zgrada okreće, gura u dubinu ili ide uz ulicu,
   tekst je prati i crta se u perspektivi (`scene.js`, CSS matrix3d, tekst ostaje pravi tekst). Gdje u prvom
@@ -205,7 +210,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.10.5: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.10.6: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 
