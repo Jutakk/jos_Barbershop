@@ -80,20 +80,22 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 
 **Footer u temelju**
 
-- Footer je upisan u temelj zgrade, ispod linije tla, u 4 reda poravnata s lijevim kutom kuće
-  (`jos_footer_rows()` u `functions.php`):
-  1. malo logo, © 2026 Jo's Barbershop. Alle Rechte vorbehalten. · Made by die aigentur
-  2. radno vrijeme: Di bis Fr 10:00 bis 19:00 · Sa 10:00 bis 18:00 · So und Mo geschlossen
-  3. izbornik: Leistungen · Über uns · Galerie · Kontakt · Impressum · Datenschutz · Cookies · FAQ
-  4. adresa (vodi na Google Maps) · telefon
+- Footer je upisan u temelj zgrade, ispod linije tla, u 4 kolone poravnate lijevo
+  (`jos_footer_columns()` u `functions.php`). Prva kolona počinje na lijevom kutu kuće, svaka je široka
+  koliko njen najduži red, redovi u koloni stoje jedan ispod drugog:
+  1. malo logo, © 2026 Jo's Barbershop. Alle Rechte vorbehalten., Made by die aigentur
+  2. radno vrijeme: Di bis Fr 10:00 bis 19:00, Sa 10:00 bis 18:00, So und Mo geschlossen
+  3. izbornik: Leistungen, Über uns, Galerie, Kontakt, Impressum, Datenschutz, Cookies, FAQ
+  4. adresa (vodi na Google Maps), telefon
 - Čita se kad se zgrada okrene prema gore ili gurne u dubinu; redovi ne blijede u daljinu. Linkovi pod mišem
   zasvijetle: stranice otvaraju svoj luk, FAQ otvara Kontakt pomaknut do pitanja (adresa `/#faq`).
-- Telefon se upisuje u Customizeru (sekcija "Jo's Barbershop", polje "Telefon"); dok je prazno, red 4 ima
+- Telefon se upisuje u Customizeru (sekcija "Jo's Barbershop", polje "Telefon"); dok je prazno, kolona 4 ima
   samo adresu. Telefon ide i u HairSalon schemu.
 - Impressum, Datenschutz i Cookies tema sama napravi kao stranice s "Inhalt folgt." (kad prijavljeni
   administrator otvori stranicu); tekst se piše u WordPressu.
-- Obični HTML footer s istim redovima ostaje za tipkovnicu, čitače ekrana i Google: na naslovnoj stoji ispod
-  ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer.
+- Obični HTML footer s istim kolonama ostaje za tipkovnicu, čitače ekrana i Google: na naslovnoj stoji ispod
+  ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer (4 kolone,
+  na tabletu 2, na mobitelu jedna ispod druge).
 
 **Izbornik na vijencu**
 
@@ -191,7 +193,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.10.0: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.10.1: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački, engleski i arapski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

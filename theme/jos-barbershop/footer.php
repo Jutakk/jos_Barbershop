@@ -1,23 +1,23 @@
 <?php
 /**
- * Footer in four rows (jos_footer_rows()): logo, copyright and agency; opening hours; the menu with the legal
- * pages and the FAQ; address and phone. On the front page the same rows are cut into the foundation of the
- * facade (scene.js); this footer then stays for keyboards and screen readers and slides in when one of its
- * links gets the focus.
+ * Footer in four columns, flush left (jos_footer_columns()): logo, copyright and agency; opening hours; the
+ * menu with the legal pages and the FAQ; address and phone. On the front page the same columns are cut into the
+ * foundation of the facade (scene.js); this footer then stays for keyboards and screen readers and slides in
+ * when one of its links gets the focus.
  *
  * @package jos-barbershop
  */
 
-$jos_rows = jos_footer_rows();
+$jos_columns = jos_footer_columns();
 ?>
 <footer class="site-footer">
-	<?php foreach ( $jos_rows as $jos_index => $jos_row ) : ?>
+	<?php foreach ( $jos_columns as $jos_index => $jos_column ) : ?>
 		<?php if ( 2 === $jos_index ) : ?>
-			<nav class="site-footer__row site-footer__menu" aria-label="<?php echo esc_attr( jos_t( 'Rechtliches' ) ); ?>">
+			<nav class="site-footer__column site-footer__menu" aria-label="<?php echo esc_attr( jos_t( 'Rechtliches' ) ); ?>">
 		<?php else : ?>
-			<p class="site-footer__row">
+			<div class="site-footer__column">
 		<?php endif; ?>
-		<?php foreach ( $jos_row as $jos_item ) : ?>
+		<?php foreach ( $jos_column as $jos_item ) : ?>
 			<?php if ( 'logo' === ( $jos_item['kind'] ?? '' ) ) : ?>
 				<img class="site-footer__logo" src="<?php echo esc_url( jos_image( 'logo-small.webp' ) ); ?>" alt="<?php echo esc_attr( $jos_item['text'] ); ?>" width="32" height="32" loading="lazy">
 			<?php elseif ( ! empty( $jos_item['url'] ) ) : ?>
@@ -29,7 +29,7 @@ $jos_rows = jos_footer_rows();
 		<?php if ( 2 === $jos_index ) : ?>
 			</nav>
 		<?php else : ?>
-			</p>
+			</div>
 		<?php endif; ?>
 	<?php endforeach; ?>
 </footer>

@@ -107,10 +107,10 @@ const HOVER_OPACITY = 0.3;       // ... and get this much more opaque
 const OPENING_COLOR = 0xffffff;  // ... and the whole window or door fills with white
 const OPENING_OPACITY = 0.8;
 
-// the footer lines, cut into the foundation under the ground line, centred under the arches
-// the footer in four rows under the ground line, flush left with the left corner of the house (BUILDING_LEFT
-// below); the first row starts with the small logo
-const FOOTER_ROWS = { height: 0.42, first: FACADE_ARCH.ground - 0.3, step: 0.74, depth: 0, gap: 0.55, opacity: 1, logo: 0.9, fog: false };
+// the footer in four columns cut into the foundation under the ground line: the first column starts at the left
+// corner of the house (BUILDING_LEFT below), every column is as wide as its longest line plus FOOTER.column, and
+// its lines are flush left, FOOTER.line apart; the first column starts with the small logo
+const FOOTER = { height: 0.42, first: FACADE_ARCH.ground - 0.3, line: 0.62, column: 1.2, depth: 0, gap: 0, opacity: 1, logo: 0.9, fog: false };
 // the menu (the pages and the languages) in one close row standing on the top line of the cornice: the front
 // edge of its crown, which is the highest line from the street (fasada/build_facade.py, CORNICE: 284.5 px,
 // 0.78 in front of the wall). The row starts flush with the left corner of the building (X_LEFT, 70 px) and
@@ -485,16 +485,11 @@ if (root) {
 				return { arch: item.arch, z: archZ, mesh, fill, texture, repeat, glow: { value: 0 } };
 			});
 
-		// ---- rows of words written along the facade, centred over the arches or starting at row.start: the
-		// footer lines in the foundation (a dot between the lines) and the menu on the cornice (buttons). A piece
-		// with an address (url) or an arch is a link. In Arabic the row runs from right to left.
+		// ---- rows of words written along the facade, centred over the arches or starting at row.start: every
+		// line of the footer columns in the foundation and the menu on the cornice (buttons). A piece with an
+		// address (url) or an arch is a link. In Arabic the row runs from right to left.
 		const writeRow = (items, row) => {
-			const pieces = [];
-			items.forEach((item, i) => {
-				// a dot between the words of a row; buttons stand apart without dots, and none after the logo
-				if (i > 0 && !row.blocks && items[i - 1].kind !== 'logo') pieces.push({ text: '·' });
-				pieces.push({ ...item, text: String(item.text || '').toLocaleUpperCase('de') });
-			});
+			const pieces = items.map((item) => ({ ...item, text: String(item.text || '').toLocaleUpperCase('de') }));
 			const words = pieces.filter((piece) => piece.text.trim()).map((piece) => {
 				if (piece.kind === 'logo') {
 					return { ...piece, row, logo: true, length: row.logo, glow: { value: 0 } };
@@ -538,11 +533,25 @@ if (root) {
 			side: THREE.DoubleSide,
 			fog: false,
 		});
-		const footerRows = footer.length && !Array.isArray(footer[0]) ? [footer] : footer;
-		const inscription = footerRows.flatMap((items, i) => writeRow(
-			items.map((item) => ({ ...item, text: item.text || '' })),
-			{ ...FOOTER_ROWS, top: FOOTER_ROWS.first - i * FOOTER_ROWS.step, start: BUILDING_LEFT },
-		));
+		// the footer columns one after the other from the left corner of the house, in every language; every line
+		// is a row of one item, the logo line is as tall as the logo
+		const footerColumns = footer.length && !Array.isArray(footer[0]) ? [footer] : footer;
+		const inscription = [];
+		let columnStart = BUILDING_LEFT;
+		footerColumns.forEach((items) => {
+			let top = FOOTER.first;
+			let columnEnd = columnStart;
+			items.forEach((item) => {
+				const height = item.kind === 'logo' ? FOOTER.logo : FOOTER.height;
+				const line = writeRow([{ ...item, text: item.text || '' }], { ...FOOTER, height, top, start: columnStart });
+				line.forEach((piece) => {
+					columnEnd = Math.max(columnEnd, piece.to);
+				});
+				inscription.push(...line);
+				top -= height + FOOTER.line - FOOTER.height;
+			});
+			columnStart = columnEnd + FOOTER.column;
+		});
 		const words = [...inscription];
 		const isLink = (piece) => Boolean(piece.url) || piece.arch !== undefined;
 

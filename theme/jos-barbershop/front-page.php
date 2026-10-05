@@ -29,7 +29,7 @@ foreach ( jos_rooms() as $jos_room ) {
 		data-logo="<?php echo esc_url( jos_image( 'logo-texture.webp' ) ); ?>"
 		data-paper="<?php echo esc_url( jos_image( 'paper.webp' ) ); ?>"
 		data-arches="<?php echo esc_attr( wp_json_encode( $jos_arches, JSON_UNESCAPED_UNICODE ) ); ?>"
-		data-footer="<?php echo esc_attr( wp_json_encode( jos_footer_rows(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
+		data-footer="<?php echo esc_attr( wp_json_encode( jos_footer_columns(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
 		data-languages="<?php echo esc_attr( wp_json_encode( jos_language_links(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?>"
 		data-dir="<?php echo esc_attr( jos_languages()[ jos_lang() ]['dir'] ); ?>"
 		<?php echo $jos_panorama ? 'data-panorama="' . esc_url( $jos_panorama ) . '"' : ''; ?>

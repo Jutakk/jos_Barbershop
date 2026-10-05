@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.10.0' );
+define( 'JOS_VERSION', '0.10.1' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -264,8 +264,8 @@ function jos_maps_link(): string {
 }
 
 /**
- * The footer in four rows. footer.php shows them as the footer; on the front page scene.js also cuts them
- * into the foundation of the facade, under the ground line.
+ * The footer in four columns, flush left. footer.php shows them as the footer; on the front page scene.js
+ * also cuts them into the foundation of the facade, under the ground line, one line under the other.
  *   1. the small logo, copyright, made by die aigentur
  *   2. the opening hours
  *   3. the menu: the pages, Impressum, Datenschutz, Cookies, FAQ
@@ -274,7 +274,7 @@ function jos_maps_link(): string {
  *
  * @return array<int, array<int, array<string, mixed>>>
  */
-function jos_footer_rows(): array {
+function jos_footer_columns(): array {
 	$shop  = jos_shop();
 	$base  = is_front_page() ? '' : jos_url( home_url( '/' ) );
 	$legal = static function ( string $slug ): string {
