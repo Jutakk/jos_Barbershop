@@ -5,9 +5,10 @@
  *    right edge, like the green on the walls of the shop; longest at the edge of the screen, the middle stays free
  *    for the menu on the cornice, the sign and the hero text. Every vine is a chain of the shapes, each link
  *    hanging from the end of the one above and swinging a little around that point, so the vine sways like a
- *    rope. A wind runs across the screen: neighbouring vines swing together. The vines hang in front of the
- *    facade, let every click through and fade out when the camera goes through an arch ('jos:view' from
- *    motion.js).
+ *    rope. A wind runs across the screen: neighbouring vines swing together. When the front page loads they grow:
+ *    each vine from the top down, link after link, the vines starting one after another, together with the
+ *    facade drawing itself. The vines hang in front of the facade, let every click through and fade out when the
+ *    camera goes through an arch ('jos:view' from motion.js).
  * 2. The reservation button of the hero: three plants hang over its top edge and sway while it is pointed at or
  *    has the focus, as on the Uiverse button.
  * Without motion everything hangs still.
@@ -74,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SCALE = [2.0, 3.4];    // px per unit of the shapes: far, near (on a phone 0.7 of it)
 	const SWAY = [1.0, 1.2];     // degrees each link swings: the top link, every link further down adds the second
 	const WIND = 3.4;            // s for the wind to cross the screen
+	// growing on load: s for one link to grow out of the one above, s over which the vines start, and the latest
+	// start when the scene never says it is ready (no WebGL)
+	const GROW = { link: 0.5, spread: 1.6, wait: 4 };
 
 	// the same vines on every visit
 	let seed = 1060127;
@@ -109,10 +113,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	let tweens = [];
 	let builtWidth = 0;
+	let growing = [];   // the paused growth of every vine, played once the facade begins to draw
 
-	const build = () => {
+	const build = (grow = false) => {
 		tweens.forEach((tween) => tween.kill());
 		tweens = [];
+		growing = [];
 		box.replaceChildren();
 		const width = window.innerWidth;
 		const height = window.innerHeight;
@@ -144,6 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		vines.sort((a, b) => a.depth - b.depth);
 		vines.forEach((vine) => {
 			const color = GREENS[Math.min(GREENS.length - 1, Math.floor(vine.depth * GREENS.length))];
+			// each link grows out of the end of the one above (scale along its length from its top), the next one
+			// starts just before it is done; not from the seeded random, so the vines stay where they are
+			const growth = grow ? gsap.timeline({ paused: true }) : null;
+			const growStart = Math.random() * GROW.spread;
 			let parent = null;
 			let reach = 0;
 			let level = 0;
@@ -167,6 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					box.appendChild(made.link);
 				}
 				gsap.set(made.link, { transformOrigin: `${made.top}px 0px` });
+				if (growth) {
+					gsap.set(made.link, { scaleY: 0 });
+					growth.to(made.link, { scaleY: 1, duration: GROW.link, ease: level ? 'none' : 'power1.in' }, level ? '>-0.06' : growStart);
+				}
 				if (!reduced) {
 					const amplitude = (SWAY[0] + SWAY[1] * level) * random(0.7, 1.3);
 					const duration = random(2.6, 4.2);
@@ -182,10 +196,41 @@ document.addEventListener('DOMContentLoaded', () => {
 				level += 1;
 				if (last) break;
 			}
+			if (growth) {
+				growth.eventCallback('onComplete', () => growth.kill());
+				growing.push(growth);
+				tweens.push(growth);
+			}
 		});
 	};
 
-	build();
+	// the vines grow when the facade begins to draw (the scene gets .is-ready), at the latest after GROW.wait s
+	const grows = !reduced;
+	build(grows);
+	if (grows) {
+		const scene = document.querySelector('[data-scene]');
+		let started = false;
+		const start = () => {
+			if (started) return;
+			started = true;
+			growing.forEach((growth) => growth.play());
+			growing = [];
+		};
+		if (scene && !scene.classList.contains('is-ready')) {
+			const watch = new MutationObserver(() => {
+				if (!scene.classList.contains('is-ready')) return;
+				watch.disconnect();
+				start();
+			});
+			watch.observe(scene, { attributes: true, attributeFilter: ['class'] });
+			setTimeout(() => {
+				watch.disconnect();
+				start();
+			}, GROW.wait * 1000);
+		} else {
+			start();
+		}
+	}
 	let resizing = null;
 	window.addEventListener('resize', () => {
 		clearTimeout(resizing);

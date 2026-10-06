@@ -224,7 +224,8 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 - `assets/js/vines.js`: zeleni puzavci vise s gornjeg ruba ekrana na naslovnici, kao zelenilo na zidovima lokala,
   i njihanje biljaka na gumbu Reservierung. Tri oblika listova (gumb s Uiverse.io, MuhammadHasann) su jednom u
   `assets/images/plants.svg` (simboli `plant-0` do `plant-2`), svaki puzavac je lanac od njih, svaka karika se njiše
-  oko točke na kojoj visi (GSAP), vjetar prolazi slijeva nadesno. Dva gusta zida: lijevo iznad hero teksta, desno
+  oko točke na kojoj visi (GSAP), vjetar prolazi slijeva nadesno. Pri učitavanju naslovnice puzavci izrastu odozgor
+  prema dolje, karika po karika, dok se fasada crta (počnu kad scena dobije .is-ready, najkasnije nakon 4 s). Dva gusta zida: lijevo iznad hero teksta, desno
   do ruba ekrana, najduži uz rub; sredina (izbornik na vijencu, znak) ostaje slobodna. Na mobitelu samo desni zid,
   desno od izbornika u zaglavlju. Klikovi prolaze kroz lišće, kroz luk u stranicu puzavci nestanu, bez pokreta
   (reduced motion) vise mirno. Uvijek isti raspored (stalni seed).
@@ -251,7 +252,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.8: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.9: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 
