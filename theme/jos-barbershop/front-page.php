@@ -40,14 +40,14 @@ foreach ( jos_rooms() as $jos_room ) {
 	</div>
 
 	<?php // green creepers hanging from the top edge of the screen (vines.js) ?>
-	<div class="vines" data-vines aria-hidden="true"></div>
+	<div class="vines" data-vines data-plants="<?php echo esc_url( jos_image( 'plants.svg' ) ); ?>" aria-hidden="true"></div>
 
 	<section class="hero" aria-labelledby="hero-title">
 		<div class="hero__content">
 			<?php
 			// one word per line: JO'S / dein / Selbstbewusstsein / beginnt / hier (English: your / confidense /
-			// starts / here), against the bottom left corner of the house (scene.js); the booking button is on the
-			// contact page
+			// starts / here), the green reservation button and BARBERSHOP in 1060 WIEN, against the bottom left
+			// corner of the house (scene.js)
 			?>
 			<h1 id="hero-title" class="hero__title" data-reveal>
 				<span class="hero__word hero__brand">Jo&rsquo;s</span><span class="visually-hidden"> Barbershop.</span>
@@ -55,6 +55,7 @@ foreach ( jos_rooms() as $jos_room ) {
 					<span class="hero__word"><?php echo esc_html( $jos_word ); ?></span>
 				<?php endforeach; ?>
 			</h1>
+			<div class="hero__action" data-reveal><?php jos_reservation_button(); ?></div>
 			<p class="hero__meta" data-reveal><?php echo esc_html( jos_t( 'BARBERSHOP in 1060 WIEN' ) ); ?></p>
 		</div>
 	</section>

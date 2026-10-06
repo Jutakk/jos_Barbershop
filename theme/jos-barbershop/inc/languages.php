@@ -92,6 +92,7 @@ function jos_strings(): array {
 			'Hauptmenü'                                => 'Main menu',
 			'Sprache'                                  => 'Language',
 			'Termin buchen'                            => 'Book an appointment',
+			'Reservierung'                             => 'Reservation',
 			'Termin-Link im Customizer eintragen'      => 'Set the booking link in the Customizer',
 			'Seite bearbeiten'                         => 'Edit page',
 			'Seite mit der Adresse "%s" anlegen'       => 'Create a page with the address "%s"',

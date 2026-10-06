@@ -205,8 +205,11 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   7 mm (26 px) lijevo od ruba kuće, zadnji red na liniji tla. Kad se zgrada okreće, gura u dubinu ili ide uz ulicu,
   tekst je prati i crta se u perspektivi (`scene.js`, CSS matrix3d, tekst ostaje pravi tekst). Gdje u prvom
   kadru nema mjesta (mobitel) stoji dolje lijevo na ekranu. Zaglavlje nema natpis JO'S BARBERSHOP, samo izbornik
-  (na računalu skriven, jer je izbornik na vijencu). Gumb "Termin buchen" je na stranici Kontakt. Zatim četiri
-  stranice iza lukova i X za povratak na ulicu
+  (na računalu skriven, jer je izbornik na vijencu). Između "hier" i "BARBERSHOP in 1060 WIEN" stoji zeleni gumb
+  "Reservierung" (EN "Reservation", `jos_reservation_button()`, po gumbu s Uiverse.io, MuhammadHasann): tri biljke
+  vise preko gornjeg ruba i njišu se dok je miš na gumbu ili ima fokus. Vodi na Termin-Link iz Customizera
+  (booking stranica u novoj kartici); dok link nije upisan, otvara stranicu Kontakt. Gumb "Termin buchen" je i na
+  stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
   kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
   `jos:open`, klik na redak u temelju kao `jos:link`. Oštrina najviše 1.5 piksela po CSS pikselu; kad grafika ne
@@ -218,8 +221,9 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   generira ih `fasada/build_facade.py`
 - `assets/js/motion.js`: GSAP drži sve vrijednosti: položaj na ulici (`jos:street`, scroll, povlačenje, strelice),
   put kamere kroz luk (`jos:view`), pogled u lokalu (`jos:look`), otvaranje i zatvaranje stranica, adrese i tipka Natrag
-- `assets/js/vines.js`: zeleni puzavci vise s gornjeg ruba ekrana na naslovnici, kao zelenilo na zidovima lokala.
-  Tri oblika listova (gumb s Uiverse.io, MuhammadHasann), svaki puzavac je lanac od njih, svaka karika se njiše
+- `assets/js/vines.js`: zeleni puzavci vise s gornjeg ruba ekrana na naslovnici, kao zelenilo na zidovima lokala,
+  i njihanje biljaka na gumbu Reservierung. Tri oblika listova (gumb s Uiverse.io, MuhammadHasann) su jednom u
+  `assets/images/plants.svg` (simboli `plant-0` do `plant-2`), svaki puzavac je lanac od njih, svaka karika se njiše
   oko točke na kojoj visi (GSAP), vjetar prolazi slijeva nadesno. Dva gusta zida: lijevo iznad hero teksta, desno
   do ruba ekrana, najduži uz rub; sredina (izbornik na vijencu, znak) ostaje slobodna. Na mobitelu samo desni zid,
   desno od izbornika u zaglavlju. Klikovi prolaze kroz lišće, kroz luk u stranicu puzavci nestanu, bez pokreta
@@ -247,7 +251,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.7: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.8: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

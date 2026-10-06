@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.7' );
+define( 'JOS_VERSION', '0.11.8' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -209,6 +209,38 @@ function jos_phone(): array {
  */
 function jos_sanitize_link( string $value ): string {
 	return esc_url_raw( trim( $value ), array( 'https', 'http', 'tel' ) );
+}
+
+/**
+ * Reservation button of the hero (after a button on Uiverse.io by MuhammadHasann): green, the three plants of
+ * images/plants.svg hang over its top edge and sway while it is pointed at (vines.js). It leads to the booking
+ * link of the Customizer (a booking page in a new tab); until that is set, to the contact page behind its arch.
+ */
+function jos_reservation_button(): void {
+	$link   = (string) get_theme_mod( 'jos_booking_link', '' );
+	$sprite = jos_image( 'plants.svg' );
+	// the plants as on the Uiverse button: symbol, its viewBox
+	$plants = array(
+		array( 0, '0 0 26.3 65.33' ),
+		array( 1, '0 0 11.67 37.63' ),
+		array( 2, '0 0 25.29 76.92' ),
+	);
+	$html = '';
+	foreach ( $plants as $index => $plant ) {
+		$html .= sprintf(
+			'<span class="reserve__plant reserve__plant--%1$d" data-plant aria-hidden="true"><svg viewBox="%2$s" focusable="false"><use href="%3$s"></use></svg></span>',
+			$index + 1,
+			esc_attr( $plant[1] ),
+			esc_url( $sprite ) . '#plant-' . $plant[0]
+		);
+	}
+	printf(
+		'<a class="reserve" href="%1$s"%2$s data-reserve><span class="reserve__label">%3$s</span>%4$s</a>',
+		esc_url( $link ? $link : '#kontakt', array( 'https', 'http', 'tel' ) ),
+		0 === strpos( $link, 'http' ) ? ' target="_blank" rel="noopener"' : '',
+		esc_html( jos_t( 'Reservierung' ) ),
+		$html // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+	);
 }
 
 /**

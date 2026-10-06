@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.7
+Version: 0.11.8
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -43,6 +43,9 @@ $bp-tablet: 768px;
 	--jos-paper-light: #ece8df;   // light paper colour: the letters on the brown buttons and blocks
 	--jos-muted: #5e5148;
 	--jos-accent: #8b5a2b;
+	--jos-green: #3f6b3a;      // the reservation button, a green of the vines (vines.js)
+	--jos-green-hover: #355a32;
+	--jos-green-deep: #22391f; // the plants over the button and its edge
 	--jos-rule: rgba(91, 53, 23, 0.3);
 	--jos-glass: rgba(214, 212, 208, 0.88);   // paper glass over the photo of the shop
 }
@@ -442,6 +445,90 @@ canvas {
 		color: var(--jos-muted);
 		font-size: $size-meta;
 		letter-spacing: 0.24em;
+	}
+}
+
+// ---------- reservation button of the hero, between the title and BARBERSHOP in 1060 WIEN (after a button on
+// Uiverse.io by MuhammadHasann): green, three plants (images/plants.svg) hang over its top edge and sway while
+// it is pointed at (vines.js). The hero lets the pointer through to the street, the button catches it.
+
+.hero__action {
+	margin: 0 0 s(5);
+}
+
+.reserve {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 48px;
+	padding: 15px 45px;
+	border: 1px solid var(--jos-green-deep);
+	border-radius: 8px;
+	background: var(--jos-green);
+	color: var(--jos-paper-light);
+	font-family: $font-stack;
+	font-size: 17px;
+	font-weight: 500;
+	line-height: 1.2;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	pointer-events: auto;
+	filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));
+	transition: transform 200ms ease;
+
+	&:hover {
+		background: var(--jos-green-hover);
+		transform: translateY(-1px);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--jos-accent);
+		outline-offset: 3px;
+	}
+
+	&:active {
+		transform: translateY(1px);
+	}
+
+	// hanging from the top edge, turned around the point where they hang (vines.js sways them)
+	&__plant {
+		position: absolute;
+		top: 0;
+		display: block;
+		color: var(--jos-green-deep);
+		filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));
+		pointer-events: none;
+
+		svg {
+			display: block;
+			width: 100%;
+			height: auto;
+			fill: currentColor;
+		}
+
+		&--1 {
+			right: 0;
+			width: 25px;
+			transform-origin: 0 0;
+			transform: rotate(10deg);
+			filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.3));
+		}
+
+		&--2 {
+			left: 25px;
+			width: 12px;
+			transform-origin: 50% 0;
+			transform: rotate(10deg);
+		}
+
+		&--3 {
+			left: 0;
+			width: 18px;
+			transform-origin: 50% 0;
+			transform: rotate(-5deg);
+		}
 	}
 }
 
