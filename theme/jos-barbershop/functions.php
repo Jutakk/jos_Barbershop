@@ -9,7 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.10' );
+define( 'JOS_VERSION', '0.11.11' );
+// the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
+// unless another link is set in the Customizer
+define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
 
 require_once get_template_directory() . '/inc/languages.php';
 
@@ -148,7 +151,7 @@ function jos_customize_register( WP_Customize_Manager $wp_customize ): void {
 	$wp_customize->add_setting(
 		'jos_booking_link',
 		array(
-			'default'           => '',
+			'default'           => JOS_BOOKING_LINK,
 			'sanitize_callback' => 'jos_sanitize_link',
 		)
 	);
@@ -212,12 +215,21 @@ function jos_sanitize_link( string $value ): string {
 }
 
 /**
+ * The booking link: the one of the Customizer, or the Treatwell page of the shop (JOS_BOOKING_LINK) while that
+ * field is empty.
+ */
+function jos_booking_link(): string {
+	$link = (string) get_theme_mod( 'jos_booking_link', JOS_BOOKING_LINK );
+	return '' !== $link ? $link : JOS_BOOKING_LINK;
+}
+
+/**
  * Reservation button of the hero (after a button on Uiverse.io by MuhammadHasann): green, the three plants of
  * images/plants.svg hang over its top edge and sway while it is pointed at (vines.js). It leads to the booking
- * link of the Customizer (a booking page in a new tab); until that is set, to the contact page behind its arch.
+ * page (jos_booking_link(), Treatwell) in a new tab; a tel: link opens the phone.
  */
 function jos_reservation_button(): void {
-	$link   = (string) get_theme_mod( 'jos_booking_link', '' );
+	$link   = jos_booking_link();
 	$sprite = jos_image( 'plants.svg' );
 	// the plants as on the Uiverse button: symbol, its viewBox
 	$plants = array(
@@ -236,7 +248,7 @@ function jos_reservation_button(): void {
 	}
 	printf(
 		'<a class="reserve" href="%1$s"%2$s data-reserve><span class="reserve__label">%3$s</span>%4$s</a>',
-		esc_url( $link ? $link : '#kontakt', array( 'https', 'http', 'tel' ) ),
+		esc_url( $link, array( 'https', 'http', 'tel' ) ),
 		0 === strpos( $link, 'http' ) ? ' target="_blank" rel="noopener"' : '',
 		esc_html( jos_t( 'Reservierung' ) ),
 		$html // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
@@ -244,23 +256,16 @@ function jos_reservation_button(): void {
 }
 
 /**
- * Booking button. Without a link only logged in editors see a hint where to set it.
+ * Booking button of the contact page, to the booking page (jos_booking_link(), Treatwell).
  */
 function jos_booking_button(): void {
-	$link = get_theme_mod( 'jos_booking_link', '' );
-	if ( $link ) {
-		printf(
-			'<a class="button" href="%1$s" data-reveal>%2$s</a>',
-			esc_url( $link, array( 'https', 'http', 'tel' ) ),
-			esc_html( jos_t( 'Termin buchen' ) )
-		);
-	} elseif ( current_user_can( 'customize' ) ) {
-		printf(
-			'<a class="button button--hint" href="%1$s" data-reveal>%2$s</a>',
-			esc_url( admin_url( 'customize.php?autofocus[control]=jos_booking_link' ) ),
-			esc_html( jos_t( 'Termin-Link im Customizer eintragen' ) )
-		);
-	}
+	$link = jos_booking_link();
+	printf(
+		'<a class="button" href="%1$s"%2$s data-reveal>%3$s</a>',
+		esc_url( $link, array( 'https', 'http', 'tel' ) ),
+		0 === strpos( $link, 'http' ) ? ' target="_blank" rel="noopener"' : '',
+		esc_html( jos_t( 'Termin buchen' ) )
+	);
 }
 
 /**

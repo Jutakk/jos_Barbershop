@@ -207,8 +207,8 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   kadru nema mjesta (mobitel) stoji dolje lijevo na ekranu. Zaglavlje nema natpis JO'S BARBERSHOP, samo izbornik
   (na računalu skriven, jer je izbornik na vijencu). Između "hier" i "BARBERSHOP in 1060 WIEN" stoji zeleni gumb
   "Reservierung" (EN "Reservation", `jos_reservation_button()`, po gumbu s Uiverse.io, MuhammadHasann): tri biljke
-  vise preko gornjeg ruba i njišu se dok je miš na gumbu ili ima fokus. Vodi na Termin-Link iz Customizera
-  (booking stranica u novoj kartici); dok link nije upisan, otvara stranicu Kontakt. Gumb "Termin buchen" je i na
+  vise preko gornjeg ruba i njišu se dok je miš na gumbu ili ima fokus. Vodi na Treatwell stranicu lokala
+  (`https://www.treatwell.at/ort/jo-s-barbershop/`) u novoj kartici. Gumb "Termin buchen" je i na
   stranici Kontakt. Zatim četiri stranice iza lukova i X za povratak na ulicu
 - `assets/js/scene.js`: three.js scena (znak, fasada, trake u lukovima, žuti otvori, footer u temelju, kamera uz ulicu i
   kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
@@ -247,12 +247,13 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   plaćanje, jezici) iz `jos_shop()` u `functions.php`; promjena radnog vremena ide i tamo.
 - `assets/scss/style.scss`: izvor stilova, prevodi se u `style.css`:
   `npx sass assets/scss/style.scss style.css --style=expanded --no-source-map` (u mapi teme)
-- Gumb "Termin buchen": link se upisuje u Customizeru, sekcija "Jo's Barbershop", polje "Termin-Link"
-  (stranica za rezervaciju ili `tel:+43...`). Dok link nije upisan, gumb vidi samo prijavljeni urednik.
+- Gumbi "Reservierung" i "Termin buchen" vode na Treatwell stranicu lokala (`JOS_BOOKING_LINK` u `functions.php`).
+  Drugi link (stranica za rezervaciju ili `tel:+43...`) može se upisati u Customizeru, sekcija "Jo's Barbershop",
+  polje "Termin-Link"; prazno polje opet vodi na Treatwell.
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.10: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.11: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 
