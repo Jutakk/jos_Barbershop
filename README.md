@@ -232,6 +232,15 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 - Stranice iza lukova su obične WordPress stranice s adresama `leistungen`, `ueber-uns`, `galerie` i `kontakt`.
   Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu; sadržaj se piše u WordPressu.
   Izbornik u zaglavlju ih otvara kao i klik na luk.
+- Kontakt forma (`inc/contact.php`, `assets/js/contact.js`): minimalistička kartica s dvije strane na stranici
+  Kontakt (ime, e-mail, poruka; DE i EN). Na računalu stoji desno od teksta i ostaje u kadru dok se stranica
+  pomiče, na mobitelu ispod teksta. Lebdi u prostoru (GSAP), s mišem preko nje stane i nagne se prema mišu,
+  uhvaćena za papir okreće se u prostoru i elastično vrati, dok se tipka stoji mirno i ravno. Poslana se okrene
+  na stražnju stranu ("Danke!", gumb "Neue Nachricht"). Poruka ide e-mailom na adresu iz Customizera
+  (Jo's Barbershop, polje "Kontakt-E-Mail"; prazno: e-mail administratora WordPressa), s pošiljateljem kao
+  Reply-To; ništa se ne sprema. Protiv spama: skriveno polje koje mora ostati prazno, forma mora biti otvorena
+  barem 3 sekunde, nonce. Bez JavaScripta forma šalje klasično i vraća na #kontakt. U Localu poslane poruke
+  vidiš u Local, Tools, Mailpit.
 - FAQ: u stranici Kontakt svako pitanje je blok "Details" (pitanje u naslovu, odgovor u sadržaju). Iz tih blokova
   tema sama složi FAQPage schemu.
 - Prvi sadržaj stranica (04.10.2026, iz cjenika i opisa salona s booking stranice): tema ga jednom upiše u stranicu,
@@ -253,7 +262,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.11: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.12: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

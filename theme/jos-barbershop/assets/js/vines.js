@@ -238,7 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		resizing = setTimeout(() => { if (window.innerWidth !== builtWidth) build(); }, 200);
 	});
 
-	// through an arch into a page or the shop the vines fade out, back on the street they are there again
+	// through an arch into a page or the shop the vines fade out, back on the street they are there again; a page
+	// in the address is open before this script listens (motion.js runs first): then they start hidden
+	if (document.documentElement.classList.contains('is-away')) gsap.set(box, { autoAlpha: 0 });
 	window.addEventListener('jos:view', (event) => {
 		gsap.set(box, { autoAlpha: 1 - event.detail.t });
 	});

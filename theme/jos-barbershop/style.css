@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.11
+Version: 0.11.12
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -824,6 +824,154 @@ canvas {
   .admin-bar .site-header {
     top: 46px;
   }
+}
+
+.room--contact {
+  overflow-x: hidden;
+}
+
+@media (min-width: 1100px) {
+  .room--contact .room__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 68ch) minmax(300px, 380px);
+    column-gap: clamp(48px, 6vw, 96px);
+    align-items: start;
+    max-width: none;
+  }
+  .room--contact .room__inner > * {
+    grid-column: 1;
+  }
+  .room--contact .room__inner > .contact {
+    position: sticky;
+    top: 32px;
+    grid-row: 1/span 5;
+    grid-column: 2;
+    margin-top: 0;
+  }
+}
+
+.contact {
+  margin-top: 64px;
+  perspective: 1400px;
+}
+
+.contact__card {
+  display: grid;
+  transform-style: preserve-3d;
+  cursor: grab;
+}
+.contact__card.is-turning {
+  cursor: grabbing;
+}
+.contact__card.is-sent {
+  transform: rotateY(180deg);
+}
+
+.contact__face {
+  grid-area: 1/1;
+  padding: 32px;
+  border: 1px solid var(--jos-line);
+  background: var(--jos-paper-light);
+  box-shadow: 0 24px 48px -24px rgba(43, 29, 20, 0.45);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.contact__face--back {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  transform: rotateY(180deg);
+}
+.contact__face--back p {
+  margin: 0 0 12px;
+}
+
+.contact__title {
+  margin: 0 0 24px;
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.contact__field {
+  display: block;
+  margin: 0 0 24px;
+  cursor: text;
+}
+
+.contact__label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--jos-muted);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.contact__input {
+  display: block;
+  width: 100%;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--jos-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--jos-ink);
+  font: inherit;
+  font-size: 1rem;
+  resize: vertical;
+}
+.contact__input:focus {
+  outline: none;
+  border-bottom-color: var(--jos-accent);
+  box-shadow: 0 1px 0 var(--jos-accent);
+}
+
+textarea.contact__input {
+  min-height: 6.5rem;
+}
+
+.contact__trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact__note {
+  margin: 0 0 24px;
+  color: var(--jos-muted);
+  font-size: 13px;
+}
+.contact__note a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+.contact__note a:hover {
+  color: var(--jos-accent);
+}
+.contact__note a:focus-visible {
+  outline: 2px solid var(--jos-accent);
+  outline-offset: 3px;
+}
+
+.contact__send {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.contact__status {
+  margin: 0;
+  color: var(--jos-muted);
+  font-size: 13px;
+}
+.contact__status:empty {
+  display: none;
 }
 
 .page {

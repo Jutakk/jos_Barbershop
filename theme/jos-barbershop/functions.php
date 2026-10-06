@@ -9,12 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.11' );
+define( 'JOS_VERSION', '0.11.12' );
 // the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
 // unless another link is set in the Customizer
 define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
 
 require_once get_template_directory() . '/inc/languages.php';
+require_once get_template_directory() . '/inc/contact.php';
 
 /**
  * Theme supports.
@@ -60,6 +61,7 @@ function jos_enqueue_motion(): void {
 	wp_enqueue_script( 'jos-motion', $dir . '/motion.js', array( 'gsap' ), filemtime( $path . '/motion.js' ), true );
 	if ( is_front_page() ) {
 		wp_enqueue_script( 'jos-vines', $dir . '/vines.js', array( 'gsap' ), filemtime( $path . '/vines.js' ), true );
+		wp_enqueue_script( 'jos-contact', $dir . '/contact.js', array( 'gsap' ), filemtime( $path . '/contact.js' ), true );
 	}
 }
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_motion' );
@@ -988,7 +990,7 @@ function jos_room( array $room ): void {
 	$title = $page ? get_the_title( $page ) : $room['title'];
 	$id    = $room['slug'];
 	?>
-	<section id="<?php echo esc_attr( $id ); ?>" class="room<?php echo $room['door'] ? ' room--shop' : ''; ?>" data-room="<?php echo esc_attr( $id ); ?>" data-arch="<?php echo esc_attr( (string) $room['arch'] ); ?>"<?php echo $room['door'] ? ' data-door' : ''; ?> aria-labelledby="<?php echo esc_attr( $id ); ?>-title">
+	<section id="<?php echo esc_attr( $id ); ?>" class="room<?php echo $room['door'] ? ' room--shop' : ''; ?><?php echo 'kontakt' === $room['slug'] ? ' room--contact' : ''; ?>" data-room="<?php echo esc_attr( $id ); ?>" data-arch="<?php echo esc_attr( (string) $room['arch'] ); ?>"<?php echo $room['door'] ? ' data-door' : ''; ?> aria-labelledby="<?php echo esc_attr( $id ); ?>-title">
 		<div class="room__inner">
 			<h2 id="<?php echo esc_attr( $id ); ?>-title" class="room__title" data-reveal><?php echo esc_html( $title ); ?></h2>
 			<div class="room__content" data-reveal>
@@ -1000,6 +1002,7 @@ function jos_room( array $room ): void {
 			</div>
 			<?php if ( 'kontakt' === $room['slug'] ) : ?>
 				<div class="room__action"><?php jos_booking_button(); ?></div>
+				<?php jos_contact_form(); ?>
 			<?php endif; ?>
 			<?php if ( current_user_can( 'edit_pages' ) ) : ?>
 				<p class="room__edit">
