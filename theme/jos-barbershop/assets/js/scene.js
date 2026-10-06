@@ -1477,6 +1477,9 @@ if (root) {
 			renderer.setPixelRatio(pixelRatio);
 			composer.setPixelRatio(pixelRatio);
 			fit();
+			// a new size empties the canvas: the next frame is drawn in any case (also the one dark frame inside an
+			// arch), so the poster under the canvas never shows through
+			drawnDark = false;
 		};
 
 		const loop = () => {
@@ -1484,12 +1487,13 @@ if (root) {
 			const now = performance.now();
 			const dt = lastTime === null ? 0 : Math.min((now - lastTime) / 1000, 0.1);
 			lastTime = now;
-			adaptResolution(dt);
+			const dark = darkInside();
+			// measured only while frames are drawn; inside an arch no frame is drawn, so nothing to measure
+			if (!dark) adaptResolution(dt);
 			state.angle += TURN_SPEED * dt;
 			ribbons.forEach((ribbon) => {
 				ribbon.texture.offset.x = (ribbon.texture.offset.x + (ribbonSpeed.value / ribbon.repeat) * dt) % 1;
 			});
-			const dark = darkInside();
 			if (!dark || !drawnDark) draw();
 			drawnDark = dark;
 			requestAnimationFrame(loop);

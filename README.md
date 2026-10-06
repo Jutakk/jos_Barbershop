@@ -214,7 +214,8 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   kroz luk, lokal iza vrata), ES modul preko WordPress Script Modules API. Samo crta; klik na luk javlja kao
   `jos:open`, klik na redak u temelju kao `jos:link`. Oštrina najviše 1.5 piksela po CSS pikselu; kad grafika ne
   stigne sličicu u 24 ms (prosjek 90 sličica), scena se crta s četvrtinu manje piksela, do 0.75, pa prati miš bez
-  kašnjenja. Sjaj loga na znaku je ispečen u `assets/images/logo-glow.webp` (`tools/logo_glow.py`, isti koraci kao
+  kašnjenja. To se mjeri samo na ulici (unutar stranice scena ne crta), a nakon promjene se uvijek nacrta nova
+  slika, pa kroz prazno platno nikad ne proviri slika za učitavanje (poster sa znakom). Sjaj loga na znaku je ispečen u `assets/images/logo-glow.webp` (`tools/logo_glow.py`, isti koraci kao
   bloom koji je bio prije) i stoji na oba lica diska kao dodani sloj: nema više bloom prolaza preko cijelog ekrana
   u svakoj sličici (12 prolaza, većina posla grafičke kartice), scena je oko 2 puta brža.
 - `assets/js/facade.js`: linije prizemlja fasade s vremenima iscrtavanja, lukom kojem pripadaju i položajem lukova,
@@ -262,7 +263,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.12: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.13: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 
