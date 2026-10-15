@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.18' );
+define( 'JOS_VERSION', '0.11.19' );
 // the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
 // unless another link is set in the Customizer
 define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
@@ -18,9 +18,13 @@ define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
 define( 'JOS_ROOMS_FILL', 'rooms-2026-10-15-2' );
 // the questions of the FAQ on their own page Häufige Fragen instead of the page Kontakt (jos_move_faq())
 define( 'JOS_FAQ', 'faq-2026-10-15' );
+// Impressum and Datenschutz get their first text once after this mark, only while they are empty or still only
+// say "Inhalt folgt." (inc/legal.php)
+define( 'JOS_LEGAL_FILL', 'legal-2026-10-15' );
 
 require_once get_template_directory() . '/inc/languages.php';
 require_once get_template_directory() . '/inc/contact.php';
+require_once get_template_directory() . '/inc/legal.php';
 
 /**
  * Theme supports.
@@ -39,6 +43,22 @@ function jos_enqueue_styles(): void {
 	wp_enqueue_style( 'jos-style', get_stylesheet_uri(), array(), filemtime( get_template_directory() . '/style.css' ) );
 }
 add_action( 'wp_enqueue_scripts', 'jos_enqueue_styles' );
+
+/**
+ * No emoji script of WordPress: it keeps a note in the Session Storage of the browser and can load emoji images
+ * from s.w.org, both of which the page Datenschutz rules out (inc/legal.php). The browser draws emojis itself.
+ */
+function jos_no_emoji(): void {
+	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+	remove_action( 'embed_head', 'print_emoji_detection_script' );
+	remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+	remove_action( 'enqueue_embed_scripts', 'wp_enqueue_emoji_styles' );
+	remove_action( 'wp_print_styles', 'print_emoji_styles' );
+	remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
+	remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
+	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
+}
+add_action( 'init', 'jos_no_emoji' );
 
 /**
  * Favicon: the sign of the shop, the white "Jo's" of the logo (logo/jos-barbershop-logo-transparent.svg, without

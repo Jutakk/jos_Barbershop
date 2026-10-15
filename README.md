@@ -110,6 +110,19 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   `datenschutz`, `cookies`) i na engleskom kao Imprint, Privacy i Cookies s "Content follows."
   (`impressum-en`, `datenschutz-en`, `cookies-en`), pri prvom otvaranju stranice, bez prijave. Tekst se piše
   u WordPressu.
+- Impressum i Datenschutz (`inc/legal.php`, 15.10.2026) imaju tekst po austrijskom zakonu, na njemačkom i
+  engleskom (engleski je prijevod, njemački vrijedi): Impressum po § 5 ECG, § 63 GewO odnosno § 14 UGB i
+  § 25 MedienG (mala web stranica, bez linka na ODR platformu EU, ugašenu 20.07.2025), Datenschutz po DSGVO,
+  DSG i § 165 TKG 2021. Gewerbebehörde je Magistratisches Bezirksamt für den 6. und 7. Bezirk, komora
+  Wirtschaftskammer Wien, Landesinnung Wien der Friseure. Ono što zna samo vlasnik (ime, telefon, e-mail,
+  e.U. i FN, UID, hosting i e-mail anbieter, webagentura, rokovi čuvanja) stoji podebljano u uglatim
+  zagradama i prepisuje se u WordPressu; retke označene "sonst Zeile löschen" vlasnik briše ako za njega ne
+  vrijede. Tema tekst upiše jednom (`JOS_LEGAL_FILL`), samo u stranicu koja je prazna ili ima samo
+  "Inhalt folgt."; poslije ga više ne dira.
+- Datenschutz kaže da stranica posjetiteljima ne sprema ništa u preglednik i ne spaja se na tuđe servere. Zato
+  je WordPressova skripta za emojije isključena (`jos_no_emoji()`): ona zapisuje u Session Storage i može
+  učitati slike sa s.w.org. Ako se doda bilo što vanjsko (karta, analitika, fontovi s CDN-a, reCAPTCHA),
+  Datenschutz se mora promijeniti.
 - Obični HTML footer s istim kolonama ostaje za tipkovnicu, čitače ekrana i Google: na naslovnoj stoji ispod
   ekrana i izađe kad neki njegov link dobije fokus, na ostalim stranicama je normalan footer (4 kolone,
   na tabletu 2, na mobitelu jedna ispod druge).
@@ -284,7 +297,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.18: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.19: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
-iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
+iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Impressum i Datenschutz imaju tekst, vlasnik upisuje svoje podatke. Slijedi Galerie.
 
