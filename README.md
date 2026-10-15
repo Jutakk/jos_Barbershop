@@ -231,16 +231,17 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   desno od izbornika u zaglavlju. Klikovi prolaze kroz lišće, bez pokreta (reduced motion) vise mirno.
   Svaka stranica ima svoje puzavce, svaka svoj nasumični raspored (seed iz imena stranice, isti pri svakom
   posjetu): ulica naslovnice (uvijek isti raspored kao prije), svaka stranica iza luka (izrastu odozgor kad se
-  stranica otvori, nestanu kad se zatvori; lijevo i desno od teksta, po 20% širine) i obične stranice
-  (Impressum, Datenschutz, Cookies, `index.php`; DE i EN ista stranica isti raspored).
-- Tekst i cjenici svih stranica iza lukova stoje u sredini ekrana; Kontakt s karticom forme u sredini kao cjelina,
-  a u lokalu (Über uns) stakleni panel s tekstom stoji dolje u sredini.
+  stranica otvori, nestanu kad se zatvori) i obične stranice (Impressum, Datenschutz, Cookies, `index.php`; DE i EN
+  ista stranica isti raspored). Na stranicama su puzavci gušći i duži nego na ulici: lijevo i desno od teksta u
+  sredini, od ruba ekrana do 24 px pred tekst, svaki zid između 18% i 34% širine.
+- Tekst i cjenici svih stranica iza lukova stoje u sredini ekrana. Kontakt je jedan stupac u sredini (tekst, Termin
+  buchen, ispod kartica forme iste širine), a u lokalu (Über uns) stakleni panel s tekstom stoji dolje u sredini.
 - Stranice iza lukova su obične WordPress stranice s adresama `leistungen`, `ueber-uns`, `galerie` i `kontakt`.
   Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu; sadržaj se piše u WordPressu.
   Izbornik u zaglavlju ih otvara kao i klik na luk.
 - Kontakt forma (`inc/contact.php`, `assets/js/contact.js`): minimalistička kartica s dvije strane na stranici
-  Kontakt (ime, e-mail, poruka; DE i EN). Na računalu stoji desno od teksta i ostaje u kadru dok se stranica
-  pomiče, na mobitelu ispod teksta. Lebdi u prostoru (GSAP), s mišem preko nje stane i nagne se prema mišu,
+  Kontakt (ime, e-mail, poruka; DE i EN), bez pozadine, samo s tankom smeđom linijom. Stoji u sredini ispod
+  teksta, široka kao tekst. Lebdi u prostoru (GSAP), s mišem preko nje stane i nagne se prema mišu,
   uhvaćena za papir okreće se u prostoru i elastično vrati, dok se tipka stoji mirno i ravno. Poslana se okrene
   na stražnju stranu ("Danke!", gumb "Neue Nachricht"). Poruka ide e-mailom na adresu iz Customizera
   (Jo's Barbershop, polje "Kontakt-E-Mail"; prazno: e-mail administratora WordPressa), s pošiljateljem kao
@@ -249,8 +250,10 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   vidiš u Local, Tools, Mailpit.
 - FAQ: u stranici Kontakt svako pitanje je blok "Details" (pitanje u naslovu, odgovor u sadržaju). Iz tih blokova
   tema sama složi FAQPage schemu.
-- Prvi sadržaj stranica (04.10.2026, iz cjenika i opisa salona s booking stranice): tema ga jednom upiše u stranicu,
-  samo dok u njoj stoji "Inhalt folgt.", a poslije se stranice uređuju u WordPressu (`jos_room_texts()` u `functions.php`):
+- Prvi sadržaj stranica (04.10.2026, iz cjenika i opisa salona s booking stranice): tema ga upiše u stranicu samo
+  dok u njoj stoji "Inhalt folgt.", a poslije se stranice uređuju u WordPressu (`jos_room_texts()` u `functions.php`).
+  Od 15.10.2026 to radi i bez prijave (prije samo za prijavljenog urednika, pa je Kontakt mogao ostati prazan),
+  jednom po oznaci `JOS_ROOMS_FILL`; tekst koji je netko već upisao nikad se ne dira:
   - Leistungen & Preise: cjenik po kategorijama (Herrenhaarschnitte, Bartpflege, Kinderhaarschnitte, Augenbrauen),
     usluga, trajanje i cijena, unutar kategorije od najjeftinije.
   - Über uns: uvod, tim (Inhaber Jwan; Deutsch, Englisch, Arabisch, Kurdisch) i "Was dich erwartet".
@@ -268,7 +271,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.14: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.15: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

@@ -10,8 +10,8 @@
  *    - the street of the front page: the middle stays free for the menu on the cornice, the sign and the hero
  *      text; they grow from the top down when the page loads, together with the facade drawing itself, and fade
  *      out when the camera goes through an arch ('jos:view' from motion.js);
- *    - every page behind an arch: the vines hang left and right of the text in the middle; they grow from the top
- *      down when the page opens (motion.js sets .is-open) and fade out when it closes;
+ *    - every page behind an arch: more and longer vines, left and right of the text in the middle, up to its
+ *      edge; they grow from the top down when the page opens (motion.js sets .is-open) and fade out when it closes;
  *    - the other pages of the site (Impressum, Datenschutz, Cookies): the same, grown when the page loads.
  * 2. The reservation button of the hero: three plants hang over its top edge and sway while it is pointed at or
  *    has the focus, as on the Uiverse button.
@@ -70,18 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	// where the vines hang, in parts of the screen width, and how long the longest (at the edge of the screen) is,
 	// in parts of the screen height. Below 768 px (as $bp-tablet in style.scss) the menu of the header runs over the
 	// top, so only the wall at the right edge, beginning MENU_GAP px right of the menu.
-	// street: left above the hero text, the right wall wider; page: the same on both sides of the text in the middle
-	const WALLS = {
-		street: {
-			wide: [{ from: 0, to: 0.25, length: 0.38 }, { from: 0.63, to: 1, length: 0.56 }],
-			narrow: [{ from: 0.82, to: 1, length: 0.44 }],
-		},
-		page: {
-			wide: [{ from: 0, to: 0.2, length: 0.5 }, { from: 0.8, to: 1, length: 0.5 }],
-			narrow: [{ from: 0.82, to: 1, length: 0.44 }],
-		},
+	// street: left above the hero text, the right wall wider (the order of the street as it has always been)
+	const STREET = {
+		wide: [{ from: 0, to: 0.25, length: 0.38 }, { from: 0.63, to: 1, length: 0.56 }],
+		narrow: [{ from: 0.82, to: 1, length: 0.44 }],
+		spacing: { wide: 22, narrow: 11 },   // px between two vines
 	};
-	const SPACING = { wide: 22, narrow: 11 };   // px between two vines
+	// a page: thicker and longer walls on both sides of its text in the middle, each from the edge of the screen to
+	// GAP px before the text, at least MIN and at most MAX of the screen width
+	const PAGE = { gap: 24, min: 0.18, max: 0.34, length: 0.62, narrow: 0.5, spacing: { wide: 15, narrow: 8 } };
 	const MENU_GAP = 44;
 	const SCALE = [2.0, 3.4];    // px per unit of the shapes: far, near (on a phone 0.7 of it)
 	const SWAY = [1.0, 1.2];     // degrees each link swings: the top link, every link further down adds the second
@@ -131,12 +128,23 @@ document.addEventListener('DOMContentLoaded', () => {
 		return { link, top, end, height };
 	};
 
-	// a set of vines: the vines of one page, in their own layer
-	const makeSet = (name, seedValue, walls) => {
+	// a set of vines: the vines of one page, in their own layer; column: where its text stands (for a page)
+	const makeSet = (name, seedValue, walls, column = null) => {
 		const el = document.createElement('div');
 		el.className = 'vines__set';
 		box.appendChild(el);
-		return { name, seed: seedValue, walls, el, tweens: [], growing: [], built: false, shown: false };
+		return { name, seed: seedValue, walls, column, el, tweens: [], growing: [], built: false, shown: false };
+	};
+
+	// the walls of a set at this width
+	const wallsOf = (set, width, small) => {
+		if (set.walls === 'street') return STREET[small ? 'narrow' : 'wide'];
+		if (small) return [{ from: 0.82, to: 1, length: PAGE.narrow }];
+		const clamp = gsap.utils.clamp(PAGE.min, PAGE.max);
+		const rect = set.column ? set.column() : null;
+		const left = rect && rect.width ? clamp((rect.left - PAGE.gap) / width) : 0.22;
+		const right = rect && rect.width ? clamp((width - rect.right - PAGE.gap) / width) : 0.22;
+		return [{ from: 0, to: left, length: PAGE.length }, { from: 1 - right, to: 1, length: PAGE.length }];
 	};
 
 	// builds the vines of a set; grown: they stand at once, else every link waits at 0 for grow()
@@ -151,16 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		seed = set.seed;
 		const small = width < 768;
 		const layout = small ? 'narrow' : 'wide';
+		const spacing = (set.walls === 'street' ? STREET : PAGE).spacing[layout];
 		// right end of the words of the header menu in the top row (only on a phone, on a computer it waits hidden)
 		const menuEnd = !small ? 0 : Math.max(0, ...[...document.querySelectorAll('.site-header__nav li')]
 			.map((item) => item.getBoundingClientRect())
 			.filter((rect) => rect.width && rect.top < 0.15 * height)
 			.map((rect) => rect.right));
 		const vines = [];
-		WALLS[set.walls][layout].forEach((wall) => {
+		wallsOf(set, width, small).forEach((wall) => {
 			const left = Math.min(0.92 * width, Math.max(wall.from * width, menuEnd ? menuEnd + MENU_GAP : 0));
 			const span = wall.to * width - left;
-			const count = Math.max(1, Math.round(span / SPACING[layout]));
+			const count = Math.max(1, Math.round(span / spacing));
 			for (let i = 0; i < count; i++) {
 				const x = left + ((i + 0.5 + random(-0.35, 0.35)) / count) * span;
 				// 1 at the edge of the screen, 0 at the inner end of the wall
@@ -279,7 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		const street = makeSet('street', STREET_SEED, 'street');
 		sets.push(street);
 		const roomSets = new Map(rooms.map((room) => {
-			const set = makeSet(room.dataset.room, seedOf(room.dataset.room), 'page');
+			const inner = room.querySelector('.room__inner');
+			const set = makeSet(room.dataset.room, seedOf(room.dataset.room), 'page', () => (inner ? inner.getBoundingClientRect() : null));
 			gsap.set(set.el, { autoAlpha: 0 });
 			sets.push(set);
 			return [room, set];
@@ -327,7 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	} else {
 		// ---- any other page: its own vines, from its name
-		initial = makeSet(box.dataset.seed || 'page', seedOf(box.dataset.seed || 'page'), 'page');
+		const text = document.querySelector('.page');
+		initial = makeSet(box.dataset.seed || 'page', seedOf(box.dataset.seed || 'page'), 'page', () => (text ? text.getBoundingClientRect() : null));
 		sets.push(initial);
 	}
 

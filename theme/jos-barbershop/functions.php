@@ -9,10 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.14' );
+define( 'JOS_VERSION', '0.11.15' );
 // the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
 // unless another link is set in the Customizer
 define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
+// the pages behind the arches that still only say "Inhalt folgt." get their first text once after this mark
+define( 'JOS_ROOMS_FILL', 'rooms-2026-10-15' );
 
 require_once get_template_directory() . '/inc/languages.php';
 require_once get_template_directory() . '/inc/contact.php';
@@ -637,24 +639,22 @@ add_action( 'init', 'jos_create_rooms', 20 );
 
 /**
  * First content of the pages behind the arches, from the prices and texts of the shop (04.10.2026).
- * A page is filled once, and only while it still holds just the placeholder "Inhalt folgt.";
- * after that the page is edited in WordPress and never touched again by the theme.
+ * A page is filled only while it still holds just the placeholder "Inhalt folgt."; after that the page is edited
+ * in WordPress and never touched again by the theme. It runs on the first visit after JOS_ROOMS_FILL (no login
+ * needed, so a page left empty because nobody was logged in gets its text), and again while a page is missing.
  */
 function jos_fill_rooms(): void {
-	if ( ! current_user_can( 'edit_pages' ) ) {
+	if ( JOS_ROOMS_FILL === get_option( 'jos_rooms_fill' ) ) {
 		return;
 	}
-	$done   = (array) get_option( 'jos_rooms_filled', array() );
-	$before = count( $done );
+	$placeholders = array_merge( array( 'Inhalt folgt.' ), array_column( jos_strings(), 'Inhalt folgt.' ) );
+	$missing      = false;
 	foreach ( jos_room_texts() as $slug => $content ) {
-		if ( in_array( $slug, $done, true ) ) {
-			continue;
-		}
 		$page = get_page_by_path( $slug );
 		if ( ! $page ) {
+			$missing = true;
 			continue;
 		}
-		$placeholders = array_merge( array( 'Inhalt folgt.' ), array_column( jos_strings(), 'Inhalt folgt.' ) );
 		if ( in_array( trim( wp_strip_all_tags( $page->post_content ) ), $placeholders, true ) ) {
 			wp_update_post(
 				array(
@@ -663,10 +663,9 @@ function jos_fill_rooms(): void {
 				)
 			);
 		}
-		$done[] = $slug;
 	}
-	if ( count( $done ) !== $before ) {
-		update_option( 'jos_rooms_filled', $done, false );
+	if ( ! $missing ) {
+		update_option( 'jos_rooms_fill', JOS_ROOMS_FILL, false );
 	}
 }
 add_action( 'init', 'jos_fill_rooms', 30 );
