@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.13
+Version: 0.11.14
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -274,7 +274,8 @@ canvas {
   user-select: none;
 }
 
-.journey > .vines {
+.journey > .vines,
+.vines--page {
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -282,11 +283,13 @@ canvas {
   pointer-events: none;
 }
 
-.vines__shapes {
+.vines--page {
+  z-index: 0;
+}
+
+.vines__set {
   position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
+  inset: 0;
 }
 
 .vines__link {
@@ -439,6 +442,7 @@ canvas {
 .room__inner {
   width: 100%;
   max-width: 68ch;
+  margin-inline: auto;
 }
 .room--shop .room__inner {
   padding: 48px;
@@ -768,14 +772,14 @@ canvas {
 
 .is-in-shop .room--shop .room__inner {
   position: fixed;
-  inset-inline-start: clamp(24px, 6vw, 96px);
+  inset-inline: 0;
   bottom: clamp(24px, 8vh, 64px);
-  width: auto;
-  max-width: min(34rem, 100vw - 48px);
+  width: min(34rem, 100vw - 48px);
+  max-width: none;
   max-height: calc(100vh - 224px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  margin: 0;
+  margin: 0 auto;
   scrollbar-color: var(--jos-line) transparent;
   scrollbar-width: thin;
   pointer-events: auto;
@@ -835,6 +839,7 @@ canvas {
     display: grid;
     grid-template-columns: minmax(0, 68ch) minmax(300px, 380px);
     column-gap: clamp(48px, 6vw, 96px);
+    justify-content: center;
     align-items: start;
     max-width: none;
   }
@@ -975,6 +980,8 @@ textarea.contact__input {
 }
 
 .page {
+  position: relative;
+  z-index: 1;
   max-width: 70ch;
   margin: 0 auto;
   padding: 96px 24px 64px;

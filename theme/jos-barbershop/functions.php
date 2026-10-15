@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.13' );
+define( 'JOS_VERSION', '0.11.14' );
 // the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
 // unless another link is set in the Customizer
 define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
@@ -59,8 +59,9 @@ function jos_enqueue_motion(): void {
 	$path = get_template_directory() . '/assets/js';
 	wp_enqueue_script( 'gsap', $dir . '/vendor/gsap.min.js', array(), '3.15.0', true );
 	wp_enqueue_script( 'jos-motion', $dir . '/motion.js', array( 'gsap' ), filemtime( $path . '/motion.js' ), true );
+	// the green vines hang on every page (vines.js), the contact form is on the front page
+	wp_enqueue_script( 'jos-vines', $dir . '/vines.js', array( 'gsap' ), filemtime( $path . '/vines.js' ), true );
 	if ( is_front_page() ) {
-		wp_enqueue_script( 'jos-vines', $dir . '/vines.js', array( 'gsap' ), filemtime( $path . '/vines.js' ), true );
 		wp_enqueue_script( 'jos-contact', $dir . '/contact.js', array( 'gsap' ), filemtime( $path . '/contact.js' ), true );
 	}
 }

@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.13
+Version: 0.11.14
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -337,10 +337,12 @@ canvas {
 	user-select: none;
 }
 
-// ---------- green creepers hang from the top edge of the screen in front of the street (vines.js), every
-// click goes through them; the hero text stands in front of them
+// ---------- green creepers hang from the top edge of the screen on every page (vines.js), every click goes
+// through them. On the front page in front of the street, behind the hero text and the pages behind the arches;
+// on the other pages behind their text. Every page its own set of vines.
 
-.journey > .vines {
+.journey > .vines,
+.vines--page {
 	position: fixed;
 	inset: 0;
 	z-index: 1;
@@ -348,11 +350,13 @@ canvas {
 	pointer-events: none;
 }
 
-.vines__shapes {
+.vines--page {
+	z-index: 0;
+}
+
+.vines__set {
 	position: absolute;
-	width: 0;
-	height: 0;
-	overflow: hidden;
+	inset: 0;
 }
 
 .vines__link {
@@ -538,9 +542,11 @@ canvas {
 	min-height: 100svh;
 	padding: s(9) clamp(#{s(5)}, 6vw, #{s(9)});
 
+	// the text in the middle of the screen, the vines hang left and right of it
 	&__inner {
 		width: 100%;
 		max-width: 68ch;
+		margin-inline: auto;
 	}
 
 	// behind the door the shop stays visible: the text lies on a dark glass panel
@@ -938,21 +944,22 @@ canvas {
 	}
 }
 
-// the text of the page behind the door stands on dark glass in the corner while one looks around
+// the text of the page behind the door stands on dark glass at the bottom, in the middle like the text of every
+// page, while one looks around the shop above it
 .is-in-shop .journey > .room--shop {
 	pointer-events: none;
 }
 
 .is-in-shop .room--shop .room__inner {
 	position: fixed;
-	inset-inline-start: clamp(#{s(5)}, 6vw, #{s(9)});
+	inset-inline: 0;
 	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
-	width: auto;
-	max-width: min(34rem, calc(100vw - #{2 * s(5)}));
+	width: min(34rem, calc(100vw - #{2 * s(5)}));
+	max-width: none;
 	max-height: calc(100vh - #{s(9) + s(9) + s(6)});   // free of the header and the X; longer text scrolls inside
 	overflow-y: auto;
 	overscroll-behavior: contain;
-	margin: 0;
+	margin: 0 auto;
 	scrollbar-color: var(--jos-line) transparent;
 	scrollbar-width: thin;
 	pointer-events: auto;
@@ -1023,6 +1030,7 @@ canvas {
 		display: grid;
 		grid-template-columns: minmax(0, 68ch) minmax(300px, 380px);
 		column-gap: clamp(#{s(7)}, 6vw, #{s(9)});
+		justify-content: center;   // text and card together in the middle of the screen
 		align-items: start;
 		max-width: none;
 
@@ -1179,6 +1187,8 @@ textarea.contact__input {
 // ---------- pages and footer
 
 .page {
+	position: relative;
+	z-index: 1;   // in front of the vines of the page
 	max-width: 70ch;
 	margin: 0 auto;
 	padding: s(9) s(5) s(8);

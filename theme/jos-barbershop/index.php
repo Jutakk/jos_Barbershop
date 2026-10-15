@@ -6,7 +6,11 @@
  */
 
 get_header();
+
+// the vines of this page (vines.js): their order comes from the name of the page, the same in German and English
+$jos_vines = is_singular() ? (string) preg_replace( '/-en$/', '', (string) get_post_field( 'post_name', get_queried_object_id() ) ) : 'page';
 ?>
+<div class="vines vines--page" data-vines data-plants="<?php echo esc_url( jos_image( 'plants.svg' ) ); ?>" data-seed="<?php echo esc_attr( $jos_vines ? $jos_vines : 'page' ); ?>" aria-hidden="true"></div>
 <main id="inhalt" class="site-main page">
 	<?php
 	while ( have_posts() ) :

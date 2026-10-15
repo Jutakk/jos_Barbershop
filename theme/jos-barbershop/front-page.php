@@ -39,8 +39,8 @@ foreach ( jos_rooms() as $jos_room ) {
 		<canvas class="scene__canvas" aria-hidden="true"></canvas>
 	</div>
 
-	<?php // green creepers hanging from the top edge of the screen (vines.js) ?>
-	<div class="vines" data-vines data-plants="<?php echo esc_url( jos_image( 'plants.svg' ) ); ?>" aria-hidden="true"></div>
+	<?php // green creepers hanging from the top edge of the screen: the street and every page behind an arch (vines.js) ?>
+	<div class="vines" data-vines data-street data-plants="<?php echo esc_url( jos_image( 'plants.svg' ) ); ?>" aria-hidden="true"></div>
 
 	<section class="hero" aria-labelledby="hero-title">
 		<div class="hero__content">
