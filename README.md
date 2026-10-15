@@ -256,8 +256,9 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   verziju kao reviziju) i napravi stranice `faq` i `faq-en`. Na Kontaktu je forma odmah ispod naslova.
 - Prvi sadržaj stranica (04.10.2026, iz cjenika i opisa salona s booking stranice): tema ga upiše u stranicu samo
   dok u njoj stoji "Inhalt folgt.", a poslije se stranice uređuju u WordPressu (`jos_room_texts()` u `functions.php`).
-  Od 15.10.2026 to radi i bez prijave (prije samo za prijavljenog urednika, pa je Kontakt mogao ostati prazan),
-  jednom po oznaci `JOS_ROOMS_FILL`; tekst koji je netko već upisao nikad se ne dira:
+  Od 15.10.2026 to radi i bez prijave (prije samo za prijavljenog urednika, pa su Kontakt i Über uns mogli ostati
+  prazni), jednom po oznaci `JOS_ROOMS_FILL`, i u praznu stranicu; stranicu koje nema (na primjer ručno napravljenu
+  s adresom `uber-uns` umjesto `ueber-uns`) napravi s tekstom. Tekst koji je netko već upisao nikad se ne dira:
   - Leistungen & Preise: cjenik po kategorijama (Herrenhaarschnitte, Bartpflege, Kinderhaarschnitte, Augenbrauen),
     usluga, trajanje i cijena, unutar kategorije od najjeftinije.
   - Über uns: uvod, tim (Inhaber Jwan; Deutsch, Englisch, Arabisch, Kurdisch) i "Was dich erwartet".
@@ -275,7 +276,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.16: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.17: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

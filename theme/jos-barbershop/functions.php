@@ -9,12 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.16' );
+define( 'JOS_VERSION', '0.11.17' );
 // the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
 // unless another link is set in the Customizer
 define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
-// the pages behind the arches that still only say "Inhalt folgt." get their first text once after this mark
-define( 'JOS_ROOMS_FILL', 'rooms-2026-10-15' );
+// the pages behind the arches that are empty or still only say "Inhalt folgt." (or are missing) get their first
+// text once after this mark
+define( 'JOS_ROOMS_FILL', 'rooms-2026-10-15-2' );
 // the questions of the FAQ on their own page Häufige Fragen instead of the page Kontakt (jos_move_faq())
 define( 'JOS_FAQ', 'faq-2026-10-15' );
 
@@ -744,35 +745,45 @@ function jos_move_faq(): void {
 add_action( 'init', 'jos_move_faq', 25 );
 
 /**
- * First content of the pages behind the arches, from the prices and texts of the shop (04.10.2026).
- * A page is filled only while it still holds just the placeholder "Inhalt folgt."; after that the page is edited
- * in WordPress and never touched again by the theme. It runs on the first visit after JOS_ROOMS_FILL (no login
- * needed, so a page left empty because nobody was logged in gets its text), and again while a page is missing.
+ * First content of the pages behind the arches, from the prices and texts of the shop (04.10.2026). A page is
+ * filled only while it is empty or still holds just the placeholder "Inhalt folgt."; after that the page is edited
+ * in WordPress and never touched again by the theme. A page that is missing (its address is not there, for
+ * example a page made by hand got the address uber-uns instead of ueber-uns) is made with its text. It runs once on
+ * the first visit after JOS_ROOMS_FILL, no login needed.
  */
 function jos_fill_rooms(): void {
 	if ( JOS_ROOMS_FILL === get_option( 'jos_rooms_fill' ) ) {
 		return;
 	}
-	$placeholders = array_merge( array( 'Inhalt folgt.' ), array_column( jos_strings(), 'Inhalt folgt.' ) );
-	$missing      = false;
-	foreach ( jos_room_texts() as $slug => $content ) {
-		$page = get_page_by_path( $slug );
-		if ( ! $page ) {
-			$missing = true;
-			continue;
-		}
-		if ( in_array( jos_plain_text( $page->post_content ), $placeholders, true ) ) {
-			jos_save_page(
-				array(
-					'ID'           => $page->ID,
-					'post_content' => $content,
-				)
-			);
+	$empty = array_merge( array( '', 'Inhalt folgt.' ), array_column( jos_strings(), 'Inhalt folgt.' ) );
+	foreach ( array_keys( jos_languages() ) as $lang ) {
+		$texts = jos_room_texts_in( $lang );
+		foreach ( jos_rooms( $lang ) as $room ) {
+			if ( ! isset( $texts[ $room['slug'] ] ) ) {
+				continue;   // the gallery waits for its photos
+			}
+			$page = get_page_by_path( $room['page'] );
+			if ( ! $page ) {
+				jos_save_page(
+					array(
+						'post_type'    => 'page',
+						'post_status'  => 'publish',
+						'post_title'   => $room['title'],
+						'post_name'    => $room['page'],
+						'post_content' => $texts[ $room['slug'] ],
+					)
+				);
+			} elseif ( in_array( jos_plain_text( $page->post_content ), $empty, true ) ) {
+				jos_save_page(
+					array(
+						'ID'           => $page->ID,
+						'post_content' => $texts[ $room['slug'] ],
+					)
+				);
+			}
 		}
 	}
-	if ( ! $missing ) {
-		update_option( 'jos_rooms_fill', JOS_ROOMS_FILL, false );
-	}
+	update_option( 'jos_rooms_fill', JOS_ROOMS_FILL, false );
 }
 add_action( 'init', 'jos_fill_rooms', 30 );
 
