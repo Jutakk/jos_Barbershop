@@ -102,7 +102,8 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Hover na svim linkovima footera (i na logu die aigentur): smeđi blok iza linka, slova u svijetloj boji papira,
   kao gumbi na vijencu. Isto u temelju i u običnom footeru (tamo i fokus tipkovnicom).
 - Čita se kad se zgrada okrene prema gore ili gurne u dubinu; redovi ne blijede u daljinu. Linkovi pod mišem
-  zasvijetle: stranice otvaraju svoj luk, Häufige Fragen otvara Kontakt pomaknut do pitanja (adresa `/#faq`).
+  zasvijetle: stranice otvaraju svoj luk, Häufige Fragen vodi na svoju stranicu (`faq`, `faq-en`); stara adresa
+  `/#faq` vodi isto tamo.
 - Telefon se upisuje u Customizeru (sekcija "Jo's Barbershop", polje "Telefon"); dok je prazno, kolona 4 ima
   samo adresu. Telefon ide i u HairSalon schemu.
 - Impressum, Datenschutz i Cookies tema sama napravi kao stranice s "Inhalt folgt." (`impressum`,
@@ -151,7 +152,7 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
 - Njemački je osnovni, engleski je `/?lang=en`. Naslovnica u `<head>` navodi obje verzije (hreflang) za Google.
 - Sve je prevedeno: njemačka verzija je cijela na njemačkom, engleska cijela na engleskom.
 - Stranice iza lukova postoje po jeziku: `leistungen`, `leistungen-en` i tako za `ueber-uns`, `galerie`,
-  `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns, Kontakt s FAQ), poslije se
+  `kontakt`. Tema ih sama napravi i jednom upiše prvi sadržaj (cjenik, Über uns, Kontakt), poslije se
   uređuju u WordPressu. Prijevodi su u `jos_room_words()` u `functions.php`.
 - Cjenik (13 usluga u 4 skupine, iz `jos_room_words()`) tema jednom upiše na stranice `leistungen` i
   `leistungen-en` (verzija `prices-2026-10-05`), bez prijave; ako stranice nema, napravi je. Što je prije bilo na
@@ -248,8 +249,11 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   Reply-To; ništa se ne sprema. Protiv spama: skriveno polje koje mora ostati prazno, forma mora biti otvorena
   barem 3 sekunde, nonce. Bez JavaScripta forma šalje klasično i vraća na #kontakt. U Localu poslane poruke
   vidiš u Local, Tools, Mailpit.
-- FAQ: u stranici Kontakt svako pitanje je blok "Details" (pitanje u naslovu, odgovor u sadržaju). Iz tih blokova
-  tema sama složi FAQPage schemu.
+- FAQ: svoja stranica Häufige Fragen (`faq`, EN `faq-en` "FAQ", obična stranica kroz `index.php`, s puzavcima i
+  tekstom u sredini); svako pitanje je blok "Details" (pitanje u naslovu, odgovor u sadržaju, otvara se klikom),
+  iz tih blokova tema sama složi FAQPage schemu. Do 15.10.2026 pitanja su bila na stranici Kontakt; `jos_move_faq()`
+  ih jednom premjesti (s naslovom FAQ, točno kako su tamo napisana, ostatak Kontakta ostaje, WordPress čuva staru
+  verziju kao reviziju) i napravi stranice `faq` i `faq-en`. Na Kontaktu je forma odmah ispod naslova.
 - Prvi sadržaj stranica (04.10.2026, iz cjenika i opisa salona s booking stranice): tema ga upiše u stranicu samo
   dok u njoj stoji "Inhalt folgt.", a poslije se stranice uređuju u WordPressu (`jos_room_texts()` u `functions.php`).
   Od 15.10.2026 to radi i bez prijave (prije samo za prijavljenog urednika, pa je Kontakt mogao ostati prazan),
@@ -258,8 +262,8 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
     usluga, trajanje i cijena, unutar kategorije od najjeftinije.
   - Über uns: uvod, tim (Inhaber Jwan; Deutsch, Englisch, Arabisch, Kurdisch) i "Was dich erwartet".
   - Kontakt: adresa (Gumpendorfer Straße 127, 1060 Wien, poveznica na Google Maps), Bushaltestelle Sonnenuhrgasse,
-    radno vrijeme (Di bis Fr 10:00 bis 19:00, Sa 10:00 bis 18:00, Mo i So zatvoreno), plaćanje (gotovina, kreditna
-    kartica) i FAQ sa 7 pitanja.
+    radno vrijeme (Di bis Fr 10:00 bis 19:00, Sa 10:00 bis 18:00, Mo i So zatvoreno) i plaćanje (gotovina, kreditna
+    kartica). Pitanja su na stranici Häufige Fragen.
   - Galerie čeka fotografije.
 - Adresa stoji i u footeru (u temelju zgrade). Za Google i AI tražilice naslovnica nosi HairSalon schemu (adresa, radno vrijeme,
   plaćanje, jezici) iz `jos_shop()` u `functions.php`; promjena radnog vremena ide i tamo.
@@ -271,7 +275,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.15: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.16: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

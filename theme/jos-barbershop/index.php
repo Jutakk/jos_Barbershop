@@ -21,6 +21,13 @@ $jos_vines = is_singular() ? (string) preg_replace( '/-en$/', '', (string) get_p
 			<div class="page__content">
 				<?php the_content(); ?>
 			</div>
+			<?php
+			// questions in Details blocks (the page Häufige Fragen): FAQPage schema for the search engines, never for a
+			// page behind a password
+			if ( get_post() && ! post_password_required() ) {
+				jos_faq_schema( get_post() );
+			}
+			?>
 		</article>
 		<?php
 	endwhile;

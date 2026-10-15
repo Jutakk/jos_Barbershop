@@ -9,12 +9,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.15' );
+define( 'JOS_VERSION', '0.11.16' );
 // the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
 // unless another link is set in the Customizer
 define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
 // the pages behind the arches that still only say "Inhalt folgt." get their first text once after this mark
 define( 'JOS_ROOMS_FILL', 'rooms-2026-10-15' );
+// the questions of the FAQ on their own page Häufige Fragen instead of the page Kontakt (jos_move_faq())
+define( 'JOS_FAQ', 'faq-2026-10-15' );
 
 require_once get_template_directory() . '/inc/languages.php';
 require_once get_template_directory() . '/inc/contact.php';
@@ -330,7 +332,7 @@ function jos_maps_link(): string {
  *   1. the small logo, © 2026 Jo's Barbershop, Alle Rechte vorbehalten, Erstellt von and the mark of
  *      die aigentur (a link to dieaigentur.at)
  *   2. the opening hours: Di-Fr 10-19 Uhr, Sa 10-18 Uhr, So&Mo geschlossen
- *   3. the menu: the pages, Impressum, Datenschutz, Cookies, FAQ
+ *   3. the menu: the pages, Impressum, Datenschutz, Cookies, Häufige Fragen (its own page, jos_move_faq())
  *   4. Gumpendorfer Straße 127, 1060 Wien (both to Google Maps), phone (once it is in the Customizer)
  * Every item: text, and url (an address) or arch (a page behind an arch of the front page) for a link.
  *
@@ -364,11 +366,14 @@ function jos_footer_columns(): array {
 			);
 		}
 	}
-	$menu[] = array(
-		'text' => jos_t( 'Häufige Fragen' ),
-		'url'  => $base . '#faq',
-		'slug' => 'faq',
-	);
+	$faq = $legal( 'faq' );
+	if ( $faq ) {
+		$menu[] = array(
+			'text' => jos_t( 'Häufige Fragen' ),
+			'url'  => $faq,
+			'faq'  => true,
+		);
+	}
 
 	$contact = array(
 		array(
@@ -638,6 +643,107 @@ function jos_create_rooms(): void {
 add_action( 'init', 'jos_create_rooms', 20 );
 
 /**
+ * Writes a page (wp_insert_post with no ID, else wp_update_post) with markup made by the theme itself. The HTML
+ * filter for visitors who may not write HTML (active when nobody is logged in) stays off meanwhile, so the blocks
+ * (tables, questions) are stored as they are.
+ *
+ * @param array<string, mixed> $page Fields of the page.
+ */
+function jos_save_page( array $page ): void {
+	$filtered = false !== has_filter( 'content_save_pre', 'wp_filter_post_kses' );
+	if ( $filtered ) {
+		kses_remove_filters();
+	}
+	if ( empty( $page['ID'] ) ) {
+		wp_insert_post( $page );
+	} else {
+		wp_update_post( $page );
+	}
+	if ( $filtered ) {
+		kses_init_filters();
+	}
+}
+
+/**
+ * The text of a page as plain words in one line: to see whether a page still holds what the theme wrote.
+ *
+ * @param string $html Content of a page.
+ */
+function jos_plain_text( string $html ): string {
+	return trim( (string) preg_replace( '/\s+/u', ' ', html_entity_decode( wp_strip_all_tags( $html ), ENT_QUOTES, 'UTF-8' ) ) );
+}
+
+/**
+ * The questions of the FAQ move from the page Kontakt to their own page Häufige Fragen (15.10.2026, JOS_FAQ),
+ * once, on the first visit (no login needed). On the page Kontakt every question (Details block) leaves it together
+ * with the heading of the FAQ, as it was written there, and everything else on it stays as it is (WordPress keeps
+ * the text before as a revision). The pages faq and faq-en are made with these questions (the questions of the
+ * theme where Kontakt had none), or filled while they only say "Inhalt folgt."; a text written there stays.
+ */
+function jos_move_faq(): void {
+	if ( JOS_FAQ === get_option( 'jos_faq' ) ) {
+		return;
+	}
+	$strings      = jos_strings();
+	$placeholders = array_merge( array( 'Inhalt folgt.' ), array_column( $strings, 'Inhalt folgt.' ) );
+	foreach ( array_keys( jos_languages() ) as $lang ) {
+		$faq     = jos_faq_text_in( $lang );
+		$title   = jos_room_words()[ $lang ]['faq_title'];
+		$contact = get_page_by_path( 'de' === $lang ? 'kontakt' : 'kontakt-' . $lang );
+		if ( $contact ) {
+			$keep  = array();
+			$moved = array();
+			foreach ( parse_blocks( $contact->post_content ) as $block ) {
+				if ( null === $block['blockName'] && '' === trim( $block['innerHTML'] ) ) {
+					continue;   // only the empty lines between two blocks: they are put back below
+				}
+				if ( 'core/details' === $block['blockName'] ) {
+					$moved[] = $block;
+				} else {
+					$keep[] = $block;
+				}
+			}
+			if ( $moved ) {
+				// the heading of the FAQ goes with its questions
+				$keep = array_filter(
+					$keep,
+					static fn( array $block ): bool => ! ( 'core/heading' === $block['blockName'] && jos_plain_text( $block['innerHTML'] ) === $title )
+				);
+				$faq  = implode( "\n\n", array_map( 'serialize_block', $moved ) );
+				jos_save_page(
+					array(
+						'ID'           => $contact->ID,
+						'post_content' => implode( "\n\n", array_map( 'serialize_block', $keep ) ),
+					)
+				);
+			}
+		}
+		$slug = jos_legal_page( 'faq', $lang );
+		$page = get_page_by_path( $slug );
+		if ( ! $page ) {
+			jos_save_page(
+				array(
+					'post_type'    => 'page',
+					'post_status'  => 'publish',
+					'post_title'   => 'de' === $lang ? 'Häufige Fragen' : ( $strings[ $lang ]['Häufige Fragen'] ?? 'Häufige Fragen' ),
+					'post_name'    => $slug,
+					'post_content' => $faq,
+				)
+			);
+		} elseif ( in_array( jos_plain_text( $page->post_content ), $placeholders, true ) ) {
+			jos_save_page(
+				array(
+					'ID'           => $page->ID,
+					'post_content' => $faq,
+				)
+			);
+		}
+	}
+	update_option( 'jos_faq', JOS_FAQ, false );
+}
+add_action( 'init', 'jos_move_faq', 25 );
+
+/**
  * First content of the pages behind the arches, from the prices and texts of the shop (04.10.2026).
  * A page is filled only while it still holds just the placeholder "Inhalt folgt."; after that the page is edited
  * in WordPress and never touched again by the theme. It runs on the first visit after JOS_ROOMS_FILL (no login
@@ -655,8 +761,8 @@ function jos_fill_rooms(): void {
 			$missing = true;
 			continue;
 		}
-		if ( in_array( trim( wp_strip_all_tags( $page->post_content ) ), $placeholders, true ) ) {
-			wp_update_post(
+		if ( in_array( jos_plain_text( $page->post_content ), $placeholders, true ) ) {
+			jos_save_page(
 				array(
 					'ID'           => $page->ID,
 					'post_content' => $content,
@@ -757,17 +863,26 @@ function jos_room_texts_in( string $lang ): array {
 		. jos_block_heading( $t['hours_title'] )
 		. jos_block_table( $t['hours'] )
 		. jos_block_heading( $t['payment_title'] )
-		. jos_block_paragraph( $t['payment'] )
-		. jos_block_heading( $t['faq_title'] );
-	foreach ( $t['faq'] as $question => $answer ) {
-		$kontakt .= jos_block_question( $question, $answer );
-	}
+		. jos_block_paragraph( $t['payment'] );
 
 	return array(
 		'leistungen' => $leistungen,
 		'ueber-uns'  => $ueber_uns,
 		'kontakt'    => $kontakt,
 	);
+}
+
+/**
+ * The questions of the FAQ in one language, for the page Häufige Fragen (faq, faq-en): one Details block each.
+ *
+ * @param string $lang Language.
+ */
+function jos_faq_text_in( string $lang ): string {
+	$text = '';
+	foreach ( jos_room_words()[ $lang ]['faq'] as $question => $answer ) {
+		$text .= jos_block_question( $question, $answer );
+	}
+	return $text;
 }
 
 /**
@@ -993,6 +1108,12 @@ function jos_room( array $room ): void {
 	<section id="<?php echo esc_attr( $id ); ?>" class="room<?php echo $room['door'] ? ' room--shop' : ''; ?><?php echo 'kontakt' === $room['slug'] ? ' room--contact' : ''; ?>" data-room="<?php echo esc_attr( $id ); ?>" data-arch="<?php echo esc_attr( (string) $room['arch'] ); ?>"<?php echo $room['door'] ? ' data-door' : ''; ?> aria-labelledby="<?php echo esc_attr( $id ); ?>-title">
 		<div class="room__inner">
 			<h2 id="<?php echo esc_attr( $id ); ?>-title" class="room__title" data-reveal><?php echo esc_html( $title ); ?></h2>
+			<?php
+			if ( 'kontakt' === $room['slug'] ) {
+				// the contact form first, right under the title; the address, the opening hours and the booking follow
+				jos_contact_form();
+			}
+			?>
 			<div class="room__content" data-reveal>
 				<?php
 				if ( $page ) {
@@ -1002,7 +1123,6 @@ function jos_room( array $room ): void {
 			</div>
 			<?php if ( 'kontakt' === $room['slug'] ) : ?>
 				<div class="room__action"><?php jos_booking_button(); ?></div>
-				<?php jos_contact_form(); ?>
 			<?php endif; ?>
 			<?php if ( current_user_can( 'edit_pages' ) ) : ?>
 				<p class="room__edit">

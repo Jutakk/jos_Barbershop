@@ -23,7 +23,7 @@ $jos_columns = jos_footer_columns();
 			<?php elseif ( 'agency' === ( $jos_item['kind'] ?? '' ) ) : ?>
 				<span><?php echo esc_html( $jos_item['text'] ); ?> <a class="site-footer__agency" href="<?php echo esc_url( $jos_item['url'] ); ?>" target="_blank" rel="noopener" aria-label="<?php echo esc_attr( $jos_item['label'] ); ?>"><?php echo jos_agency_mark(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the SVG file of the theme. ?></a></span>
 			<?php elseif ( ! empty( $jos_item['url'] ) ) : ?>
-				<a href="<?php echo esc_url( $jos_item['url'], array( 'https', 'http', 'tel' ) ); ?>"<?php echo isset( $jos_item['slug'] ) ? ' data-open="' . esc_attr( $jos_item['slug'] ) . '"' : ''; ?>><?php echo esc_html( $jos_item['text'] ); ?></a>
+				<a href="<?php echo esc_url( $jos_item['url'], array( 'https', 'http', 'tel' ) ); ?>"<?php echo isset( $jos_item['slug'] ) ? ' data-open="' . esc_attr( $jos_item['slug'] ) . '"' : ''; ?><?php echo ! empty( $jos_item['faq'] ) ? ' data-faq' : ''; ?>><?php echo esc_html( $jos_item['text'] ); ?></a>
 			<?php else : ?>
 				<span><?php echo esc_html( $jos_item['text'] ); ?></span>
 			<?php endif; ?>

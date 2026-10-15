@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.15
+Version: 0.11.16
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -529,40 +529,6 @@ canvas {
   margin: 0 0 32px;
   gap: 12px;
 }
-.room__content .wp-block-details {
-  margin: 0;
-  padding: 16px 0;
-  border-top: 1px solid var(--jos-rule);
-}
-.room__content .wp-block-details:last-of-type {
-  border-bottom: 1px solid var(--jos-rule);
-}
-.room__content .wp-block-details summary {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  cursor: pointer;
-  list-style: none;
-}
-.room__content .wp-block-details summary::-webkit-details-marker {
-  display: none;
-}
-.room__content .wp-block-details summary::after {
-  content: "+";
-  color: var(--jos-accent);
-  transition: transform 200ms ease;
-}
-.room__content .wp-block-details summary:focus-visible {
-  outline: 2px solid var(--jos-accent);
-  outline-offset: 3px;
-}
-.room__content .wp-block-details[open] summary::after {
-  transform: rotate(45deg);
-}
-.room__content .wp-block-details > :not(summary) {
-  margin: 12px 0 0;
-  color: var(--jos-muted);
-}
 .room__action {
   margin-top: 48px;
 }
@@ -830,12 +796,55 @@ canvas {
   }
 }
 
+.room__content .wp-block-details,
+.page__content .wp-block-details {
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--jos-rule);
+}
+.room__content .wp-block-details:last-of-type,
+.page__content .wp-block-details:last-of-type {
+  border-bottom: 1px solid var(--jos-rule);
+}
+.room__content .wp-block-details summary,
+.page__content .wp-block-details summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.room__content .wp-block-details summary::-webkit-details-marker,
+.page__content .wp-block-details summary::-webkit-details-marker {
+  display: none;
+}
+.room__content .wp-block-details summary::after,
+.page__content .wp-block-details summary::after {
+  content: "+";
+  color: var(--jos-accent);
+  transition: transform 200ms ease;
+}
+.room__content .wp-block-details summary:focus-visible,
+.page__content .wp-block-details summary:focus-visible {
+  outline: 2px solid var(--jos-accent);
+  outline-offset: 3px;
+}
+.room__content .wp-block-details[open] summary::after,
+.page__content .wp-block-details[open] summary::after {
+  transform: rotate(45deg);
+}
+.room__content .wp-block-details > :not(summary),
+.page__content .wp-block-details > :not(summary) {
+  margin: 12px 0 0;
+  color: var(--jos-muted);
+}
+
 .room--contact {
   overflow-x: hidden;
 }
 
 .contact {
-  margin-top: 64px;
+  margin: 0 0 64px;
   perspective: 1400px;
 }
 

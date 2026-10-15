@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.15
+Version: 0.11.16
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -658,49 +658,6 @@ canvas {
 			margin: 0 0 s(6);
 			gap: s(3);
 		}
-
-		// FAQ: every Details block is one question
-		.wp-block-details {
-			margin: 0;
-			padding: s(4) 0;
-			border-top: 1px solid var(--jos-rule);
-
-			&:last-of-type {
-				border-bottom: 1px solid var(--jos-rule);
-			}
-
-			summary {
-				display: flex;
-				justify-content: space-between;
-				gap: s(4);
-				cursor: pointer;
-				list-style: none;
-
-				&::-webkit-details-marker {
-					display: none;
-				}
-
-				&::after {
-					content: "+";
-					color: var(--jos-accent);
-					transition: transform 200ms ease;
-				}
-
-				&:focus-visible {
-					outline: 2px solid var(--jos-accent);
-					outline-offset: 3px;
-				}
-			}
-
-			&[open] summary::after {
-				transform: rotate(45deg);
-			}
-
-			> :not(summary) {
-				margin: s(3) 0 0;
-				color: var(--jos-muted);
-			}
-		}
 	}
 
 	&__action {
@@ -1017,16 +974,62 @@ canvas {
 	}
 }
 
+// FAQ: every Details block is one question, on the page Häufige Fragen and on any page behind an arch
+.room__content,
+.page__content {
+	.wp-block-details {
+		margin: 0;
+		padding: s(4) 0;
+		border-top: 1px solid var(--jos-rule);
+
+		&:last-of-type {
+			border-bottom: 1px solid var(--jos-rule);
+		}
+
+		summary {
+			display: flex;
+			justify-content: space-between;
+			gap: s(4);
+			cursor: pointer;
+			list-style: none;
+
+			&::-webkit-details-marker {
+				display: none;
+			}
+
+			&::after {
+				content: "+";
+				color: var(--jos-accent);
+				transition: transform 200ms ease;
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--jos-accent);
+				outline-offset: 3px;
+			}
+		}
+
+		&[open] summary::after {
+			transform: rotate(45deg);
+		}
+
+		> :not(summary) {
+			margin: s(3) 0 0;
+			color: var(--jos-muted);
+		}
+	}
+}
+
 // ---------- contact form of the page Kontakt (inc/contact.php, contact.js): a two sided card in space, the form on
 // the front, the thanks on the back, without a background of its own: only its thin line. It stands in the middle
-// like everything on the page, below the text, as wide as the text.
+// like everything on the page, right under the title, as wide as the text below it.
 
 .room--contact {
 	overflow-x: hidden;   // the turning card never makes the page wider
 }
 
 .contact {
-	margin-top: s(8);
+	margin: 0 0 s(8);   // right under the title, the address and the opening hours follow
 	perspective: 1400px;
 }
 
