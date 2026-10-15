@@ -189,8 +189,10 @@ Stranica počinje 3D scenom s okruglim znakom trgovine, kao na fasadi (`images/f
   fasade (ili čim miš dođe na vrata), pa ne ulazi u budžet prvog učitavanja. Pogled prvo ide ravno u lokal,
   prema stolicama i ogledalima, s ulazom iza leđa. Unutra se kut gledanja proširi s 30 na 70 stupnjeva.
 - U lokalu povlačenjem mišem ili prstom gledaš okolo i gore dolje, strelice na tipkovnici rade isto. Tekst
-  Über uns stoji na tamnom staklu u kutu, uputa "Ziehen, um sich umzusehen" nestane nakon prvog povlačenja.
-- Bez animacija (prefers-reduced-motion) sve se otvara i zatvara odmah, bez leta kamere i bez pulsiranja.
+  Über uns stoji na tamnom staklu dolje u sredini, uputa "Ziehen, um sich umzusehen" stoji gore u sredini, u
+  visini X (na mobitelu lijevo od X) i nestane nakon prvog povlačenja.
+- Bez animacija (prefers-reduced-motion) sve se otvara i zatvara odmah, bez leta kamere i bez pulsiranja; i tada
+  scena zna u kojem je luku, pa iza otvorene stranice nikad ne stoji ulica sa znakom.
 - Bez JavaScripta stranice jednostavno slijede jedna za drugom ispod heroja.
 
 ## Tema `theme/jos-barbershop`
@@ -234,11 +236,15 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   posjetu): ulica naslovnice (uvijek isti raspored kao prije), svaka stranica iza luka (izrastu odozgor kad se
   stranica otvori, nestanu kad se zatvori) i obične stranice (Impressum, Datenschutz, Cookies, `index.php`; DE i EN
   ista stranica isti raspored). Na stranicama su puzavci gušći i duži nego na ulici: lijevo i desno od teksta u
-  sredini, od ruba ekrana do 24 px pred tekst, svaki zid između 18% i 34% širine.
-- Tekst i cjenici svih stranica iza lukova stoje u sredini ekrana. Kontakt je jedan stupac u sredini (tekst, Termin
+  sredini, od ruba ekrana do 24 px pred tekst, uz još 50 px za list koji se njiše, svaki zid najviše 34% širine,
+  pa lišće nikad ne ulazi u tekst. Gdje sa strane nema mjesta (uži tablet, mobitel) vise kratki puzavci u desnom
+  gornjem kutu. Obične stranice nose stil `.site-main.page` (samo glavni dio, ne `body.page` WordPressa).
+- Tekst i cjenici svih stranica iza lukova stoje u sredini ekrana, nikad ispod X gore desno (ni na uspravnom
+  tabletu: stupac je tamo uži). Kontakt je jedan stupac u sredini (tekst, Termin
   buchen, ispod kartica forme iste širine), a u lokalu (Über uns) stakleni panel s tekstom stoji dolje u sredini.
 - Stranice iza lukova su obične WordPress stranice s adresama `leistungen`, `ueber-uns`, `galerie` i `kontakt`.
-  Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu; sadržaj se piše u WordPressu.
+  Tema ih sama napravi (sa "Inhalt folgt.") kad prijavljeni administrator otvori stranicu, one s prvim tekstom
+  (vidi dolje) i bez prijave; sadržaj se piše u WordPressu.
   Izbornik u zaglavlju ih otvara kao i klik na luk.
 - Kontakt forma (`inc/contact.php`, `assets/js/contact.js`): minimalistička kartica s dvije strane na stranici
   Kontakt (ime, e-mail, poruka; DE i EN), bez pozadine, samo s tankom smeđom linijom. Stoji u sredini ispod
@@ -258,7 +264,9 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
   dok u njoj stoji "Inhalt folgt.", a poslije se stranice uređuju u WordPressu (`jos_room_texts()` u `functions.php`).
   Od 15.10.2026 to radi i bez prijave (prije samo za prijavljenog urednika, pa su Kontakt i Über uns mogli ostati
   prazni), jednom po oznaci `JOS_ROOMS_FILL`, i u praznu stranicu; stranicu koje nema (na primjer ručno napravljenu
-  s adresom `uber-uns` umjesto `ueber-uns`) napravi s tekstom. Tekst koji je netko već upisao nikad se ne dira:
+  s adresom `uber-uns` umjesto `ueber-uns`) napravi s tekstom. Prazna znači: bez ičega ili samo jedan odlomak
+  "Inhalt folgt." (`jos_is_placeholder()`); stranica sa slikom, embedom, formom ili bilo kojim drugim blokom nije
+  prazna. Tekst koji je netko već upisao nikad se ne dira:
   - Leistungen & Preise: cjenik po kategorijama (Herrenhaarschnitte, Bartpflege, Kinderhaarschnitte, Augenbrauen),
     usluga, trajanje i cijena, unutar kategorije od najjeftinije.
   - Über uns: uvod, tim (Inhaber Jwan; Deutsch, Englisch, Arabisch, Kurdisch) i "Was dich erwartet".
@@ -276,7 +284,7 @@ Vlastita WordPress tema (PHP, SCSS, čisti JavaScript, GSAP, three.js), sve loka
 
 Dijale (zadane vrijednosti dok ih ne promijenimo): VARIJACIJA 6, ANIMACIJA 9 (3D hero, lukovi kao izbornik), GUSTOĆA 4.
 
-Status 0.11.17: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
+Status 0.11.18: znak na fasadi koja se iscrta pri učitavanju, zgrada se okreće povlačenjem, scroll gura zgradu po osi Z u dubinu, lukovi s
 tekućim trakama kao izbornik, cijeli prozor ili vrata kao gumb, klik vodi kameru kroz luk do četiri stranice, lokal
 iza vrata s 360 fotografijom, footer upisan u temelj, sve na papiru sa smeđim linijama, izbornik na vijencu, njemački i engleski. Cjenik, Über uns i Kontakt imaju sadržaj. Slijede Galerie, Impressum i Datenschutz.
 

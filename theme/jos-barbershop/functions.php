@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'JOS_VERSION', '0.11.17' );
+define( 'JOS_VERSION', '0.11.18' );
 // the booking page of the shop on Treatwell (06.10.2026): the Reservierung and Termin buchen buttons lead there
 // unless another link is set in the Customizer
 define( 'JOS_BOOKING_LINK', 'https://www.treatwell.at/ort/jo-s-barbershop/' );
@@ -675,6 +675,34 @@ function jos_plain_text( string $html ): string {
 }
 
 /**
+ * Whether a page still holds nothing of its own: no content at all, or only the one paragraph with the placeholder
+ * "Inhalt folgt." (or "Content follows."). A page with anything else next to it (an image, a map, a form, a second
+ * paragraph) is a page someone made, and the theme leaves it as it is.
+ *
+ * @param string $content Content of the page.
+ */
+function jos_is_placeholder( string $content ): bool {
+	$placeholders = array_merge( array( 'Inhalt folgt.' ), array_column( jos_strings(), 'Inhalt folgt.' ) );
+	$blocks       = array_values(
+		array_filter(
+			parse_blocks( $content ),
+			static fn( array $block ): bool => null !== $block['blockName'] || '' !== trim( $block['innerHTML'] )
+		)
+	);
+	if ( ! $blocks ) {
+		return true;
+	}
+	if ( 1 !== count( $blocks ) || ! in_array( $blocks[0]['blockName'], array( 'core/paragraph', null ), true ) || $blocks[0]['innerBlocks'] ) {
+		return false;
+	}
+	// only the words of the placeholder, at most in one paragraph tag
+	if ( ! preg_match( '#^\s*(?:<p[^>]*>)?([^<]*)(?:</p>)?\s*$#i', $blocks[0]['innerHTML'], $match ) ) {
+		return false;
+	}
+	return in_array( jos_plain_text( $match[1] ), $placeholders, true );
+}
+
+/**
  * The questions of the FAQ move from the page Kontakt to their own page Häufige Fragen (15.10.2026, JOS_FAQ),
  * once, on the first visit (no login needed). On the page Kontakt every question (Details block) leaves it together
  * with the heading of the FAQ, as it was written there, and everything else on it stays as it is (WordPress keeps
@@ -685,8 +713,7 @@ function jos_move_faq(): void {
 	if ( JOS_FAQ === get_option( 'jos_faq' ) ) {
 		return;
 	}
-	$strings      = jos_strings();
-	$placeholders = array_merge( array( 'Inhalt folgt.' ), array_column( $strings, 'Inhalt folgt.' ) );
+	$strings = jos_strings();
 	foreach ( array_keys( jos_languages() ) as $lang ) {
 		$faq     = jos_faq_text_in( $lang );
 		$title   = jos_room_words()[ $lang ]['faq_title'];
@@ -731,7 +758,7 @@ function jos_move_faq(): void {
 					'post_content' => $faq,
 				)
 			);
-		} elseif ( in_array( jos_plain_text( $page->post_content ), $placeholders, true ) ) {
+		} elseif ( jos_is_placeholder( $page->post_content ) ) {
 			jos_save_page(
 				array(
 					'ID'           => $page->ID,
@@ -755,7 +782,6 @@ function jos_fill_rooms(): void {
 	if ( JOS_ROOMS_FILL === get_option( 'jos_rooms_fill' ) ) {
 		return;
 	}
-	$empty = array_merge( array( '', 'Inhalt folgt.' ), array_column( jos_strings(), 'Inhalt folgt.' ) );
 	foreach ( array_keys( jos_languages() ) as $lang ) {
 		$texts = jos_room_texts_in( $lang );
 		foreach ( jos_rooms( $lang ) as $room ) {
@@ -773,7 +799,7 @@ function jos_fill_rooms(): void {
 						'post_content' => $texts[ $room['slug'] ],
 					)
 				);
-			} elseif ( in_array( jos_plain_text( $page->post_content ), $empty, true ) ) {
+			} elseif ( jos_is_placeholder( $page->post_content ) ) {
 				jos_save_page(
 					array(
 						'ID'           => $page->ID,

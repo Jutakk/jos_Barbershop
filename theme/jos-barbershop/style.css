@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.17
+Version: 0.11.18
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -444,6 +444,11 @@ canvas {
   max-width: 68ch;
   margin-inline: auto;
 }
+@media (min-width: 768px) {
+  .room__inner {
+    max-width: min(68ch, 100vw - 2 * (clamp(24px, 6vw, 96px) + 72px + 16px));
+  }
+}
 .room--shop .room__inner {
   padding: 48px;
   background: var(--jos-glass);
@@ -619,10 +624,11 @@ canvas {
 
 .journey > .shop-hint {
   position: fixed;
-  inset-inline-end: clamp(24px, 6vw, 96px);
-  bottom: clamp(24px, 8vh, 64px);
+  top: clamp(64px, 12vh, 96px);
+  inset-inline: 0;
   z-index: 3;
-  margin: 0;
+  width: max-content;
+  margin: 0 auto;
   padding: 8px 12px;
   background: var(--jos-glass);
   color: var(--jos-ink);
@@ -640,9 +646,10 @@ canvas {
   .journey > .shop-hint {
     top: 112px;
     inset-inline-end: auto;
-    bottom: auto;
     inset-inline-start: 24px;
+    width: auto;
     max-width: calc(100vw - 56px - 72px);
+    margin: 0;
     white-space: normal;
   }
 }
@@ -965,13 +972,14 @@ textarea.contact__input {
   display: none;
 }
 
-.page {
+.site-main.page {
   position: relative;
   z-index: 1;
   max-width: 70ch;
   margin: 0 auto;
   padding: 96px 24px 64px;
 }
+
 .page__title {
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 400;

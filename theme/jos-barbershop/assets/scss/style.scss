@@ -3,7 +3,7 @@ Theme Name: Jo's Barbershop
 Author: iks.haus
 Author URI: https://iks.haus
 Description: Custom theme for Jo's Barbershop, Wien 1060. The turning shop sign on the facade in three.js, the pages behind the arches.
-Version: 0.11.17
+Version: 0.11.18
 Requires at least: 6.5
 Requires PHP: 8.0
 License: Proprietary
@@ -542,11 +542,16 @@ canvas {
 	min-height: 100svh;
 	padding: s(9) clamp(#{s(5)}, 6vw, #{s(9)});
 
-	// the text in the middle of the screen, the vines hang left and right of it
+	// the text in the middle of the screen, the vines hang left and right of it; never under the X up on the right
+	// (72 px wide, 6vw from the edge), also where the screen is narrow (a tablet held upright)
 	&__inner {
 		width: 100%;
 		max-width: 68ch;
 		margin-inline: auto;
+
+		@media (min-width: $bp-tablet) {
+			max-width: min(68ch, calc(100vw - 2 * (clamp(#{s(5)}, 6vw, #{s(9)}) + 72px + #{s(4)})));
+		}
 	}
 
 	// behind the door the shop stays visible: the text lies on a dark glass panel
@@ -771,12 +776,14 @@ canvas {
 	}
 }
 
+// up in the middle, as high as the X: the glass panel with the text of the page is down in the middle
 .journey > .shop-hint {
 	position: fixed;
-	inset-inline-end: clamp(#{s(5)}, 6vw, #{s(9)});
-	bottom: clamp(#{s(5)}, 8vh, #{s(8)});
+	top: clamp(#{s(8)}, 12vh, #{s(9)});
+	inset-inline: 0;
 	z-index: 3;
-	margin: 0;
+	width: max-content;
+	margin: 0 auto;
 	padding: s(2) s(3);
 	background: var(--jos-glass);
 	color: var(--jos-ink);
@@ -791,13 +798,14 @@ canvas {
 		opacity: 0;
 	}
 
-	// on phones the text of the page lies at the bottom: the hint goes up, left of the X
+	// on phones the hint goes up, left of the X
 	@media (max-width: $bp-tablet - 1) {
 		top: 112px;
 		inset-inline-end: auto;
-		bottom: auto;
 		inset-inline-start: s(5);
+		width: auto;
 		max-width: calc(100vw - 56px - #{3 * s(5)});
+		margin: 0;
 		white-space: normal;
 	}
 }
@@ -1164,13 +1172,16 @@ textarea.contact__input {
 
 // ---------- pages and footer
 
-.page {
+// the main element only: WordPress gives <body> the class "page" too
+.site-main.page {
 	position: relative;
 	z-index: 1;   // in front of the vines of the page
 	max-width: 70ch;
 	margin: 0 auto;
 	padding: s(9) s(5) s(8);
+}
 
+.page {
 	&__title {
 		font-size: clamp(1.75rem, 3vw, 2.5rem);
 		font-weight: 400;

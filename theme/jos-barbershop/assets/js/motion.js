@@ -152,7 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 		// only its opacity: its place is drawn by scene.js, stuck to the house
 		if (heroContent) tl.to(heroContent, { autoAlpha: 0, duration: time(0.4), ease: 'power2.in' }, 0);
-		tl.to(view, { t: 1, duration: FLY_IN, ease: 'power2.inOut', onUpdate: sendView }, 0);
+		// immediateRender off: without motion (no duration) the tween would run at once, before the call above
+		// names the arch, and scene.js would draw the street behind the page
+		tl.to(view, { t: 1, duration: FLY_IN, ease: 'power2.inOut', immediateRender: false, onUpdate: sendView }, 0);
 		tl.call(() => showRoom(room), null, Math.max(FLY_IN - time(0.2), 0));
 		tl.fromTo(room.el, { opacity: 0 }, { opacity: 1, duration: FADE_IN, ease: 'power1.out' }, '>');
 		if (!reduced && room.reveals.length) {
@@ -175,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				onUpdate: sendLook,
 			}, '>');
 		}
-		tl.to(view, { t: 0, duration: FLY_OUT, ease: 'power2.inOut', onUpdate: sendView }, room.door ? '<' : '>');
+		tl.to(view, { t: 0, duration: FLY_OUT, ease: 'power2.inOut', immediateRender: false, onUpdate: sendView }, room.door ? '<' : '>');
 		tl.call(() => {
 			view.arch = -1;
 			sendView();
